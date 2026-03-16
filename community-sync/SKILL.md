@@ -135,6 +135,29 @@ For failed builds, show the errors and ask user:
 
 Only proceed to push with branches that passed both cherry-pick AND build.
 
+### Step 4b: Verify Branch Integrity
+
+**Critical step.** Worktree agents may cherry-pick onto a temporary worktree branch instead of the actual `community/{branch}`. After all agents complete and before pushing, verify every target branch contains the expected commit:
+
+```bash
+COMMIT_MSG="short commit message or unique pattern"
+MISSING=""
+for branch in $ALL_TARGET_BRANCHES; do
+  latest=$(git log --oneline -1 community/$branch)
+  if ! echo "$latest" | grep -q "$COMMIT_MSG"; then
+    echo "MISSING: community/$branch — latest: $latest"
+    MISSING="$MISSING $branch"
+  fi
+done
+```
+
+If any branches are missing the commit:
+1. Cherry-pick manually: `git checkout community/{branch} && git cherry-pick {hash}`
+2. Verify build: `yarn build`
+3. Add to push list
+
+**Why this happens:** worktree isolation creates a separate working directory. If the agent runs `git checkout -b community/grandaddy origin/community/grandaddy` but the worktree's HEAD is detached, the commit lands on a temporary branch that gets cleaned up with the worktree. The fix is to ensure agents checkout the existing local branch (`git checkout community/{branch}`) not create a new one from remote.
+
 ### Step 5: Sequential Push
 
 Push branches that passed, one at a time with 30s delay:
@@ -228,6 +251,7 @@ These patterns are from real production incidents during sync operations:
 - **Shell variable expansion in refspecs is fragile.** `"community/$branch:community/$branch"` inside a loop concatenates wrong. Always use the simple form: `git push origin community/{branch}`.
 - **Build verification catches 90% of CI failures early.** The three most common: API signature changes (TS2559), removed template bindings (NG8002), broken HTML structure (NG5002). All are auto-fixable.
 - **Tag pipelines use the tag name as ref**, not the branch name. To find pipeline for tag `2026.03.10-alex-profile-links`, query with that exact string as ref.
+- **Worktree agents can silently lose commits.** Agent reports SUCCESS but the commit lands on a temporary worktree branch (e.g., `worktree-agent-aa23eea5`) instead of the actual `community/{branch}`. When the worktree is cleaned up, the commit is gone. Always run Step 4b verification before pushing. Root cause: agent creates a new branch from remote (`git checkout -b community/X origin/community/X`) in the worktree, but the worktree's git state doesn't propagate back to the main repo's branch pointer. Mitigation: instruct agents to `git checkout community/{branch}` (existing local branch) rather than creating new ones, or always verify after.
 
 ## Example Run
 
