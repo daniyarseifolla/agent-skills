@@ -1,0 +1,60 @@
+[
+  {
+    "query": "проверь UI",
+    "should_trigger": true
+  },
+  {
+    "query": "ui review",
+    "should_trigger": true
+  },
+  {
+    "query": "протестируй UI",
+    "should_trigger": true
+  },
+  {
+    "query": "проверь интерфейс",
+    "should_trigger": true
+  },
+  {
+    "query": "test UI on localhost",
+    "should_trigger": true
+  },
+  {
+    "query": "visual review",
+    "should_trigger": true
+  },
+  {
+    "query": "сравни с фигмой",
+    "should_trigger": true
+  },
+  {
+    "query": "проверь верстку",
+    "should_trigger": true
+  },
+  {
+    "query": "протестируй страницу saved",
+    "should_trigger": true
+  },
+  {
+    "query": "ARGO-10743",
+    "should_trigger": false,
+    "note": "Jira key triggers jira-worker"
+  },
+  {
+    "query": "проверь код",
+    "should_trigger": false,
+    "note": "Code review triggers jira-code-reviewer"
+  },
+  {
+    "query": "задеплой на тест",
+    "should_trigger": false
+  },
+  {
+    "query": "напиши unit тест",
+    "should_trigger": false
+  },
+  {
+    "query": "обновить ветки",
+    "should_trigger": false
+  }
+]

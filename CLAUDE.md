@@ -1,12 +1,22 @@
 # Agent Skills Repository
 
-This repository contains custom Claude Code skills for GitLab CI/CD, Jira integration, and branch management.
+Reusable development pipeline skills for Claude Code with swappable adapters.
 
-## Skills
+## Versions
 
-- **deploy** — GitLab CI/CD deployment automation
-- **jira-worker** — Full-cycle Jira task implementation
-- **community-sync** — Distribute commits across community branches
+- **v2.0/** — active version (project-agnostic, 18 focused skills, model routing, security, recovery)
+- **v1.0/** — backup of original skills (Jira/Angular/GitLab specific, 8 monolithic skills)
+
+See [v2.0/SKILLS_OVERVIEW.md](v2.0/SKILLS_OVERVIEW.md) for full architecture and catalog.
+
+## Quick Reference
+
+| Trigger | Facade | Pipeline |
+|---------|--------|----------|
+| ARGO-XXX, "сделай задачу" | jira-worker | worker → planner → review → coder → review → deploy |
+| "deploy", "задеплой" | deploy | gitlab adapter direct |
+| "sync branches" | community-sync | gitlab adapter + parallel cherry-pick |
+| "scan UI" | scan-ui-inventory | standalone scan |
 
 ## Testing
 

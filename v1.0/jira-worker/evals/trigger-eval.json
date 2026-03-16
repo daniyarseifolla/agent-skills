@@ -1,0 +1,82 @@
+[
+  {
+    "query": "ARGO-10738",
+    "should_trigger": true
+  },
+  {
+    "query": "https://argomedia.atlassian.net/browse/ARGO-10695 — возьми в работу",
+    "should_trigger": true
+  },
+  {
+    "query": "сделай задачу ARGO-10700, там баг с отображением аватарки на странице профиля",
+    "should_trigger": true
+  },
+  {
+    "query": "реализуй тикет ARGO-10693 — нужно подключить виджет календаря к хедеру",
+    "should_trigger": true
+  },
+  {
+    "query": "возьми тикет ARGO-10500, это фича для passport — добавить смену пароля в настройках",
+    "should_trigger": true
+  },
+  {
+    "query": "implement ARGO-10800, it's about adding Web Share API support for posts",
+    "should_trigger": true
+  },
+  {
+    "query": "take this ticket — ARGO-10750, баг: при клике на шаринг копируется неправильная ссылка",
+    "should_trigger": true
+  },
+  {
+    "query": "work on ARGO-10820 please, the calendar events page needs an empty state component",
+    "should_trigger": true
+  },
+  {
+    "query": "ARGO-10900 — фича для подписок, нужно добавить кнопку отписки в профиле пользователя",
+    "should_trigger": true
+  },
+  {
+    "query": "бери ARGO-10650 в работу. Описание: 'Community. Добавить padding для табов'. Это быстрый фикс",
+    "should_trigger": true
+  },
+  {
+    "query": "задеплой community/alex на тест, пайплайн уже прошел",
+    "should_trigger": false
+  },
+  {
+    "query": "обновить ветки — раскатай последний коммит 41c927e3 на все community ветки",
+    "should_trigger": false
+  },
+  {
+    "query": "покажи мне тикет ARGO-10738, хочу просто посмотреть описание и статус",
+    "should_trigger": false
+  },
+  {
+    "query": "напиши Angular компонент для отображения списка событий, standalone с сигналами",
+    "should_trigger": false
+  },
+  {
+    "query": "создай unit тесты для CommunityService, покрой все публичные методы",
+    "should_trigger": false
+  },
+  {
+    "query": "yarn lint показывает 15 ворнингов в profile-page.component.ts, почини",
+    "should_trigger": false
+  },
+  {
+    "query": "сделай код-ревью последнего MR, проверь на баги и code style",
+    "should_trigger": false
+  },
+  {
+    "query": "создай jira тикет: 'Добавить dark mode для страницы подписок', приоритет Medium",
+    "should_trigger": false
+  },
+  {
+    "query": "перенеси мой тикет ARGO-10700 в статус Done, он уже протестирован",
+    "should_trigger": false
+  },
+  {
+    "query": "добавь в CLAUDE.md информацию о новом модуле events и его структуре",
+    "should_trigger": false
+  }
+]

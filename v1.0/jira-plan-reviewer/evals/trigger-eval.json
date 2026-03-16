@@ -1,0 +1,12 @@
+[
+  {
+    "query": "проверь план задачи",
+    "should_trigger": false,
+    "note": "Called by jira-worker internally, not directly by user"
+  },
+  {
+    "query": "review the plan for ARGO-10743",
+    "should_trigger": false,
+    "note": "Called by jira-worker internally"
+  }
+]
