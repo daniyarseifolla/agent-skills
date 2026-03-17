@@ -65,6 +65,74 @@ quality_checks:
     grep_bad: "@for.*;"
     grep_good: "@for.*track"
     severity: MINOR
+
+  - name: "Signal-based inputs"
+    rule: "New components MUST use input() and input.required() instead of @Input()"
+    grep_bad: "@Input\\("
+    grep_good: "input\\(|input\\.required\\("
+    severity: MAJOR
+
+  - name: "Signal-based outputs"
+    rule: "New components MUST use output() instead of @Output()"
+    grep_bad: "@Output\\("
+    grep_good: "output\\("
+    severity: MAJOR
+
+  - name: "Host bindings"
+    rule: "Use host: {} in @Component metadata instead of @HostBinding/@HostListener"
+    grep_bad: "@HostBinding|@HostListener"
+    grep_good: "host:\\s*\\{"
+    severity: MINOR
+
+  - name: "takeUntilDestroyed for subscriptions"
+    rule: "Manual subscriptions MUST use takeUntilDestroyed() or DestroyRef to prevent memory leaks"
+    grep_bad: "\\.subscribe\\("
+    grep_good: "takeUntilDestroyed|destroyRef"
+    severity: MAJOR
+
+  - name: "httpResource for data fetching"
+    rule: "Prefer httpResource() or resource() over raw HttpClient.get() for signal-based data loading"
+    grep_bad: "this\\.http\\.get|this\\.http\\.post"
+    grep_good: "httpResource|resource\\("
+    severity: MINOR
+
+  - name: "Lazy loading routes"
+    rule: "Feature routes MUST use loadComponent/loadChildren for lazy loading"
+    grep_bad: "component:\\s*[A-Z]\\w+Component"
+    grep_good: "loadComponent|loadChildren"
+    severity: MINOR
+
+  - name: "providedIn root for services"
+    rule: "Singleton services should use providedIn: 'root'"
+    grep_bad: "@Injectable\\(\\)"
+    grep_good: "providedIn:\\s*'root'"
+    severity: MINOR
+```
+
+```yaml
+memory_leak_checks:
+  - pattern: ".subscribe() without takeUntilDestroyed()"
+    risk: "Observable subscription leaks on component destroy"
+    fix: "Add pipe(takeUntilDestroyed(this.destroyRef)) or use async pipe"
+
+  - pattern: "setInterval/setTimeout without cleanup"
+    risk: "Timer continues after component destroy"
+    fix: "Clear in ngOnDestroy or use RxJS timer with takeUntilDestroyed"
+
+  - pattern: "addEventListener without removeEventListener"
+    risk: "Event handler leaks"
+    fix: "Use Renderer2.listen() or host listeners"
+```
+
+```yaml
+path_aliases:
+  note: "Common path aliases in Angular/Nx projects. Verify in tsconfig.json."
+  common:
+    - "@app/*": "src/app/*"
+    - "@core/*": "src/app/core/*"
+    - "@shared/*": "src/app/shared/* or libs/shared/*"
+    - "@env/*": "src/environments/*"
+  rule: "ALWAYS use path aliases, never relative imports crossing module boundaries"
 ```
 
 ---

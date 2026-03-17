@@ -81,6 +81,17 @@ review:
       - "User-facing errors are translated/friendly"
     severity: MAJOR
 
+  memory_leaks:
+    description: "No subscription leaks, timer leaks, or event listener leaks"
+    check: "tech-stack adapter memory_leak_checks patterns"
+    severity: MAJOR
+
+  design_implementation:
+    description: "UI matches Figma design with high fidelity"
+    check: "If plan references Figma URLs, verify figma:implement-design skill was used"
+    skip_if: "no design adapter or no Figma URLs in plan"
+    severity: MAJOR
+
   test_coverage:
     description: "New code has corresponding tests"
     method: "Every new .ts file should have .spec.ts (per tech_stack_adapter conventions)"
@@ -137,6 +148,20 @@ output:
     ### Verdict
     {APPROVED|APPROVED_WITH_COMMENTS|CHANGES_REQUESTED}
 ```
+
+---
+
+## Severity Triage (for worker)
+
+When code-reviewer returns CHANGES_REQUESTED, worker should triage:
+
+| Severity | Worker Action |
+|----------|--------------|
+| BLOCKER | Return to coder — must fix before proceeding |
+| MAJOR | Return to coder — must fix |
+| MINOR (1-2) | Show to user, ask: fix now or proceed? |
+| MINOR (3+) | Return to coder (auto-escalated) |
+| NIT | Show for awareness, proceed |
 
 ---
 

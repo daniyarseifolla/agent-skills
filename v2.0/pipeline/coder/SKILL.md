@@ -151,3 +151,61 @@ loop:
   max: 3
   guard: "core/orchestration loop_limits"
 ```
+
+---
+
+## 7. Superpowers Integration
+
+```yaml
+execution_strategy:
+  FULL_mode:
+    skill: "superpowers:subagent-driven-development"
+    when: "complexity M/L/XL, plan has 3+ parts"
+    description: "Fresh subagent per task + two-stage review"
+
+  SIMPLE_mode:
+    skill: "superpowers:executing-plans"
+    when: "complexity S, plan has 1-2 parts"
+    description: "Execute in current session with checkpoints"
+```
+
+---
+
+## 8. Figma Implementation
+
+```yaml
+figma_implementation:
+  when: "Plan references Figma URLs or design adapter is active"
+  skill: "figma:implement-design"
+  rules:
+    - "Use figma:implement-design for 1:1 visual fidelity"
+    - "Extract design tokens from Figma (colors, spacing, typography)"
+    - "Map tokens to project's existing SCSS variables/CSS custom properties"
+    - "NEVER hardcode hex colors — use variables"
+    - "MUST use existing SCSS mixins from ui-inventory when applicable"
+```
+
+---
+
+## 9. Component Reuse Rules
+
+```yaml
+component_reuse:
+  mandatory:
+    - "MUST reuse existing components from .claude/ui-inventory.md"
+    - "MUST use existing SCSS mixins for common patterns (spacing, flexbox, typography)"
+    - "MUST use design token variables (colors, sizes, shadows)"
+    - "NEVER hardcode colors, font sizes, or spacing values"
+    - "NEVER create a new component if a shared one covers ≥80% of the need"
+
+  check: "Read .claude/ui-inventory.md before implementing any UI"
+```
+
+---
+
+## 10. Library Code
+
+```yaml
+library_code:
+  rule: "Library/node_modules code is READ-ONLY. Never modify files in node_modules or external libraries."
+```

@@ -56,6 +56,39 @@ startup:
 
 ---
 
+## Confirmation Summary
+
+display_before_start:
+  format: |
+    **Task:** {task_key} — {title}
+    **Project:** {project_name} ({tech_stack})
+    **Complexity:** {S|M|L|XL} → Route: {MINIMAL|STANDARD|FULL}
+    **Modules:** {detected_modules}
+    **AC:** {ac_count} items
+    **Figma:** {yes/no} ({url_count} URLs)
+    **Credentials:** {if found in description}
+
+    Proceed? (y/n)
+
+  skip_if: "autonomous mode (--auto flag)"
+
+---
+
+## Branch Management
+
+```yaml
+branch_naming:
+  format: "feat/{task_key}"
+  example: "feat/ARGO-12345"
+  steps:
+    - "Check if branch already exists: git branch -a | grep {task_key}"
+    - "If exists, ask user: switch to existing or create new?"
+    - "Create: git checkout -b feat/{task_key}"
+    - "Unset upstream to avoid accidental push to wrong branch: git branch --unset-upstream"
+```
+
+---
+
 ## 2. Pipeline Execution
 
 Phases from core/orchestration. Worker dispatches each, validates handoffs, writes checkpoints.
@@ -132,6 +165,7 @@ phases:
       - commit: "Create git commit (MANDATORY)"
       - mr: "ASK user → if yes, ci-cd adapter create_mr()"
       - deploy: "ASK user → if yes, ci-cd adapter deploy()"
+      - transition: "IF deployed: transition task to 'Ready for Test' via task-source adapter"
       - metrics: "Load core/metrics, collect and store"
       - checkpoint: "phase_completed: 6"
 ```
@@ -198,14 +232,22 @@ errors:
     level: WARN
     action: "Ask user for project type or create .claude/project.yaml"
 
+  task_fetch_failed:
+    level: ERROR
+    action: "Verify task key and MCP connection. Is Atlassian MCP running?"
+
+  project_detect_failed:
+    level: WARN
+    action: "Ask user for project type"
+
   adapter_not_found:
     level: ERROR
-    message: "Adapter '{name}' not found at adapters/{name}/SKILL.md"
+    message: "Adapter '{name}' not found. Available: {list}"
     action: "List available adapters, ask user"
 
   phase_failed:
     level: ERROR
-    action: "Save checkpoint, display error details, ask user"
+    action: "Save checkpoint, show error, ask user"
 
   handoff_validation_failed:
     level: ERROR
@@ -214,8 +256,50 @@ errors:
 
   loop_exceeded:
     level: STOP
-    action: "Display iteration summary table, request user intervention"
+    action: "STOP, show iteration summary (from core/orchestration)"
     do_not: "Auto-proceed or auto-approve"
+
+  git_conflicts:
+    level: ERROR
+    action: "Show conflicted files, ask user to resolve"
+
+  build_fails:
+    level: ERROR
+    action: "Show errors. If lint-only: auto-fix with format command. If test: show failures."
+
+  pre_existing_lint_warnings:
+    level: INFO
+    action: "Ignore — exit code 1 on lint is normal for existing code"
+
+  dev_server_wont_start:
+    level: ERROR
+    action: "Check if port is in use: lsof -i :4200"
+
+  agent_browser_fails:
+    level: WARN
+    action: "Close browser, retry once. If still fails, skip UI review."
+
+  glab_not_installed:
+    level: ERROR
+    action: "Install: brew install glab && glab auth login"
+
+  glab_auth_expired:
+    level: ERROR
+    action: "Run: glab auth login"
+
+  skill_not_found:
+    level: WARN
+    action: "Warn, fall back to inline execution"
+```
+
+---
+
+## Cleanup
+
+```yaml
+trigger: "User says 'cleanup', 'очисти', 'remove plans'"
+action: "Remove docs/plans/{task_key}/ directory"
+confirmation: "Always ask before deleting"
 ```
 
 ---

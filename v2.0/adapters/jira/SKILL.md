@@ -27,6 +27,13 @@ steps:
       status: "fields.status.name"
       figma_urls: "parse_urls(fields.description)"
   - return: structured task object
+
+  extended_parsing:
+    subtasks: "Extract subtask list if present"
+    credentials: "Look for 'Пользователь:' / 'Логин:' / 'Login:' / 'Password:' patterns"
+    expected_result: "Extract 'Ожидаемый результат' / 'Expected Result' section"
+    actual_result: "Extract 'Фактический результат' / 'Actual Result' section (for bugs)"
+    checklist_from_ac: "Convert AC items to checkbox list for tracking"
 ```
 
 ---
@@ -71,6 +78,22 @@ Used by worker Phase 0 for complexity classification.
 
 ---
 
+## detect_modules
+
+```yaml
+detect_modules:
+  strategy: "Scan description and AC for keywords, map to project modules"
+  note: "Module paths are project-specific. Use tech-stack adapter module_lookup or .claude/project.yaml modules."
+  keywords_hint:
+    - "auth, login, registration → auth module"
+    - "profile, settings, account → profile module"
+    - "layout, header, sidebar, navigation → layout module"
+    - "shared, common, utility → shared module"
+    - "store, state, redux, ngrx → store module"
+```
+
+---
+
 ## 4. transition(key, status)
 
 ```yaml
@@ -84,6 +107,13 @@ steps:
       issueKey: "{key}"
       transitionId: "{matched_transition.id}"
   - on_no_match: "report available transitions to user"
+
+  transition_after_deploy:
+    action: "After successful deploy, transition to 'Ready for Test'"
+    steps:
+      - "getTransitionsForJiraIssue → find 'Ready for Test' or equivalent"
+      - "transitionJiraIssue with found transition ID"
+    skip_if: "No deploy was performed"
 ```
 
 ---

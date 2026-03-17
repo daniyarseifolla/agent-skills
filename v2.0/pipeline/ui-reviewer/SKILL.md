@@ -20,6 +20,11 @@ input:
   design_adapter: "for Figma screenshots and comparison"
   tech_stack_adapter: "for serve command"
   ui_inventory_path: ".claude/ui-inventory.md (optional)"
+
+  credentials:
+    source: "Extracted from task description by task-source adapter (credentials field)"
+    usage: "Passed to functional-tester for login workflow"
+    fallback: "If no credentials in task, ask user"
 ```
 
 ---
@@ -49,6 +54,32 @@ test_planning:
       visual:
         - "Screen-to-Figma frame mapping"
         - "Comparison points per screen"
+
+  test_case_format: |
+    Functional tests (F1-F8 style):
+    - F1: Navigate to /profile → page loads, header shows username
+    - F2: Click "Edit" button → edit form appears
+    - F3: Clear "Name" field, submit → validation error shown
+    - F4: Fill valid data, submit → success snackbar, data saved
+
+    Visual tests (V1-V5 style):
+    - V1: Profile page (desktop) → compare with Figma frame "Profile Desktop"
+    - V2: Profile page (mobile 375px) → compare with Figma frame "Profile Mobile"
+    - V3: Edit modal → compare with Figma frame "Edit Profile Modal"
+```
+
+---
+
+## Dev Server Setup
+
+```yaml
+detect:
+  - "Check if app is running: curl -s -o /dev/null -w '%{http_code}' http://localhost:4200"
+  - "If not running, check port 6200 (community projects)"
+  - "If neither running, ask user: start dev server or provide URL"
+  - "Store app_url for all subsequent tests"
+
+fallback_ports: [4200, 6200, 3000, 8080]
 ```
 
 ---
@@ -58,15 +89,27 @@ test_planning:
 ```yaml
 parallel_agents:
   functional_tester:
-    description: "Functional UI testing via browser agent"
+    description: "Functional UI testing via agent-browser"
     model: sonnet
-    mode: subagent
-    steps:
-      step_1: "Start dev server if not running (tech_stack_adapter.commands.serve)"
-      step_2: "Navigate to relevant pages per test plan"
-      step_3: "Execute functional test scenarios"
-      step_4: "Take screenshots of each state"
-      step_5: "Report pass/fail per scenario with evidence"
+    run_as: "Agent(subagent)"
+    skill: "agent-browser"
+    setup:
+      - "Navigate to app_url"
+      - "If login required: use credentials from task (extracted by jira adapter)"
+      - "For input fields, use nativeInputValueSetter pattern (Angular forms don't respond to .value=)"
+
+    execution:
+      - "For each test scenario in ui-test-plan.md:"
+      - "  Navigate to page"
+      - "  Execute actions (click, type, select)"
+      - "  Verify expected result"
+      - "  Take screenshot: docs/plans/{task-key}/screenshots/F{N}-{name}.png"
+
+    tips:
+      - "Use CSS selectors, not XPath"
+      - "For nth element, use >>nth=0 suffix"
+      - "If browser fails, close and retry once"
+      - "Clipboard API workaround: document.execCommand('copy') may not work in headless"
     output:
       format: |
         | # | Scenario | Expected | Actual | Result | Screenshot |
@@ -74,14 +117,24 @@ parallel_agents:
   visual_comparator:
     description: "Visual comparison against Figma designs"
     model: sonnet
-    mode: subagent
+    run_as: "Agent(subagent)"
     skip_if: "no design_adapter or no figma_urls"
     steps:
-      step_1: "For each figma_url: design_adapter.get_screenshot(url)"
-      step_2: "For each corresponding page: take actual screenshot"
-      step_3: "Compare dimensions: layout, spacing, sizing"
-      step_4: "Compare visual: colors, typography, icons"
-      step_5: "Identify: missing elements, extra elements"
+      - "For each Figma URL: design_adapter.get_screenshot(url)"
+      - "For each corresponding page: navigate in browser, take screenshot"
+      - "Compare descriptively (not pixel-perfect):"
+      - "  Layout: element positioning, alignment, grid structure"
+      - "  Spacing: margins, padding, gaps between elements"
+      - "  Colors: background, text, border colors (compare with design tokens)"
+      - "  Typography: font size, weight, line-height"
+      - "  Components: correct component used, proper variant"
+      - "  States: hover, active, disabled, focus states"
+      - "  Border-radius, shadows, opacity"
+      - "Compare with existing pages for visual consistency"
+
+    output_per_screen: |
+      | Aspect | Figma | Actual | Match? | Notes |
+      |--------|-------|--------|--------|-------|
     output:
       format: |
         | # | Screen | Figma Frame | Match | Diff Notes |

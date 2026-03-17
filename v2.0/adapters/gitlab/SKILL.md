@@ -29,7 +29,9 @@ target_branch_default: "project.yaml → project.branches.main (fallback: develo
 
 ```yaml
 command: |
-  glab api "projects/:id/pipelines?ref={branch}&per_page=1"
+  glab api "projects/:id/pipelines?ref={branch}&source=push&per_page=1"
+
+note: "ALWAYS use source=push filter. Without it, you'll find MR pipelines on refs/merge-requests/*/head that lack deploy jobs."
 
 extract:
   id: "data[0].id"
@@ -168,4 +170,91 @@ cherry_pick_batch:
 rate_limiting:
   push_delay_sec: 30
   reason: "avoid GitLab API rate limits on parallel pushes"
+```
+
+---
+
+## 10. Python JSON Parsing Helper
+
+glab api outputs extra text alongside JSON. Always use Python to extract:
+
+```python
+import json, sys, re
+raw = sys.stdin.read()
+match = re.search(r'[\[{].*[\]}]', raw, re.DOTALL)
+if match:
+    data = json.loads(match.group())
+    # process data
+```
+
+WHY: glab API responses include headers/debug text mixed with JSON. Direct JSON parsing fails.
+
+---
+
+## 11. Rollback Workflow
+
+```yaml
+rollback:
+  description: "Revert a bad deployment"
+  steps:
+    - "Find rollback job in pipeline: glab api 'projects/:id/pipelines/{id}/jobs' | filter stage=rollback"
+    - "Or find previous successful deploy and re-trigger it"
+    - "Jobs: rollback:gcp-test, rollback:gcp-prod (project-specific)"
+  requires_confirmation: true
+```
+
+---
+
+## 12. Error Handling Patterns
+
+```yaml
+error_handling:
+  401_unauthorized:
+    cause: "glab auth token expired"
+    fix: "Run: glab auth login"
+
+  no_pipeline_found:
+    cause: "Push hasn't triggered pipeline yet, or used wrong ref"
+    fix: "Wait 10s, retry. Check if branch was actually pushed."
+
+  job_not_found:
+    cause: "Pipeline still in earlier stages, deploy job not created yet"
+    fix: "Wait for build stage to complete first"
+
+  deploy_job_created_status:
+    cause: "Manual job, needs to be 'played'"
+    fix: "glab api --method POST 'projects/:id/jobs/{id}/play'"
+
+  deploy_fails_oom:
+    cause: "Container OOM killed or k8s pod crash loop"
+    fix: "Show log tail, suggest: check memory limits or rollback"
+
+  pipeline_stuck_running:
+    cause: "Runner hung or network issue"
+    fix: "Cancel pipeline, re-push: glab api --method POST 'projects/:id/pipelines/{id}/cancel'"
+
+  glab_not_installed:
+    fix: "brew install glab && glab auth login"
+```
+
+---
+
+## 13. Pipeline Stages Reference
+
+```yaml
+stages_reference:
+  typical_order: [lint, test, build-deps, build-static, build, push, deploy-test, production, rollback]
+  note: "Exact stages vary per project. Check .gitlab-ci.yml"
+```
+
+---
+
+## 14. Useful Commands
+
+```yaml
+useful_commands:
+  list_recent: 'glab api "projects/:id/pipelines?per_page=5"'
+  cancel_pipeline: 'glab api --method POST "projects/:id/pipelines/{id}/cancel"'
+  get_full_log: 'glab api "projects/:id/jobs/{id}/trace"'
+  list_branches: 'glab api "projects/:id/repository/branches?per_page=100"'
 ```

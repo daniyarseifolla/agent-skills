@@ -56,8 +56,17 @@ mode_detection:
 steps:
   step_1_component_discovery:
     action: "Read ui_inventory_path if exists"
-    purpose: "Identify reusable components — avoid reinventing"
-    skip_if: "ui_inventory_path does not exist"
+    fallback_if_no_inventory:
+      action: "Scan for shared components manually"
+      commands:
+        - "Glob: libs/shared/ui/**/*.component.ts"
+        - "Glob: libs/shared/components/**/*.component.ts"
+        - "Glob: libs/shared/dialogs/**/*.component.ts"
+        - "Glob: **/shared/**/*.pipe.ts"
+        - "Glob: **/*.mixins.scss"
+        - "Glob: **/variables.scss"
+      output: "Inline component list for brainstorming input"
+    purpose: "Avoid reinventing existing components"
 
   step_2_design_context:
     skip_if: "no design_adapter or no figma_urls"
@@ -68,6 +77,11 @@ steps:
     action: "Invoke Skill: brainstorming"
     input: "task + component inventory + tech-stack patterns + design context"
     output: "design decisions, approach options, selected approach"
+    brainstorming_focus:
+      - "Which existing components can be reused? (MUST prefer existing over custom)"
+      - "What new components are needed?"
+      - "What is the minimal approach to satisfy all AC?"
+      - "What are the risks and edge cases?"
 
   step_4_codebase_research:
     action: "Research existing code for patterns, dependencies, imports"
@@ -97,15 +111,28 @@ steps:
   step_6_checklist:
     action: "Generate checklist from plan parts"
     output_path: "docs/plans/{task-key}/checklist.md"
-    format: |
-      # {task-key} Checklist
-      ## Implementation
-      - [ ] Part 1: {description}
-      - [ ] Part 2: {description}
-      ## Verification
-      - [ ] Lint passes
-      - [ ] Tests pass
-      - [ ] Build succeeds
+    format:
+      full_mode: |
+        ## Checklist: {task_key}
+
+        ### Tasks
+        - [ ] Task 1: {description} → AC: {ac_ids} → Commit: `feat(ARGO-XXXXX): {msg}`
+        - [ ] Task 2: ...
+
+        ### Verification
+        - [ ] Lint passes
+        - [ ] Tests pass
+        - [ ] Build succeeds
+
+        ### AC Coverage Map
+        | AC | Task | Status |
+        |----|------|--------|
+        | AC-1 | Task 1 | planned |
+
+      simple_mode: |
+        ## Checklist: {task_key}
+        - [ ] {single task description}
+        - [ ] Build + lint passes
 
   step_7_handoff:
     action: "Form handoff per core/orchestration planner_to_reviewer contract"
@@ -181,6 +208,12 @@ code_researcher_dispatch:
 ```yaml
 figma_first:
   when: "task.description is empty AND figma_urls present"
+  ac_format: |
+    Generated AC use "AC-F{N}" prefix:
+    - AC-F1: Page /path displays [component] with [data]
+    - AC-F2: Button [label] navigates to [destination]
+    - AC-F3: [Component] shows states: loading, error, empty, populated
+    - AC-F4: Form validates [fields] with [rules]
   steps:
     - extract: "design_adapter.get_design(url) for each URL"
     - analyze:
@@ -191,4 +224,18 @@ figma_first:
     - generate_ac: "design_adapter.figma_first_mode output"
     - proceed: "Use generated AC as task.acceptance_criteria"
     - note: "Document in plan that AC were generated from Figma"
+```
+
+---
+
+## 7. Plan Constraints
+
+```yaml
+plan_constraints:
+  - "Each task = one logical commit"
+  - "Map every AC to at least one task"
+  - "Include exact file paths (create/modify)"
+  - "Include build/lint verification step per task"
+  - "Library code is read-only"
+  - "Use path aliases from tech-stack adapter"
 ```
