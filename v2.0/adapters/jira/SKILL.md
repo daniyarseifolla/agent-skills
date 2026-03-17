@@ -1,7 +1,6 @@
 ---
 name: adapter-jira
 description: "Jira task source adapter. Provides task fetching, AC parsing, transitions, and MR description generation. Loaded by pipeline skills when task-source is jira."
-disable-model-invocation: true
 allowed-tools: mcp__plugin_atlassian_atlassian__getJiraIssue, mcp__plugin_atlassian_atlassian__getTransitionsForJiraIssue, mcp__plugin_atlassian_atlassian__transitionJiraIssue, mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql, mcp__plugin_atlassian_atlassian__addCommentToJiraIssue
 ---
 

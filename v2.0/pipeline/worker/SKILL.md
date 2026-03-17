@@ -1,7 +1,6 @@
 ---
 name: pipeline-worker
 description: "Project-agnostic development pipeline orchestrator. Manages phases, checkpoints, recovery, and adapter loading. Called by facade skills — not directly by user."
-disable-model-invocation: true
 ---
 
 # Pipeline Worker
