@@ -213,6 +213,32 @@ figma_implementation:
     - "MUST use existing SCSS mixins from ui-inventory when applicable"
     - "When Figma shows auto-layout → use flexbox with exact gap values"
     - "When Figma shows fixed dimensions → use exact px unless responsive context requires otherwise"
+
+  icon_extraction:
+    CRITICAL: "NEVER draw SVG icons manually — always source from Figma or designer"
+    problem: |
+      Figma MCP cannot export SVG code directly.
+      get_design_context returns a raster asset URL (PNG), not SVG.
+      Manually drawing SVG leads to wrong stroke/fill, wrong shape, broken masks.
+    workflow:
+      step_1: "Call get_design_context for the icon node"
+      step_2: "Check if asset URL is returned (figma.com/api/mcp/asset/...)"
+      step_3: "Try WebFetch on the asset URL — if it returns SVG content, use it"
+      step_4: "If PNG/raster → ASK user to export SVG from Figma (File → Export → SVG)"
+      step_5: "If user provides SVG → use it directly"
+      step_6: "If no SVG available → use <img> with the raster asset URL as fallback"
+
+    css_mask_rule: |
+      When using SVG as CSS mask-image:
+      - SVG MUST use fill paths, NOT stroke-only paths
+      - stroke-only SVG will show as empty rectangle in mask
+      - If SVG has stroke without fill → convert stroke to filled path or ask designer
+
+    never_do:
+      - "NEVER attempt to hand-draw SVG path data"
+      - "NEVER guess icon shapes from screenshots"
+      - "NEVER convert stroke SVG to fill by hand — shapes won't match"
+      - "If 3 attempts fail → STOP, ask user for the SVG file"
 ```
 
 ---

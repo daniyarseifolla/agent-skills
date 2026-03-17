@@ -43,6 +43,18 @@ steps:
   - routing:
       code_connect_present: "use mapped component directly"
       code_connect_absent: "use screenshot as visual reference"
+
+  - icon_detection:
+      description: "Detect if node is an icon and handle SVG limitation"
+      condition: "node size ≤ 32x32px OR node name contains 'icon'/'ic_'/'svg'"
+      warning: |
+        Figma MCP cannot export SVG code. Asset URL returns raster (PNG).
+        For icons:
+        1. Try WebFetch on asset URL — sometimes SVG is returned
+        2. If raster → warn coder: "Icon {name} is raster-only from Figma MCP"
+        3. Suggest: ask user to export SVG from Figma desktop (Select → Export → SVG)
+        4. For CSS mask usage: SVG must have fill paths, not stroke-only
+      fallback: "Use raster asset as <img> if SVG unavailable"
 ```
 
 ---
