@@ -115,30 +115,63 @@ parallel_agents:
         | # | Scenario | Expected | Actual | Result | Screenshot |
 
   visual_comparator:
-    description: "Visual comparison against Figma designs"
+    description: "Per-element visual verification against Figma"
     model: sonnet
     run_as: "Agent(subagent)"
     skip_if: "no design_adapter or no figma_urls"
-    steps:
-      - "For each Figma URL: design_adapter.get_screenshot(url)"
-      - "For each corresponding page: navigate in browser, take screenshot"
-      - "Compare descriptively (not pixel-perfect):"
-      - "  Layout: element positioning, alignment, grid structure"
-      - "  Spacing: margins, padding, gaps between elements"
-      - "  Colors: background, text, border colors (compare with design tokens)"
-      - "  Typography: font size, weight, line-height"
-      - "  Components: correct component used, proper variant"
-      - "  States: hover, active, disabled, focus states"
-      - "  Border-radius, shadows, opacity"
-      - "Compare with existing pages for visual consistency"
+
+    CRITICAL_RULE: |
+      Do NOT just compare screenshots side-by-side.
+      For EACH UI element in the Figma Node Map (from plan):
+      1. Call get_design_context(fileKey, nodeId) for the specific element
+      2. Extract exact CSS values from Figma code hints
+      3. Inspect the actual CSS in browser (via agent-browser DevTools or computed styles)
+      4. Compare EACH property: size, color, font, spacing, border-radius, shadow
+      5. Report exact mismatches with Figma value vs Actual value
+
+    workflow:
+      step_1: "Read plan → find Figma Node Map table"
+      step_2: "For each node in the map:"
+      step_2a: "  Call get_design_context(fileKey, nodeId) → extract expected CSS"
+      step_2b: "  In browser: inspect the corresponding element → get actual CSS"
+      step_2c: "  Compare property by property"
+      step_2d: "  Record: element, property, figma_value, actual_value, match?"
+      step_3: "Take full-page screenshots for overall layout comparison"
+      step_4: "Compare with existing pages for visual consistency"
+
+    per_element_check:
+      properties:
+        layout: "display, flex-direction, justify-content, align-items, gap"
+        sizing: "width, height, padding, margin"
+        typography: "font-family, font-size, font-weight, line-height, letter-spacing, color"
+        visual: "background-color, border, border-radius, box-shadow, opacity"
+
+      tolerance:
+        size: "±2px"
+        color: "exact match (after mapping to project variables)"
+        font_size: "±1px"
+        spacing: "±2px"
+        border_radius: "exact match"
+
+    output_per_element: |
+      | Element | Property | Figma | Actual | Match? |
+      |---------|----------|-------|--------|--------|
+      | Card | width | 290px | 290px | YES |
+      | Card | border-radius | 12px | 8px | NO — fix to 12px |
+      | Title | font-size | 16px | 14px | NO — fix to 16px |
+      | Title | color | #1A1A1A | #333333 | NO — use $text-primary |
 
     output_per_screen: |
-      | Aspect | Figma | Actual | Match? | Notes |
-      |--------|-------|--------|--------|-------|
-    output:
-      format: |
-        | # | Screen | Figma Frame | Match | Diff Notes |
-    note: "Pixel-perfect NOT required — focus on functional/visual parity"
+      | # | Screen | Figma Frame | Elements Checked | Matches | Mismatches |
+
+    severity:
+      color_mismatch: MAJOR
+      size_mismatch_gt_4px: MAJOR
+      size_mismatch_2_4px: MINOR
+      font_mismatch: MAJOR
+      border_radius_mismatch: MINOR
+      spacing_mismatch_gt_4px: MAJOR
+      spacing_mismatch_2_4px: MINOR
 ```
 
 ---

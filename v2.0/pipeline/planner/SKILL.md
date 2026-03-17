@@ -70,8 +70,22 @@ steps:
 
   step_2_design_context:
     skip_if: "no design_adapter or no figma_urls"
-    action: "design_adapter.get_design(url) for each figma_url"
-    output: "visual references, component mappings, design tokens"
+    action: "Extract Figma node map for EVERY UI component"
+    CRITICAL: |
+      For each Figma URL:
+      1. Call get_design_context(fileKey, nodeId) → get screenshot + code hints
+      2. Identify EVERY distinct UI component/element in the design
+      3. For each component, record its Figma node-id
+      4. Extract key CSS properties (dimensions, colors, typography, spacing)
+      5. Build a Figma Node Map table for the plan
+    output: "Figma Node Map table (component → node-id → key CSS properties)"
+    node_map_format: |
+      | Component | Figma Node ID | Key Properties |
+      |-----------|---------------|----------------|
+      | Card container | 123:456 | w:290px h:160px radius:12px bg:#F5F5F5 |
+      | Card title | 123:457 | font:Inter/600/16px color:#1A1A1A |
+      | Card image | 123:458 | w:290px h:100px radius:12px 12px 0 0 |
+    WHY: "Without node-ids in the plan, coder will guess CSS values instead of extracting exact ones from Figma"
 
   step_3_brainstorming:
     action: "Invoke Skill: brainstorming"
@@ -168,10 +182,17 @@ plan_template:
     ## Architecture Decisions
     {from brainstorming — decision, rationale, alternatives rejected}
 
+    ## Figma Node Map (REQUIRED when Figma URLs present)
+    | Component | Figma Node ID | Figma URL | Key CSS Properties |
+    |-----------|---------------|-----------|-------------------|
+    | Header | 123:456 | figma.com/design/xxx?node-id=123-456 | h: 64px, bg: #FFFFFF |
+    | Card | 123:789 | figma.com/design/xxx?node-id=123-789 | w: 290px, h: 160px, radius: 12px |
+
     ## Implementation Parts
     ### Part 1: {name}
     - Files: {list}
     - AC: {mapped AC numbers}
+    - Figma nodes: {node-ids from Figma Node Map for this part}
     - Dependencies: {other parts}
     - Details: {what to implement}
 

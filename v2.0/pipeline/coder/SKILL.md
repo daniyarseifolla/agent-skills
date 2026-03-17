@@ -171,18 +171,48 @@ execution_strategy:
 
 ---
 
-## 8. Figma Implementation
+## 8. Figma Implementation (MANDATORY for UI tasks)
 
 ```yaml
 figma_implementation:
   when: "Plan references Figma URLs or design adapter is active"
   skill: "figma:implement-design"
+
+  CRITICAL_RULE: |
+    For EVERY UI element, BEFORE writing any CSS/SCSS:
+    1. Call get_design_context with the SPECIFIC Figma node-id from the plan
+    2. Extract EXACT values: width, height, padding, margin, gap, border-radius,
+       font-family, font-size, font-weight, line-height, letter-spacing,
+       color, background-color, border, box-shadow, opacity
+    3. Write CSS using these exact values (mapped to project variables where possible)
+    4. NEVER guess or approximate values — always extract from Figma
+
+  workflow_per_element:
+    step_1: "Read plan → get Figma node-id for the element"
+    step_2: "Call get_design_context(fileKey, nodeId) → extract code hints + screenshot"
+    step_3: "Extract exact CSS properties from code hints"
+    step_4: "Map hex colors to project SCSS variables (e.g., #FF5722 → $color-accent)"
+    step_5: "Map spacing to project tokens (e.g., 16px → $spacing-md)"
+    step_6: "Write CSS/SCSS using extracted + mapped values"
+    step_7: "If code hints are insufficient, call get_screenshot and measure visually"
+
+  extraction_checklist:
+    layout: "display, flex-direction, justify-content, align-items, gap"
+    sizing: "width, height, min-width, max-width, padding, margin"
+    typography: "font-family, font-size, font-weight, line-height, letter-spacing, text-align, color"
+    visual: "background-color, border, border-radius, box-shadow, opacity"
+    spacing: "gap, padding, margin (top/right/bottom/left)"
+
   rules:
-    - "Use figma:implement-design for 1:1 visual fidelity"
-    - "Extract design tokens from Figma (colors, spacing, typography)"
-    - "Map tokens to project's existing SCSS variables/CSS custom properties"
+    - "MUST call get_design_context for EVERY UI component before writing CSS"
+    - "MUST use exact px/rem values from Figma, not approximations"
+    - "MUST map Figma colors to project SCSS variables / CSS custom properties"
+    - "MUST map Figma spacing to project design tokens where they exist"
     - "NEVER hardcode hex colors — use variables"
+    - "NEVER guess font-size, spacing, or border-radius — extract from Figma"
     - "MUST use existing SCSS mixins from ui-inventory when applicable"
+    - "When Figma shows auto-layout → use flexbox with exact gap values"
+    - "When Figma shows fixed dimensions → use exact px unless responsive context requires otherwise"
 ```
 
 ---
