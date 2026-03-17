@@ -12,7 +12,7 @@ Phase 2. Validates plan quality and completeness. Runs as subagent for objectivi
 
 ## 1. Input
 
-Per core/orchestration planner_to_reviewer contract.
+Per core-orchestration planner_to_reviewer contract.
 
 ```yaml
 input:
@@ -135,7 +135,7 @@ output:
 
 ## 5. Handoff
 
-Per core/orchestration reviewer_to_coder contract.
+Per core-orchestration reviewer_to_coder contract.
 
 ```yaml
 handoff:
@@ -144,7 +144,7 @@ handoff:
     approved_notes: "non-blocking suggestions (if APPROVED)"
     issues: "list of findings with severity (if NEEDS_CHANGES/REJECTED)"
     iteration: "N/3"
-  validation: "All required fields per core/orchestration contract"
+  validation: "All required fields per core-orchestration contract"
 ```
 
 ---
@@ -154,7 +154,7 @@ handoff:
 ```yaml
 loop:
   max: 3
-  guard: "core/orchestration loop_limits"
+  guard: "core-orchestration loop_limits"
   per_iteration:
     - "Receive updated plan from planner"
     - "Re-run full checklist"

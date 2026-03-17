@@ -15,7 +15,7 @@ Triggers on branch sync phrases. Specific to projects with community/* branch pa
 ## Delegation
 
 1. Read .claude/project.yaml for ci-cd adapter
-2. Load adapters/gitlab (or detected ci-cd adapter)
+2. Load adapter-gitlab (or detected ci-cd adapter)
 
 ## Workflow
 

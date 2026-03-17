@@ -22,14 +22,14 @@ startup:
   step_2_adapters:
     action: "Load adapters based on config"
     mapping:
-      task-source: "adapters/{config.task-source}"
-      ci-cd: "adapters/{config.ci-cd}"
-      tech-stack: "adapters/{config.tech-stack}"
-      design: "adapters/{config.design}"
+      task-source: "adapter-{config.task-source}"
+      ci-cd: "adapter-{config.ci-cd}"
+      tech-stack: "adapter-{config.tech-stack}"
+      design: "adapter-{config.design}"
     on_missing: "WARN, continue without that adapter type"
 
   step_3_core:
-    action: "Load core/orchestration"
+    action: "Load core-orchestration"
     provides: [phase_sequence, handoff_contracts, checkpoint_schema, loop_limits]
 
   step_4_recovery:
@@ -48,7 +48,7 @@ startup:
     output: "S|M|L|XL"
 
   step_7_route:
-    action: "Select route from core/orchestration complexity_matrix"
+    action: "Select route from core-orchestration complexity_matrix"
     S: MINIMAL
     M: STANDARD
     L_XL: FULL
@@ -91,7 +91,7 @@ branch_naming:
 
 ## 2. Pipeline Execution
 
-Phases from core/orchestration. Worker dispatches each, validates handoffs, writes checkpoints.
+Phases from core-orchestration. Worker dispatches each, validates handoffs, writes checkpoints.
 
 ```yaml
 phases:
@@ -104,7 +104,7 @@ phases:
 
   - phase: 1
     name: planning
-    skill: "pipeline/planner"
+    skill: "pipeline-planner"
     model: opus
     mode: inline
     input: "task, complexity, route, tech_stack_adapter, design_adapter"
@@ -113,21 +113,21 @@ phases:
 
   - phase: 2
     name: plan-review
-    skill: "pipeline/plan-reviewer"
+    skill: "pipeline-plan-reviewer"
     model: sonnet
     mode: subagent
     skip_if: "complexity == S"
-    input: "handoff: planner_to_reviewer (core/orchestration contract)"
+    input: "handoff: planner_to_reviewer (core-orchestration contract)"
     output: "verdict: APPROVED|NEEDS_CHANGES|REJECTED"
     checkpoint: true
     loop:
       max: 3
-      with: "pipeline/planner"
+      with: "pipeline-planner"
       counter: "checkpoint.iteration.plan_review"
 
   - phase: 3
     name: implementation
-    skill: "pipeline/coder"
+    skill: "pipeline-coder"
     model: sonnet
     mode: inline
     input: "handoff: reviewer_to_coder, plan_path, tech_stack_adapter"
@@ -136,20 +136,20 @@ phases:
 
   - phase: 4
     name: code-review
-    skill: "pipeline/code-reviewer"
+    skill: "pipeline-code-reviewer"
     model: sonnet
     mode: subagent_worktree
-    input: "handoff: coder_to_reviewer (core/orchestration contract)"
+    input: "handoff: coder_to_reviewer (core-orchestration contract)"
     output: "verdict: APPROVED|APPROVED_WITH_COMMENTS|CHANGES_REQUESTED"
     checkpoint: true
     loop:
       max: 3
-      with: "pipeline/coder"
+      with: "pipeline-coder"
       counter: "checkpoint.iteration.code_review"
 
   - phase: 5
     name: ui-review
-    skill: "pipeline/ui-reviewer"
+    skill: "pipeline-ui-reviewer"
     model: sonnet
     mode: subagent
     skip_if: "complexity == S OR no design adapter"
@@ -166,7 +166,7 @@ phases:
       - mr: "ASK user → if yes, ci-cd adapter create_mr()"
       - deploy: "ASK user → if yes, ci-cd adapter deploy()"
       - transition: "IF deployed: transition task to 'Ready for Test' via task-source adapter"
-      - metrics: "Load core/metrics, collect and store"
+      - metrics: "Load core-metrics, collect and store"
       - checkpoint: "phase_completed: 6"
 ```
 
@@ -177,9 +177,9 @@ phases:
 ```yaml
 dispatch:
   before_phase:
-    - validate: "handoff payload against core/orchestration contract"
+    - validate: "handoff payload against core-orchestration contract"
     - check_skip: "evaluate skip_if condition"
-    - check_loop: "guard against loop_limits (core/orchestration)"
+    - check_loop: "guard against loop_limits (core-orchestration)"
     - log: "Starting Phase {N}: {name}"
 
   after_phase:
@@ -189,7 +189,7 @@ dispatch:
 
   on_loop:
     - increment: "checkpoint.iteration.{loop_type}"
-    - check_limit: "core/orchestration loop_limits"
+    - check_limit: "core-orchestration loop_limits"
     - on_exceeded: "STOP, show iteration summary, request user intervention"
 ```
 
@@ -256,7 +256,7 @@ errors:
 
   loop_exceeded:
     level: STOP
-    action: "STOP, show iteration summary (from core/orchestration)"
+    action: "STOP, show iteration summary (from core-orchestration)"
     do_not: "Auto-proceed or auto-approve"
 
   git_conflicts:
@@ -306,7 +306,7 @@ confirmation: "Always ask before deleting"
 
 ## 6. Re-routing
 
-From core/orchestration. Worker applies mid-pipeline.
+From core-orchestration. Worker applies mid-pipeline.
 
 ```yaml
 re_routing:

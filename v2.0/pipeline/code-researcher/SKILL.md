@@ -15,7 +15,7 @@ Read-only haiku agent. Cheap codebase search delegated from expensive phases.
 
 ```yaml
 role: "Fast, cheap codebase exploration"
-invoked_by: [pipeline/planner, pipeline/coder]
+invoked_by: [pipeline-planner, pipeline-coder]
 when: "complexity in [L, XL]"
 does: "Find patterns, trace imports, locate files, read existing code"
 does_not: "Write code, make decisions, modify files"

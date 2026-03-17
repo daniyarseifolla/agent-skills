@@ -12,7 +12,7 @@ Phase 4. Architecture + security + quality review. Runs in worktree for isolatio
 
 ## 1. Input
 
-Per core/orchestration coder_to_reviewer contract.
+Per core-orchestration coder_to_reviewer contract.
 
 ```yaml
 input:
@@ -23,7 +23,7 @@ input:
     risks_mitigated: string[]
   plan_path: "docs/plans/{task-key}/plan.md"
   tech_stack_adapter: "for quality checks and lint/test commands"
-  # Auto-loaded: core/security
+  # Auto-loaded: core-security
 ```
 
 ---
@@ -63,8 +63,8 @@ review:
 
   security:
     description: "No security vulnerabilities introduced"
-    method: "Load core/security, run all grep patterns against changed files"
-    severity: "Per core/security classification (BLOCKER or MAJOR)"
+    method: "Load core-security, run all grep patterns against changed files"
+    severity: "Per core-security classification (BLOCKER or MAJOR)"
 
   component_reuse:
     description: "No reinvented components"
@@ -113,7 +113,7 @@ severity:
 auto_escalation:
   - condition: "5+ MINOR in same file"
     action: "Escalate to MAJOR for that file"
-  - condition: "Any core/security finding"
+  - condition: "Any core-security finding"
     action: "Always BLOCKER regardless of pattern severity"
 
 decision:
@@ -167,7 +167,7 @@ When code-reviewer returns CHANGES_REQUESTED, worker should triage:
 
 ## 6. Handoff
 
-Per core/orchestration reviewer_to_completion contract.
+Per core-orchestration reviewer_to_completion contract.
 
 ```yaml
 handoff:
@@ -176,7 +176,7 @@ handoff:
     comments: "non-blocking notes (MINOR/NIT)"
     issues: "blocking findings (if CHANGES_REQUESTED)"
     iteration: "N/3"
-  validation: "All required fields per core/orchestration contract"
+  validation: "All required fields per core-orchestration contract"
 ```
 
 ---
@@ -186,7 +186,7 @@ handoff:
 ```yaml
 loop:
   max: 3
-  guard: "core/orchestration loop_limits"
+  guard: "core-orchestration loop_limits"
   per_iteration:
     - "Receive updated code from coder"
     - "Re-run pre-checks"
@@ -213,7 +213,7 @@ standalone:
     step_3_plan_found: "Run full review including plan compliance"
     step_3_no_plan: "Run review without plan compliance (diff-only mode)"
     step_4: "Load tech_stack_adapter from project.yaml or autodetect"
-    step_5: "Load core/security"
+    step_5: "Load core-security"
     step_6: "Execute review areas (section 3), skip plan_compliance if no plan"
     step_7: "Output code-review.md"
 ```

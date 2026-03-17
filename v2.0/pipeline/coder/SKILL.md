@@ -28,7 +28,7 @@ input:
 
 ## 2. Evaluate Gate
 
-Per core/orchestration evaluate_gate protocol. Run before writing any code.
+Per core-orchestration evaluate_gate protocol. Run before writing any code.
 
 ```yaml
 evaluate:
@@ -90,7 +90,7 @@ implement:
 
   L_XL_research:
     when: "Stuck on implementation detail for L/XL tasks"
-    action: "Dispatch pipeline/code-researcher via Task tool"
+    action: "Dispatch pipeline-code-researcher via Task tool"
     purpose: "Find patterns, imports, existing code to reference"
 ```
 
@@ -120,17 +120,17 @@ verify:
 
 ## 5. Handoff
 
-Per core/orchestration coder_to_reviewer contract.
+Per core-orchestration coder_to_reviewer contract.
 
 ```yaml
 handoff:
-  to: "pipeline/code-reviewer"
+  to: "pipeline-code-reviewer"
   payload:
     branch: "current git branch"
     parts_implemented: "list of completed parts with file paths"
     deviations_from_plan: "from evaluate.md adjustments section"
     risks_mitigated: "issues addressed during implementation"
-  validation: "All required fields per core/orchestration contract"
+  validation: "All required fields per core-orchestration contract"
 ```
 
 ---
@@ -149,7 +149,7 @@ loop:
     - "Re-run verification (section 4)"
     - "Form new handoff"
   max: 3
-  guard: "core/orchestration loop_limits"
+  guard: "core-orchestration loop_limits"
 ```
 
 ---

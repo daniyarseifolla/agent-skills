@@ -21,7 +21,7 @@ Entry point for Jira-based task workflow. Delegates to pipeline/worker with Jira
    task_key: "{parsed key}"
    ```
 
-2. Load and invoke: `Skill: pipeline/worker`
+2. Load and invoke: `Skill: pipeline-worker`
    - Worker reads .claude/project.yaml for remaining config (ci-cd, tech-stack, design)
    - Worker handles full pipeline with all phases
 

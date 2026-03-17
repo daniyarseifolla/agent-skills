@@ -16,7 +16,7 @@ Triggers on deploy-related phrases in any language (RU/EN).
 
 1. Read .claude/project.yaml for ci-cd adapter type and deploy config
 2. If no config → autodetect from .gitlab-ci.yml or .github/workflows/
-3. Load appropriate ci-cd adapter (e.g., adapters/gitlab)
+3. Load appropriate ci-cd adapter (e.g., adapter-gitlab)
 
 ## Modes
 

@@ -89,7 +89,7 @@ steps:
       method: "Direct Glob/Grep/Read"
       scope: "focused on known modules"
     L_XL:
-      method: "Dispatch pipeline/code-researcher (haiku) via Task tool"
+      method: "Dispatch pipeline-code-researcher (haiku) via Task tool"
       queries:
         - "Find existing patterns for {feature_type}"
         - "Trace imports in {affected_modules}"
@@ -135,7 +135,7 @@ steps:
         - [ ] Build + lint passes
 
   step_7_handoff:
-    action: "Form handoff per core/orchestration planner_to_reviewer contract"
+    action: "Form handoff per core-orchestration planner_to_reviewer contract"
     payload:
       artifact_path: "docs/plans/{task-key}/plan.md"
       key_decisions: "extracted from brainstorming step"
@@ -192,7 +192,7 @@ plan_template:
 ```yaml
 code_researcher_dispatch:
   when: "complexity in [L, XL]"
-  method: "Task tool → pipeline/code-researcher"
+  method: "Task tool → pipeline-code-researcher"
   queries_generated_from:
     - "Affected modules from AC analysis"
     - "Pattern questions from brainstorming"
