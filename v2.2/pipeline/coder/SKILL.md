@@ -74,18 +74,37 @@ implement:
   order: "Parts in dependency order from plan"
 
   for_each_part:
+    step_0: "RESEARCH existing patterns — find the closest existing component in the project and study its approach"
     step_1: "If part has UI/CSS → run Figma Extract (section 8) for EVERY element in this part"
-    step_2: "Implement code changes per plan using extracted values"
+    step_2: "Implement code changes per plan using extracted values + existing pattern as template"
     step_3: "If part has UI/CSS → run Figma Self-Verify (section 8b) — compare EVERY CSS property against Figma"
     step_4: "Run tech_stack_adapter lint command"
     step_5: "Run tech_stack_adapter test command"
     step_6: "If verify/lint/test fail → fix → retry"
     max_retries_per_part: 3
 
+    RESEARCH_FIRST: |
+      BEFORE writing ANY code for a UI component:
+      1. Find the closest existing component in the project (Glob for similar selectors/names)
+      2. Read its .component.ts, .component.html, .component.scss — understand the PATTERN
+      3. Note: which mixins it uses, how SCSS is organized, which variables, how layout is done
+      4. Use this pattern as your TEMPLATE — copy the approach, adapt for new component
+      Example: building a new dialog → find existing dialog → copy its SCSS structure
+
+    STALE_CONTEXT_RULE: |
+      If you've made 2+ failed attempts at the same component:
+      1. STOP iterating in current context — it's polluted with wrong approaches
+      2. The fix: spawn a FRESH subagent with CLEAN context containing ONLY:
+         - Figma specs (node-ids + extracted CSS)
+         - Existing pattern files (the closest component you found in step_0)
+         - Project variables/mixins
+      3. Fresh agent with clean context gets it right first try
+      4. NEVER keep trial-and-error fixing after 3 attempts — you're making it worse
+
     CRITICAL: |
-      Steps 1 and 3 are MANDATORY for any part that touches CSS/SCSS/HTML templates.
-      Do NOT skip step 3 — this is the verification that prevents "approximate CSS" bugs.
-      The loop is: extract → write → verify → fix → next component.
+      Steps 0, 1 and 3 are MANDATORY for any part that touches CSS/SCSS/HTML templates.
+      Step 0 (research) prevents trial-and-error. Step 3 (verify) catches remaining mismatches.
+      The loop is: research → extract → write → verify → fix → next component.
       NEVER move to the next part until ALL elements in current part pass Figma verification.
 
   rules:
