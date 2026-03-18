@@ -57,6 +57,8 @@ startup:
 
 ## Confirmation Summary
 
+CRITICAL: "This summary MUST be shown before ANY work begins. It is Phase 0 output."
+
 display_before_start:
   format: |
     **Task:** {task_key} — {title}
@@ -67,9 +69,19 @@ display_before_start:
     **Figma:** {yes/no} ({url_count} URLs)
     **Credentials:** {if found in description}
 
+    **Workspace options:**
+    1. Worktree: использовать изолированный worktree? (y/n) [default: y for M+]
+    2. CI: отключить CI на feature-ветке? (y/n) [default: y if .gitlab-ci.yml exists]
+
     Proceed? (y/n)
 
   skip_if: "autonomous mode (--auto flag)"
+
+  after_confirm:
+    step_1_worktree: "If user chose worktree=y → Invoke Skill: superpowers:using-git-worktrees"
+    step_2_branch: "If worktree=n → create branch feat/{task_key} in current repo"
+    step_3_ci: "If user chose CI=y AND not in worktree → ci-cd adapter disable_ci(task_key)"
+    step_4_checkpoint: "Save checkpoint: phase_completed: 0, ci_disabled: bool, worktree_path: string|null"
 
 ---
 
