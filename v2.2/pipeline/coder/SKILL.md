@@ -299,7 +299,33 @@ figma_self_verify:
 
 ---
 
-## 8c. Icon Extraction
+## 8c. UI Quality Check (after all parts implemented)
+
+```yaml
+ui_quality_check:
+  skill: "refactoring-ui"
+  when: "After ALL parts with UI are implemented and Figma Self-Verified"
+  purpose: "Catch design quality issues that per-property check misses: hierarchy, spacing rhythm, visual weight balance"
+
+  workflow:
+    step_1: "Take screenshot of implemented page(s)"
+    step_2: "Invoke Skill: refactoring-ui for scoring (0-10)"
+    step_3: "Check 7 principles: hierarchy, spacing, color, typography, depth, layout, details"
+    step_4: "If score < 8 → fix issues identified by refactoring-ui"
+    step_5: "Re-verify fixed elements against Figma (section 8b)"
+
+  what_it_catches:
+    - "Wrong visual hierarchy (all text same weight/size)"
+    - "Inconsistent spacing rhythm (8px here, 13px there)"
+    - "Label-value hierarchy wrong (label bigger than value)"
+    - "Too dense or too sparse layout"
+    - "Button hierarchy missing (all buttons same style)"
+    - "Shadows/depth inconsistent"
+```
+
+---
+
+## 8d. Icon Extraction
 
 ```yaml
   icon_extraction:
