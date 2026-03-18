@@ -74,11 +74,19 @@ implement:
   order: "Parts in dependency order from plan"
 
   for_each_part:
-    step_1: "Implement code changes per plan"
-    step_2: "Run tech_stack_adapter lint command"
-    step_3: "Run tech_stack_adapter test command"
-    step_4: "If fail → fix → retry"
+    step_1: "If part has UI/CSS → run Figma Extract (section 8) for EVERY element in this part"
+    step_2: "Implement code changes per plan using extracted values"
+    step_3: "If part has UI/CSS → run Figma Self-Verify (section 8b) — compare EVERY CSS property against Figma"
+    step_4: "Run tech_stack_adapter lint command"
+    step_5: "Run tech_stack_adapter test command"
+    step_6: "If verify/lint/test fail → fix → retry"
     max_retries_per_part: 3
+
+    CRITICAL: |
+      Steps 1 and 3 are MANDATORY for any part that touches CSS/SCSS/HTML templates.
+      Do NOT skip step 3 — this is the verification that prevents "approximate CSS" bugs.
+      The loop is: extract → write → verify → fix → next component.
+      NEVER move to the next part until ALL elements in current part pass Figma verification.
 
   rules:
     - "Implement ONLY what is in the plan"
@@ -214,6 +222,86 @@ figma_implementation:
     - "When Figma shows auto-layout → use flexbox with exact gap values"
     - "When Figma shows fixed dimensions → use exact px unless responsive context requires otherwise"
 
+```
+
+---
+
+## 8b. Figma Self-Verify (MANDATORY after writing CSS)
+
+```yaml
+figma_self_verify:
+  CRITICAL: |
+    After implementing CSS for EACH component, IMMEDIATELY verify every property
+    against Figma BEFORE moving to the next component.
+    This step catches the #1 problem: agents writing approximate CSS instead of exact values.
+
+  when: "After writing CSS/SCSS for any UI component"
+  trigger: "Runs inside for_each_part step_3"
+
+  workflow:
+    for_each_element_in_part:
+      step_1_recheck_figma:
+        action: "Call get_design_context(fileKey, nodeId) again for this element"
+        purpose: "Get authoritative CSS values (may have been lost from context)"
+
+      step_2_read_written_css:
+        action: "Read the SCSS/CSS you just wrote for this element"
+        how: "Read the .scss/.css file, find the selector for this element"
+
+      step_3_compare_property_by_property:
+        action: "Compare EVERY property from extraction_checklist"
+        checklist:
+          - "font-family: Figma says {X} → code has {Y} → MATCH/MISMATCH"
+          - "font-size: Figma says {X}px → code has {Y}px → MATCH/MISMATCH"
+          - "font-weight: Figma says {X} → code has {Y} → MATCH/MISMATCH"
+          - "line-height: Figma says {X}px → code has {Y}px → MATCH/MISMATCH"
+          - "letter-spacing: Figma says {X}px → code has {Y} → MATCH/MISMATCH"
+          - "color: Figma says {hex} → code has {var/hex} → MATCH/MISMATCH"
+          - "padding: Figma says {T R B L}px → code has {values} → MATCH/MISMATCH"
+          - "margin: Figma says {T R B L}px → code has {values} → MATCH/MISMATCH"
+          - "gap: Figma says {X}px → code has {Y}px → MATCH/MISMATCH"
+          - "width/height: Figma says {X}px → code has {Y} → MATCH/MISMATCH"
+          - "border-radius: Figma says {X}px → code has {Y}px → MATCH/MISMATCH"
+          - "background-color: Figma says {hex} → code has {var/hex} → MATCH/MISMATCH"
+          - "border: Figma says {width style color} → code has {values} → MATCH/MISMATCH"
+          - "box-shadow: Figma says {values} → code has {values} → MATCH/MISMATCH"
+          - "opacity: Figma says {X} → code has {Y} → MATCH/MISMATCH"
+
+      step_4_fix_mismatches:
+        action: "For each MISMATCH → fix immediately"
+        rule: "Use Figma value, not your approximation"
+
+      step_5_log_verification:
+        action: "Write verification result to docs/plans/{task-key}/figma-verify.md"
+        format: |
+          ## {component_name}
+          | Property | Figma | Code | Match |
+          |----------|-------|------|-------|
+          | font-size | 16px | 16px | YES |
+          | font-weight | 700 | 600 | FIXED → 700 |
+          | padding | 24px 32px | 20px 24px | FIXED → 24px 32px |
+          | color | #1A1A2E | $text-primary (#1A1A2E) | YES |
+
+  tolerance:
+    size: "±0px for exact values, ±1px only for computed/inherited"
+    color: "exact match (hex must resolve to same value)"
+    font_weight: "exact match (700 ≠ 600, bold ≠ semibold)"
+    spacing: "±0px — padding and margin must be exact"
+    border_radius: "exact match"
+
+  blocking_rule: |
+    Do NOT proceed to the next component/part if current component has unresolved mismatches.
+    The ONLY acceptable mismatches:
+    - Responsive adjustments explicitly noted in plan
+    - Project variable maps to a different but intentionally equivalent value
+    All other mismatches MUST be fixed before moving on.
+```
+
+---
+
+## 8c. Icon Extraction
+
+```yaml
   icon_extraction:
     CRITICAL: "NEVER draw SVG icons manually — always source from Figma or designer"
     problem: |
