@@ -39,33 +39,55 @@ test_planning:
     output: "test scenarios"
 
   step_2:
-    action: "Generate test plan"
+    action: "Generate test plan using qa-test-planner + qa-playbook"
+    inputs:
+      - "AC from task (via task-source adapter)"
+      - ".claude/qa-playbook.md (if exists) → credentials, edge cases, fragile areas"
+      - ".claude/project-practices.md (if exists) → known bugs, patterns"
+      - "Figma Node Map from plan (if exists)"
     output_path: "docs/plans/{task-key}/ui-test-plan.md"
-    covers:
-      functional:
-        - "Click interactions (buttons, links, toggles)"
-        - "Input behavior (forms, validation, submission)"
-        - "Navigation (routing, back/forward)"
-      state:
-        - "Loading state"
-        - "Error state"
-        - "Empty state"
-        - "Populated state"
-      visual:
-        - "Screen-to-Figma frame mapping"
-        - "Comparison points per screen"
 
-  test_case_format: |
-    Functional tests (F1-F8 style):
-    - F1: Navigate to /profile → page loads, header shows username
-    - F2: Click "Edit" button → edit form appears
-    - F3: Clear "Name" field, submit → validation error shown
-    - F4: Fill valid data, submit → success snackbar, data saved
+    CRITICAL: |
+      Test cases are generated from AC + project context, NOT from a fixed list.
+      Use Skill: qa-test-planner to generate comprehensive test scenarios.
+      Group test cases into PARALLEL AGENT GROUPS — each group runs as a separate agent.
 
-    Visual tests (V1-V5 style):
-    - V1: Profile page (desktop) → compare with Figma frame "Profile Desktop"
-    - V2: Profile page (mobile 375px) → compare with Figma frame "Profile Mobile"
-    - V3: Edit modal → compare with Figma frame "Edit Profile Modal"
+    grouping_strategy: |
+      Group test cases by independence (tests that don't share state):
+      - Group by page/feature (tests on /search are independent from /profile)
+      - Group by test type (functional vs visual vs edge cases)
+      - Each group = one parallel agent
+      - Max 10 agents (avoid OOM)
+
+    test_plan_format: |
+      ## Test Plan: {task-key}
+
+      ### Agent Groups
+      | # | Agent Name | Test Cases | Type |
+      |---|-----------|-----------|------|
+      | 1 | QA: Search functional | F1-F4 | functional |
+      | 2 | QA: Search visual | V1-V2 | visual (Figma) |
+      | 3 | QA: Search edge cases | E1-E3 | edge cases |
+      | 4 | QA: Mobile responsive | M1-M2 | responsive |
+
+      ### Test Cases
+      Functional (F1-F8 style):
+      - F1: Navigate to /search → page loads, search input visible
+      - F2: Type "test" → results update, playlists filtered
+      - F3: Clear search → all results shown
+
+      Visual (V1-V5 style):
+      - V1: Search page (desktop) → compare with Figma frame
+      - V2: Search results card → per-element Figma check
+
+      Edge Cases (E1-E5 style, from qa-playbook):
+      - E1: Search with cyrillic "тест" → results correct
+      - E2: Search with empty string → no crash
+      - E3: Search with 500+ chars → graceful handling
+
+      Mobile (M1-M3 style):
+      - M1: Search page at 375px → responsive layout
+      - M2: Search page at 768px → tablet layout
 ```
 
 ---
@@ -88,22 +110,51 @@ fallback_ports: [4200, 6200, 3000, 8080]
 
 ```yaml
 parallel_agents:
-  functional_tester:
-    description: "Functional UI testing via agent-browser"
-    model: sonnet
-    run_as: "Agent(subagent)"
+  CRITICAL: |
+    Dispatch N agents IN PARALLEL — one per Agent Group from test plan.
+    Use Skill: superpowers:dispatching-parallel-agents for parallel launch.
+    Each agent gets: group name, test cases, credentials, app_url.
+
+  dispatch:
+    for_each: "Agent Group in ui-test-plan.md"
+    launch: "Agent(subagent, model: sonnet)"
     skill: "agent-browser"
+    parallel: true
+    max_agents: 10
+
+  per_agent_prompt: |
+    You are QA agent "{group_name}".
+    App URL: {app_url}
+    Credentials: {from qa-playbook or task}
+
+    Your test cases:
+    {test_cases_for_this_group}
+
+    For each test case:
+    1. agent-browser open {url}
+    2. agent-browser snapshot -i
+    3. Execute test steps (click, fill, verify)
+    4. Take screenshot: docs/plans/{task-key}/screenshots/{test_id}.png
+    5. Record: PASS / FAIL with details
+
+    Auth: use nativeInputValueSetter for Angular form inputs.
+    Report format:
+    | Test ID | Description | Result | Screenshot | Notes |
+
+  functional_agent:
+    description: "Functional UI testing via agent-browser"
+    test_types: [functional, edge_cases]
     setup:
       - "Navigate to app_url"
-      - "If login required: use credentials from task (extracted by jira adapter)"
-      - "For input fields, use nativeInputValueSetter pattern (Angular forms don't respond to .value=)"
+      - "If login required: use credentials from qa-playbook or task"
+      - "For input fields, use nativeInputValueSetter pattern (Angular forms)"
 
     execution:
-      - "For each test scenario in ui-test-plan.md:"
+      - "For each test case in this group:"
       - "  Navigate to page"
       - "  Execute actions (click, type, select)"
       - "  Verify expected result"
-      - "  Take screenshot: docs/plans/{task-key}/screenshots/F{N}-{name}.png"
+      - "  Take screenshot: docs/plans/{task-key}/screenshots/{test_id}.png"
 
     tips:
       - "Use CSS selectors, not XPath"
