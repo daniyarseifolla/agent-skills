@@ -195,6 +195,20 @@ figma_implementation:
     3. Write CSS using these exact values (mapped to project variables where possible)
     4. NEVER guess or approximate values — always extract from Figma
 
+  LAYOUT_RULE: |
+    NEVER guess flex-direction, justify-content, align-items, gap, padding for ANY container.
+    For EVERY container/wrapper element, call get_design_context and read:
+    - Auto-layout horizontal → flex-direction: row
+    - Auto-layout vertical → flex-direction: column
+    - If Figma shows NO auto-layout → do NOT add flexbox
+    - gap value → exact px from Figma, not your assumption
+    - padding → exact values per side from Figma
+    - align-items / justify-content → from Figma alignment settings
+
+    Common mistake: agent assumes flex-direction: column when Figma shows row.
+    Rule: if Figma doesn't explicitly show column layout → it's row (default).
+    Do NOT "think it looks like column" — READ the Figma node.
+
   workflow_per_element:
     step_1: "Read plan → get Figma node-id for the element"
     step_2: "Call get_design_context(fileKey, nodeId) → extract code hints + screenshot"
