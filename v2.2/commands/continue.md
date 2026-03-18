@@ -1,5 +1,5 @@
 ---
-description: "Resume interrupted pipeline from last checkpoint. Usage: /resume ARGO-12345"
+description: "Continue interrupted pipeline from last checkpoint. Usage: /continue ARGO-12345"
 ---
 
 # Resume Pipeline
