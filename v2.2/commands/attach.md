@@ -80,11 +80,19 @@ If no Figma Node Map and Figma URLs exist:
 
 ### Phase 2-5: Run Missing Phases
 
+CRITICAL: Use OUR commands, NOT superpowers or feature-dev skills.
+Each command below invokes our pipeline skills with OWASP security, plan compliance, and Figma verification.
+
 Only run phases that haven't been done:
-- **Plan review** → if no docs/plans/{task-key}/plan-review.md
-- **Code review** → if no docs/plans/{task-key}/code-review.md → /review
-- **UI review** → if no docs/plans/{task-key}/ui-review.md AND Figma URLs exist → /ui-review
-- **Figma verify** → if no docs/plans/{task-key}/figma-verify.md → /verify-figma
+- **Plan review** → if no plan-review.md → Load Skill: pipeline-plan-reviewer (NOT superpowers:code-reviewer)
+- **Code review** → if no code-review.md → Load Skill: pipeline-code-reviewer (NOT superpowers:code-reviewer)
+- **UI review** → if no ui-review.md AND Figma URLs exist → Load Skill: pipeline-ui-reviewer
+- **Figma verify** → if no figma-verify.md → Load Skill: pipeline-coder (section 8b: Figma Self-Verify)
+
+DO NOT use:
+- superpowers:code-reviewer (generic, no OWASP, no plan compliance)
+- superpowers:requesting-code-review (different purpose)
+- feature-dev:code-reviewer (disabled, conflicts with ours)
 
 ### Phase 6: Save Checkpoint
 
