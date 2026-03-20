@@ -120,6 +120,7 @@ steps:
       - parts: "Implementation parts in dependency order"
       - ac_mapping: "AC -> implementation part(s)"
       - test_plan: "What to test, how"
+      - "Component states (for each UI component: which states to implement)"
       - config_changes: "Environment, routing, module config (if any)"
 
   step_6_checklist:
@@ -193,6 +194,7 @@ plan_template:
     - Files: {list}
     - AC: {mapped AC numbers}
     - Figma nodes: {node-ids from Figma Node Map for this part}
+    - States: {list ALL states needed: default, hover, disabled, loading, empty, error}
     - Dependencies: {other parts}
     - Details: {what to implement}
 

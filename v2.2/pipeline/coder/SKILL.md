@@ -390,6 +390,111 @@ ui_quality_check:
 
 ---
 
+## 8e. UI Implementation Rules
+
+```yaml
+ui_rules:
+  portal_overlay:
+    rule: "Any menu, dropdown, tooltip, popover, or modal triggered by click MUST use portal/overlay"
+    why: "Without portal, overlay clips by parent overflow:hidden"
+    implementation:
+      angular: "Use Angular CDK Overlay (@angular/cdk/overlay) or ask user for preferred approach"
+      action: "ASK user: use CDK Overlay, PrimeNG OverlayPanel, or custom portal?"
+    severity: BLOCKER
+
+  missing_states:
+    rule: "For EVERY interactive component, verify ALL states exist"
+    required_states:
+      - "default — normal resting state"
+      - "hover — mouse over"
+      - "active/pressed — during click"
+      - "focus-visible — keyboard focus"
+      - "disabled — non-interactive"
+      - "loading — async operation in progress"
+      - "empty — no data"
+      - "error — validation or API error"
+      - "selected — item chosen (if applicable)"
+    workflow:
+      step_1: "Check Figma for each state — does a frame exist?"
+      step_2: "If state missing in Figma → ASK user: implement default behavior or skip?"
+      step_3: "If user says 'придумай' → generate reasonable states from project patterns"
+    severity: MAJOR
+
+  transitions:
+    rule: "Every interactive element MUST have CSS transition"
+    defaults:
+      hover: "transition: background-color 200ms ease, color 200ms ease"
+      focus: "transition: box-shadow 200ms ease, outline 200ms ease"
+      expand: "transition: height 300ms ease, opacity 200ms ease"
+    never: "transition: all (too broad, causes layout jank)"
+    duration: "200-300ms for UI interactions, never 0ms, never >500ms"
+    severity: MINOR
+
+  hidden_fields:
+    rule: "Hidden/collapsed elements must use correct CSS"
+    patterns:
+      visually_hidden: "display: none or visibility: hidden — NOT opacity: 0"
+      collapsed: "height: 0 + overflow: hidden + transition — for animated collapse"
+      offscreen: "position: absolute; left: -9999px — for screen-reader-only content"
+    never: "opacity: 0 without pointer-events: none (invisible but clickable = bug)"
+    severity: MAJOR
+
+  focus_states:
+    rule: "Every interactive element MUST have visible :focus-visible"
+    default: "outline: 2px solid var(--color-focus, #4A90D9); outline-offset: 2px"
+    never: "outline: none without replacement (breaks keyboard navigation)"
+    severity: MAJOR
+
+  z_index:
+    rule: "Never hardcode z-index: 9999. Use project scale."
+    scale: "base(1) < dropdown(100) < modal(200) < toast(300) < tooltip(400)"
+    prefer: "CSS variables: var(--z-dropdown), var(--z-modal), etc."
+    severity: MINOR
+
+  overflow_text:
+    rule: "Long text MUST have overflow handling"
+    patterns:
+      single_line: "white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+      multi_line: "display: -webkit-box; -webkit-line-clamp: N; overflow: hidden"
+      scrollable: "overflow-y: auto; max-height: Npx"
+    severity: MINOR
+
+  cursor:
+    rule: "Correct cursor for element state"
+    map:
+      clickable: "cursor: pointer"
+      disabled: "cursor: not-allowed"
+      text_input: "cursor: text"
+      draggable: "cursor: grab / cursor: grabbing"
+      loading: "cursor: wait"
+    severity: MINOR
+
+  responsive:
+    rule: "If Figma has mobile/tablet frames → implement responsive"
+    action: "Check Figma for breakpoint variants. If none → ask user"
+    severity: MAJOR
+
+  skeleton_loading:
+    rule: "Components that load async data MUST have loading state"
+    options:
+      - "Skeleton placeholder (preferred for content areas)"
+      - "Spinner (for buttons, small actions)"
+      - "Progress bar (for uploads, long operations)"
+    severity: MAJOR
+
+  animation_duration:
+    rule: "Standard durations for UI animations"
+    scale:
+      instant: "100ms — micro-interactions (button press)"
+      fast: "200ms — hover, focus, color changes"
+      normal: "300ms — expand/collapse, slide"
+      slow: "500ms — page transitions, complex animations"
+    never: "0ms (jarring) or >1000ms (feels broken)"
+    severity: MINOR
+```
+
+---
+
 ## 9. CSS Architecture
 
 ```yaml

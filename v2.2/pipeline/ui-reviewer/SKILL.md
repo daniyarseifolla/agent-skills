@@ -244,6 +244,47 @@ parallel_agents:
 
 ---
 
+## 3b. Missing States Audit
+
+```yaml
+missing_states_audit:
+  CRITICAL: |
+    For EVERY interactive component on the page, check if ALL required states are implemented.
+    This catches the #2 most common issue: components with only default state.
+
+  required_states:
+    button: [default, hover, active, focus-visible, disabled, loading]
+    input: [default, hover, focus, filled, error, disabled]
+    link: [default, hover, active, focus-visible, visited]
+    dropdown: [closed, open, item-hover, item-selected, disabled]
+    card: [default, hover, selected (if selectable)]
+    modal: [opening-animation, open, closing-animation]
+    checkbox: [unchecked, checked, indeterminate, disabled]
+    toggle: [off, on, disabled]
+
+  workflow:
+    step_1: "List all interactive components on the page"
+    step_2: "For each component, check Figma for state frames"
+    step_3: "For each component, check code for state CSS (:hover, :focus-visible, :disabled, .loading, etc.)"
+    step_4: "Report missing states"
+
+  output: |
+    | Component | State | Figma | Code | Status |
+    |-----------|-------|-------|------|--------|
+    | Save button | hover | YES | YES | OK |
+    | Save button | loading | NO | NO | MISSING — add spinner |
+    | Search input | error | YES | NO | MISSING — add error style |
+
+  severity:
+    no_hover: MAJOR
+    no_focus_visible: MAJOR
+    no_disabled: MINOR
+    no_loading: MAJOR (if async)
+    no_error: MAJOR (if validates)
+```
+
+---
+
 ## 4. Component Reuse Check
 
 ```yaml
