@@ -83,16 +83,33 @@ If no Figma Node Map and Figma URLs exist:
 CRITICAL: Use OUR commands, NOT superpowers or feature-dev skills.
 Each command below invokes our pipeline skills with OWASP security, plan compliance, and Figma verification.
 
-Only run phases that haven't been done:
-- **Plan review** → if no plan-review.md → Load Skill: pipeline-plan-reviewer (NOT superpowers:code-reviewer)
-- **Code review** → if no code-review.md → Load Skill: pipeline-code-reviewer (NOT superpowers:code-reviewer)
-- **UI review** → if no ui-review.md AND Figma URLs exist → Load Skill: pipeline-ui-reviewer
-- **Figma verify** → if no figma-verify.md → Load Skill: pipeline-coder (section 8b: Figma Self-Verify)
+Only run phases that haven't been done.
 
-DO NOT use:
-- superpowers:code-reviewer (generic, no OWASP, no plan compliance)
-- superpowers:requesting-code-review (different purpose)
-- feature-dev:code-reviewer (disabled, conflicts with ours)
+IMPORTANT: Use the Skill tool (not Agent tool) to load each skill.
+Skills are NOT agent types — they are loaded via `Skill("skill-name")`.
+
+- **Plan review** → if no plan-review.md:
+  1. Use the Skill tool to load "pipeline-plan-reviewer"
+  2. Follow the loaded skill instructions to review the plan
+  3. Save output to docs/plans/{task-key}/plan-review.md
+
+- **Code review** → if no code-review.md:
+  1. Use the Skill tool to load "pipeline-code-reviewer"
+  2. Follow the loaded skill instructions (standalone mode: detect branch, find plan, run review)
+  3. Save output to docs/plans/{task-key}/code-review.md
+
+- **UI review** → if no ui-review.md AND Figma URLs exist:
+  1. Use the Skill tool to load "pipeline-ui-reviewer"
+  2. Follow the loaded skill instructions (standalone mode)
+  3. Save output to docs/plans/{task-key}/ui-review.md
+
+- **Figma verify** → if no figma-verify.md:
+  1. Use the Skill tool to load "pipeline-coder"
+  2. Execute ONLY section 8b (Figma Self-Verify) — do NOT implement new code
+  3. Save output to docs/plans/{task-key}/figma-verify.md
+
+NEVER use Agent tool with subagent_type for these — they are skills, not agent types.
+NEVER use: superpowers:code-reviewer, feature-dev:code-reviewer, or any agent type containing "code-reviewer".
 
 ### Phase 6: Save Checkpoint
 
