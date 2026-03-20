@@ -34,12 +34,19 @@ input:
 ```yaml
 test_planning:
   step_1:
-    action: "Invoke Skill: brainstorming"
-    input: "branch changes + figma_urls + task AC"
-    output: "test scenarios"
+    action: "Invoke Skill: qa-test-planner to generate comprehensive test cases"
+    input: "branch changes + figma_urls + task AC + .claude/qa-playbook.md"
+    output: "test cases grouped by type (functional, visual, edge, mobile, states)"
+    note: "qa-test-planner generates manual test cases, regression suites, and bug scenarios"
+
+  step_1b:
+    action: "Invoke Skill: ui-ux-pro-max for UX review checklist"
+    input: "page screenshots or component list"
+    output: "UX issues found (interaction states, accessibility, visual hierarchy)"
+    skip_if: "no screenshots available yet"
 
   step_2:
-    action: "Generate test plan using qa-test-planner + qa-playbook"
+    action: "Merge qa-test-planner output + ui-ux-pro-max findings + qa-playbook into test plan"
     inputs:
       - "AC from task (via task-source adapter)"
       - ".claude/qa-playbook.md (if exists) → credentials, edge cases, fragile areas"

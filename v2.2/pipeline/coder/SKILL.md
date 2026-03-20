@@ -343,9 +343,10 @@ ui_quality_check:
   workflow:
     step_1: "Take screenshot of implemented page(s)"
     step_2: "Invoke Skill: refactoring-ui for scoring (0-10)"
-    step_3: "Check 7 principles: hierarchy, spacing, color, typography, depth, layout, details"
-    step_4: "If score < 8 → fix issues identified by refactoring-ui"
-    step_5: "Re-verify fixed elements against Figma (section 8b)"
+    step_3: "Invoke Skill: ui-ux-pro-max — review existing UI for UX issues (interaction states, a11y, guidelines)"
+    step_4: "Check combined: hierarchy, spacing, color, typography, depth, layout, interaction states"
+    step_5: "If refactoring-ui score < 8 OR ui-ux-pro-max finds issues → fix"
+    step_6: "Re-verify fixed elements against Figma (section 8b)"
 
   what_it_catches:
     - "Wrong visual hierarchy (all text same weight/size)"
