@@ -39,6 +39,27 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 - [ ] **27. core-security: add modern threats** → prototype pollution, SSRF, open redirect, CSP, CORS checks
 - [ ] **28. core-metrics: add aggregation implementation** → remove "future" placeholder or implement
 
+## ORCHESTRATION — From swarm-coordination review (2026-03-23)
+
+- [ ] **29. Add Iron Laws to core-orchestration** — 5 rules from swarm-coordination:
+  1. Never spawn workers sequentially (parallel if independent)
+  2. Always detect failures (structured error reporting, not silence = ok)
+  3. No cross-worker communication (everything through orchestrator)
+  4. Structured handoff required (mandatory template with Context/Findings/Recommendations/Artifacts)
+  5. Max 7 workers per fan-out (reduce from current max 10 in ui-reviewer)
+
+- [ ] **30. Add task classification to core-orchestration** — classify phases as:
+  - Independent (can parallel): code-review + ui-review
+  - Dependent (sequential): plan → plan-review, code → code-review
+  - Fan-out/Fan-in: ui-reviewer test groups
+  - Pipeline: the overall planner → coder → reviewer chain
+
+- [ ] **31. Parallelize Phase 4 + Phase 5** — code-review and ui-review are independent, can run simultaneously. Worker currently runs them sequentially.
+
+- [ ] **32. Structured agent error reporting** — every subagent must return `{ status: success|fail, findings: [], errors: [] }`, not free text. Worker must check status before proceeding.
+
+- [ ] **33. Aggregation template for multi-agent results** — when fan-out agents complete, merge results into: consensus points, conflicts, combined recommendations.
+
 ## Notes
 
 - pipeline-code-researcher scored 9/10, plan-reviewer 8.5/10 — don't touch these
