@@ -21,4 +21,4 @@ Worktree: {path or "main repo"}
 Last update: {timestamp}
 ```
 
-If phase < 6 → suggest: "Resume with /resume {task_key}"
+If phase < 6 → suggest: "Resume with /continue {task_key}"

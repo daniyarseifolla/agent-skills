@@ -117,7 +117,7 @@ implement:
 
   L_XL_research:
     when: "Stuck on implementation detail for L/XL tasks"
-    action: "Dispatch pipeline-code-researcher via Task tool"
+    action: "Dispatch pipeline-code-researcher via Agent tool"
     purpose: "Find patterns, imports, existing code to reference"
 ```
 
@@ -540,7 +540,7 @@ component_reuse:
 
 ---
 
-## 10. Library Code
+## 11. Library Code
 
 ```yaml
 library_code:

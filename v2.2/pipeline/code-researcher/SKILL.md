@@ -1,6 +1,6 @@
 ---
 name: pipeline-code-researcher
-description: "Read-only codebase exploration agent. Uses haiku for cheap, fast search. Returns structured summary <=2000 tokens. Invoked via Task tool by planner or coder for L/XL tasks."
+description: "Read-only codebase exploration agent. Uses haiku for cheap, fast search. Returns structured summary <=2000 tokens. Invoked via Agent tool by planner or coder for L/XL tasks."
 model: haiku
 allowed-tools: Read, Glob, Grep, Bash(git log *), Bash(git show *), Bash(git diff *)
 ---

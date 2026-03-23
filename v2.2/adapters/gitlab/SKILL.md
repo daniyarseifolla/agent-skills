@@ -147,7 +147,7 @@ command: |
 
 ---
 
-## 6. create_tag(tag_name, ref)
+## 8. create_tag(tag_name, ref)
 
 ```yaml
 command: |
@@ -158,7 +158,7 @@ use_case: "production releases"
 
 ---
 
-## 7. branch_management
+## 9. branch_management
 
 ```yaml
 create_branch:
@@ -174,7 +174,7 @@ delete_branch:
 
 ---
 
-## 8. get_job_log(job_id, tail_lines)
+## 10. get_job_log(job_id, tail_lines)
 
 ```yaml
 defaults:
@@ -188,7 +188,7 @@ use_case: "diagnosing pipeline failures"
 
 ---
 
-## 9. community_sync
+## 11. community_sync
 
 Cherry-pick distribution across community branches.
 
@@ -218,7 +218,7 @@ rate_limiting:
 
 ---
 
-## 10. Python JSON Parsing Helper
+## 12. Python JSON Parsing Helper
 
 glab api outputs extra text alongside JSON. Always use Python to extract:
 
@@ -235,7 +235,7 @@ WHY: glab API responses include headers/debug text mixed with JSON. Direct JSON 
 
 ---
 
-## 11. Rollback Workflow
+## 13. Rollback Workflow
 
 ```yaml
 rollback:
@@ -249,7 +249,7 @@ rollback:
 
 ---
 
-## 12. Error Handling Patterns
+## 14. Error Handling Patterns
 
 ```yaml
 error_handling:
@@ -283,7 +283,7 @@ error_handling:
 
 ---
 
-## 13. Pipeline Stages Reference
+## 15. Pipeline Stages Reference
 
 ```yaml
 stages_reference:
@@ -293,7 +293,7 @@ stages_reference:
 
 ---
 
-## 14. Useful Commands
+## 16. Useful Commands
 
 ```yaml
 useful_commands:

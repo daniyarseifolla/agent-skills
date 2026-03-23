@@ -1,4 +1,4 @@
-# Agent Skills v2.0 — Overview
+# Agent Skills v2.2 — Overview
 
 ## Architecture
 
@@ -8,9 +8,9 @@ User triggers                    Pipeline (project-agnostic)           Core (inv
 facades/jira-worker  ──┐
 facades/deploy       ──┤         pipeline/worker (orchestrator)       core/orchestration
 facades/community-sync ┤           ├─ pipeline/planner     (opus)     core/security
-facades/scan-ui-inv  ──┘           ├─ pipeline/plan-reviewer (sonnet)  core/metrics
-                                   ├─ pipeline/coder       (sonnet)
-                                   ├─ pipeline/code-reviewer (sonnet)
+facades/scan-ui-inv  ──┤           ├─ pipeline/plan-reviewer (sonnet)  core/metrics
+facades/scan-qa-pb   ──┤           ├─ pipeline/coder       (sonnet)
+facades/scan-practices ┘           ├─ pipeline/code-reviewer (sonnet)
                                    ├─ pipeline/ui-reviewer  (sonnet)
                                    └─ pipeline/code-researcher (haiku)
 
@@ -28,7 +28,7 @@ facades/scan-ui-inv  ──┘           ├─ pipeline/plan-reviewer (sonnet) 
 
 | Skill | Lines | Purpose |
 |-------|-------|---------|
-| core/orchestration | 219 | Handoff, checkpoints, recovery, loop limits, evaluate gate, complexity routing, re-routing |
+| core/orchestration | 221 | Handoff, checkpoints, recovery, loop limits, evaluate gate, complexity routing, re-routing |
 | core/security | 187 | OWASP security checklist with grep patterns (XSS, injection, auth, secrets, CSRF) |
 | core/metrics | 113 | Pipeline metrics collection and storage |
 
@@ -36,22 +36,22 @@ facades/scan-ui-inv  ──┘           ├─ pipeline/plan-reviewer (sonnet) 
 
 | Skill | Lines | Model | Run as | Purpose |
 |-------|-------|-------|--------|---------|
-| pipeline/worker | 237 | — | inline | Orchestrator: config, adapters, phases, checkpoints |
-| pipeline/planner | 194 | opus | inline | Research codebase, create plan |
-| pipeline/coder | 153 | sonnet | inline | Evaluate gate + implement code |
+| pipeline/worker | 388 | — | inline | Orchestrator: config, adapters, phases, checkpoints |
+| pipeline/planner | 264 | opus | inline | Research codebase, create plan |
+| pipeline/coder | 548 | sonnet | inline | Evaluate gate + implement code |
 | pipeline/plan-reviewer | 164 | sonnet | subagent | Validate plan against AC and architecture |
-| pipeline/code-reviewer | 194 | sonnet | subagent/worktree | Review diff: plan compliance, security, quality |
-| pipeline/ui-reviewer | 155 | sonnet | subagent | Functional + visual testing |
-| pipeline/code-researcher | 101 | haiku | Task tool | Cheap read-only codebase search (L/XL only) |
+| pipeline/code-reviewer | 219 | sonnet | subagent/worktree | Review diff: plan compliance, security, quality |
+| pipeline/ui-reviewer | 362 | sonnet | subagent | Functional + visual testing, parallel QA |
+| pipeline/code-researcher | 101 | haiku | Agent tool | Cheap read-only codebase search (L/XL only) |
 
 ### Adapters (swappable per project)
 
 | Skill | Lines | Type | Purpose |
 |-------|-------|------|---------|
-| adapters/jira | 149 | task-source | Fetch task, parse AC, transitions, MR description |
-| adapters/gitlab | 171 | ci-cd | MR creation, pipeline monitoring, deploy, cherry-pick |
-| adapters/angular | 162 | tech-stack | Lint/test/build commands, quality patterns, module lookup |
-| adapters/figma | 145 | design | Design context, screenshots, visual comparison |
+| adapters/jira | 178 | task-source | Fetch task, parse AC, transitions, MR description |
+| adapters/gitlab | 304 | ci-cd | MR creation, pipeline monitoring, deploy, cherry-pick, CI disable/restore |
+| adapters/angular | 229 | tech-stack | Lint/test/build commands, quality patterns, module lookup |
+| adapters/figma | 156 | design | Design context, screenshots, visual comparison, self-verify extraction |
 
 ### Facades (user-facing entry points)
 
@@ -59,8 +59,29 @@ facades/scan-ui-inv  ──┘           ├─ pipeline/plan-reviewer (sonnet) 
 |-------|-------|----------|
 | facades/jira-worker | 45 | ARGO-XXX, "сделай задачу", "возьми тикет", "implement" |
 | facades/deploy | 34 | "задеплой", "deploy to test/prod", "check pipeline" |
-| facades/community-sync | 51 | "обновить ветки", "sync branches", "distribute commit" |
-| facades/scan-ui-inventory | 62 | "скан UI", "scan components", "обнови инвентарь" |
+| facades/community-sync | 179 | "обновить ветки", "sync branches", "distribute commit" |
+| facades/scan-ui-inventory | 132 | "скан UI", "scan components", "обнови инвентарь" |
+| facades/scan-qa-playbook | 211 | "скан QA", "scan QA", "сгенерируй playbook", "generate playbook" |
+| facades/scan-practices | 149 | "скан практик", "scan practices", "обнови практики", "собери грабли" |
+
+### Commands (14 slash commands)
+
+| Command | Lines | Trigger |
+|---------|-------|---------|
+| /worker | 13 | Start full pipeline |
+| /plan | 14 | Run planner only |
+| /cr | 15 | Code review current diff |
+| /ui-review | 13 | UI review current state |
+| /deploy | 14 | Deploy to environment |
+| /sync | 11 | Sync community branches |
+| /scan | 9 | Scan UI inventory |
+| /scan-qa | 9 | Generate QA playbook |
+| /scan-practices | 9 | Scan project practices |
+| /attach | 131 | Attach context (files, URLs, Figma) |
+| /verify-figma | 53 | Verify Figma-to-code fidelity |
+| /progress | 24 | Show pipeline progress |
+| /continue | 16 | Resume from checkpoint |
+| /cleanup | 18 | Clean up worktrees and branches |
 
 ## Model Routing
 
@@ -79,12 +100,13 @@ facades/scan-ui-inv  ──┘           ├─ pipeline/plan-reviewer (sonnet) 
 | L | 5-6 | 3+ | standard | yes | yes | recommended |
 | XL | 7+ | 4+ | standard | yes | yes | required |
 
-## What's New in v2.0
+## What's New in v2.2
 
-| Feature | v1.0 | v2.0 |
+| Feature | v1.0 | v2.2 |
 |---------|------|------|
-| Skills | 8 monolithic | 18 focused |
-| Max lines/skill | 443 | 237 |
+| Skills | 8 monolithic | 20 focused |
+| Commands | — | 14 slash commands |
+| Max lines/skill | 443 | 548 |
 | Model routing | none | opus/sonnet/haiku |
 | Security checks | none | OWASP checklist |
 | Session recovery | none | checkpoint + heuristic |
@@ -93,14 +115,23 @@ facades/scan-ui-inv  ──┘           ├─ pipeline/plan-reviewer (sonnet) 
 | Project-agnostic | no | yes (adapter pattern) |
 | Complexity levels | 2 | 4 |
 | Metrics | none | collected at completion |
+| CI on feature branches | always on | disable/restore around work |
+| Worktree safety | none | isolated review in worktrees |
+| Figma fidelity | manual | self-verify post-write |
+| UI rules | none | refactoring-ui enforced |
+| QA approach | single pass | parallel QA (visual + functional) |
+| QA playbook | none | scan-qa-playbook facade |
+| Project practices | none | scan-practices facade |
 
-## External Skill Integration (v2.1)
+## External Skill Dependencies
 
 | External Skill | Used by | Purpose |
 |---------------|---------|---------|
 | visual-qa | pipeline/ui-reviewer | Screenshot-based QA: spacing rhythm, alignment, typography consistency, polish |
 | css-styling-expert | pipeline/coder | CSS architecture: Grid/Flex decisions, responsive, performance, accessibility |
-| figma:implement-design | pipeline/coder | 1:1 Figma-to-code for UI components |
+| refactoring-ui | pipeline/coder, pipeline/ui-reviewer | UI design rules: spacing, typography, color, layout patterns |
+| qa-test-planner | pipeline/plan-reviewer | Test strategy, edge cases, risk analysis |
+| ui-ux-pro-max | pipeline/ui-reviewer | Advanced UI/UX review: micro-interactions, accessibility, design system compliance |
 
 ## Adapter Contracts
 
@@ -117,7 +148,7 @@ design:          parse_urls, get_design, get_screenshot, compare_visual, extract
 
 ```yaml
 # .claude/project.yaml
-version: "2.0"
+version: "2.2"
 task-source: jira
 ci-cd: gitlab
 tech-stack: angular

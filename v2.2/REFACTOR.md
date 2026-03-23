@@ -4,12 +4,12 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 
 ## HIGH — Must fix
 
-- [ ] **1. `/review` conflicts with Claude Code built-in** → rename to `/code-review` or `/cr`
+- [x] **1. `/review` conflicts with Claude Code built-in** → renamed to `/cr` with `/code-review` alias
 - [ ] **2. pipeline-coder too long (549 lines)** → extract sections 8-8e into separate skill `figma-coding-rules` or split into `pipeline-coder` (implementation) + `pipeline-coder-figma` (verify)
 - [ ] **3. Verdict mismatch** → unify: plan-reviewer uses `NEEDS_CHANGES`, code-reviewer uses `CHANGES_REQUESTED`. Pick one vocabulary or document mapping in core-orchestration
 - [ ] **4. Tolerance conflict** → coder 8b: ±0px, ui-reviewer: ±2px. Make ui-reviewer stricter (±0px) or document why different
 - [ ] **5. Duplicate ui-ux-pro-max** → remove from coder 8c, keep only in ui-reviewer (Phase 5). Coder uses refactoring-ui only
-- [ ] **6. `/progress` references `/resume`** → fix to `/continue`
+- [x] **6. `/progress` references `/resume`** → fixed to `/continue`
 - [ ] **7. `/attach` bypasses checkpoints** → delegate to pipeline-worker resume mode or add checkpoint writing
 - [ ] **8. Commit strategy undefined** → add to pipeline-coder: commit per part. Worker Phase 6: final merge commit or squash
 - [ ] **9. "Task tool" → "Agent tool"** → fix in pipeline-planner, pipeline-code-researcher
@@ -29,7 +29,7 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 ## LOW — Nice to have
 
 - [ ] **19. SKILLS_OVERVIEW line counts stale** → regenerate from actual file sizes
-- [ ] **20. project.yaml.example says v2.1** → update to v2.2
+- [x] **20. project.yaml.example says v2.1** → updated to v2.2
 - [ ] **21. No `/scan-all` umbrella command** → add: runs scan-ui + scan-practices + scan-qa
 - [ ] **22. No rollback command** → add `/rollback` using adapter-gitlab rollback workflow
 - [ ] **23. `/continue` should fallback to heuristic recovery** when no checkpoint exists
@@ -59,6 +59,16 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 - [ ] **32. Structured agent error reporting** — every subagent must return `{ status: success|fail, findings: [], errors: [] }`, not free text. Worker must check status before proceeding.
 
 - [ ] **33. Aggregation template for multi-agent results** — when fan-out agents complete, merge results into: consensus points, conflicts, combined recommendations.
+
+## CROSS-AGENT — Portability to other agents (Gemini, Codex, Kimi)
+
+- [ ] **34. Share adapter-gitlab to ~/.agents/skills/** — symlink or copy adapter-gitlab for Gemini/Codex/Kimi. These agents only have `glab` CLI but no knowledge of: correct `glab api` syntax, JSON parsing workarounds, rate limits (30s between pushes), troubleshooting patterns. Adapter-gitlab solves this. Same applies to adapter-jira.
+
+- [ ] **35. Share adapter-jira to ~/.agents/skills/** — same rationale. Other agents call Jira MCP but lack workflow knowledge (transitions, AC parsing, MR description generation).
+
+- [ ] **36. Create lightweight adapter variants for non-Claude agents** — current adapters use Claude-specific features (allowed-tools, Skill tool). Strip those for a universal SKILL.md version that works everywhere.
+
+- [ ] **37. MCP servers centralized in ~/.claude/.mcp.json** — context7, atlassian, figma already configured globally. Consider creating a shared `.mcp.json` at project level for team sync.
 
 ## Notes
 

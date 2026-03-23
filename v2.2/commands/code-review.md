@@ -1,8 +1,10 @@
 ---
-description: "Run code review on current branch. Usage: /review"
+description: "Alias for /cr. Run code review on current branch."
 ---
 
 # Code Review (standalone)
+
+Alias: /code-review also works
 
 1. Load Skill: pipeline-code-reviewer
 2. Detect current branch

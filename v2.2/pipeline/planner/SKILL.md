@@ -103,7 +103,7 @@ steps:
       method: "Direct Glob/Grep/Read"
       scope: "focused on known modules"
     L_XL:
-      method: "Dispatch pipeline-code-researcher (haiku) via Task tool"
+      method: "Dispatch pipeline-code-researcher (haiku) via Agent tool"
       queries:
         - "Find existing patterns for {feature_type}"
         - "Trace imports in {affected_modules}"
@@ -215,7 +215,7 @@ plan_template:
 ```yaml
 code_researcher_dispatch:
   when: "complexity in [L, XL]"
-  method: "Task tool → pipeline-code-researcher"
+  method: "Agent tool → pipeline-code-researcher"
   queries_generated_from:
     - "Affected modules from AC analysis"
     - "Pattern questions from brainstorming"
