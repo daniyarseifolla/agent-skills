@@ -245,3 +245,21 @@ skills:
   - angular-routing: "lazy loading, guards"
   - angular-forms: "signal-based forms"
 ```
+
+---
+
+## 8. Cherry-Pick Build Fix Patterns
+
+```yaml
+cherry_pick_fixes:
+  description: "Common Angular build errors after cherry-pick/merge"
+  TS2559:
+    error: "Type has no properties in common — type mismatch after cherry-pick"
+    fix: "Update call sites to match new interface"
+  NG8002:
+    error: "Can't bind to 'X' — unknown property after component removal/rename"
+    fix: "Remove binding or replace with new component API"
+  NG5002:
+    error: "Parser error — template syntax broken after merge"
+    fix: "Fix HTML nesting, check for unclosed tags"
+```

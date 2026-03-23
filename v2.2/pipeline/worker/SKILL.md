@@ -211,28 +211,33 @@ phases:
     output: "branch, parts_implemented, deviations"
     checkpoint: true
 
-  - phase: 4
-    name: code-review
-    skill: "pipeline-code-reviewer"
-    model: sonnet
-    mode: subagent_worktree
-    input: "handoff: coder_to_reviewer (core-orchestration contract)"
-    output: "verdict: APPROVED|APPROVED_WITH_COMMENTS|CHANGES_REQUESTED"
-    checkpoint: true
-    loop:
-      max: 3
-      with: "pipeline-coder"
-      counter: "checkpoint.iteration.code_review"
+  - phase: "4+5"
+    name: "review (parallel)"
+    description: "Code review + UI review run in parallel (they are independent)"
+    parallel:
+      - skill: "pipeline-code-reviewer"
+        model: sonnet
+        mode: "subagent_worktree"
+        input: "handoff from coder"
+        output: "code review verdict"
+      - skill: "pipeline-ui-reviewer"
+        model: sonnet
+        mode: subagent
+        skip_if: "complexity == S OR no design adapter"
+        input: "branch, figma_urls"
+        output: "ui review report"
 
-  - phase: 5
-    name: ui-review
-    skill: "pipeline-ui-reviewer"
-    model: sonnet
-    mode: subagent
-    skip_if: "complexity == S OR no design adapter"
-    input: "branch, figma_urls from task"
-    output: "ui review report"
+    after_parallel:
+      - "If code-review returned CHANGES_REQUESTED:"
+      - "  → discard ui-review results (tested pre-fix code)"
+      - "  → loop back to coder (Phase 3)"
+      - "  → after fix, re-run Phase 4+5 parallel again"
+      - "If code-review returned APPROVED/APPROVED_WITH_COMMENTS:"
+      - "  → accept both results"
+      - "  → proceed to Phase 6"
+
     checkpoint: true
+    loop: "max 3 with coder (per iron_laws)"
 
   - phase: 6
     name: completion

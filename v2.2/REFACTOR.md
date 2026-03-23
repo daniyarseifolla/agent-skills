@@ -5,7 +5,7 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 ## HIGH — Must fix
 
 - [x] **1. `/review` conflicts with Claude Code built-in** → renamed to `/cr` with `/code-review` alias
-- [ ] **2. pipeline-coder too long (549 lines)** → extract sections 8-8e into separate skill `figma-coding-rules` or split into `pipeline-coder` (implementation) + `pipeline-coder-figma` (verify)
+- [x] **2. pipeline-coder too long (549 lines)** → extracted sections 8-8e into `figma-coding-rules` skill. Coder has reference block in section 8.
 - [x] **3. Verdict mismatch** → documented verdict vocabulary mapping in core-orchestration section 3
 - [x] **4. Tolerance conflict** → coder 8b: ±0px, ui-reviewer: ±2px. Make ui-reviewer stricter (±0px) or document why different
 - [x] **5. Duplicate ui-ux-pro-max** → remove from coder 8c, keep only in ui-reviewer (Phase 5). Coder uses refactoring-ui only
@@ -17,7 +17,7 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 
 ## MEDIUM — Should fix
 
-- [ ] **11. community-sync too thick** → extract workflow logic, move branch config to project.yaml
+- [x] **11. community-sync too thick** → added config_source with project.yaml override note, moved Angular build fixes to adapter-angular section 8
 - [x] **12. `/scan` ambiguous** → renamed to `/scan-ui`
 - [x] **13. core-security Angular-specific** → add framework-agnostic base section, move Angular patterns to subsection
 - [x] **14. core-metrics missing fields** → add: duration_per_phase, total_duration, success/failure flag, token_usage
@@ -32,7 +32,7 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 - [x] **20. project.yaml.example says v2.1** → updated to v2.2
 - [ ] **21. No `/scan-all` umbrella command** → add: runs scan-ui + scan-practices + scan-qa
 - [ ] **22. No rollback command** → add `/rollback` using adapter-gitlab rollback workflow
-- [ ] **23. `/continue` should fallback to heuristic recovery** when no checkpoint exists
+- [x] **23. `/continue` should fallback to heuristic recovery** → added recovery table (Plan/Code/Tests/Reviews → resume phase)
 - [ ] **24. Merge STANDARD and FULL routes** → they have identical phase lists, simplify to 2 routes
 - [x] **25. Add pause/resume messaging** → added message block to after_phase in worker dispatch
 - [x] **26. Add Figma error handling** → adapter-figma: handle invalid fileKey, access denied, node not found
@@ -54,7 +54,7 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
   - Fan-out/Fan-in: ui-reviewer test groups
   - Pipeline: the overall planner → coder → reviewer chain
 
-- [ ] **31. Parallelize Phase 4 + Phase 5** — code-review and ui-review are independent, can run simultaneously. Worker currently runs them sequentially.
+- [x] **31. Parallelize Phase 4 + Phase 5** — merged into Phase 4+5 with parallel block, after_parallel logic, and loop back to coder on CHANGES_REQUESTED.
 
 - [x] **32. Structured agent error reporting** — rewritten as verdict parsing protocol (keyword-based, not structured JSON). Added as section 12 in core-orchestration.
 

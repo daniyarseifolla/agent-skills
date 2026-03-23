@@ -57,6 +57,19 @@ If cherry-pick conflicts:
 Config block the facade provides to the adapter:
 
 ```yaml
+config_source: |
+  These values are DEFAULTS. Override in .claude/project.yaml:
+  ```yaml
+  community-sync:
+    tag_branches: [alex, avi, arcadiy, nama]
+    exclude_branches: [calling-in]
+    active_period_days: 30
+    push_delay_seconds: 30
+    batch_size: 3
+  ```
+  If project.yaml has community-sync section, use those values.
+  If not, use defaults below.
+
 config:
   tag_branches: [alex, avi, arcadiy, nama]     # branches that get production tags
   exclude_branches: [calling-in]                # branches to skip
@@ -65,8 +78,6 @@ config:
   tag_format: "{branch}-{date}"                 # e.g., alex-2026-03-17
   batch_size: 3                                 # parallel cherry-pick batch size
 ```
-
-Note: This config should be overridable via project.yaml in the future.
 
 ---
 
@@ -103,19 +114,10 @@ grep -r "functionX" path/to/file && echo "CONFLICT RESOLUTION FAILED — code st
 
 ## Build Fix Strategy (Angular-specific)
 
-Common build errors after cherry-pick and their auto-fixes:
-
 ```yaml
 build_fixes:
-  TS2559:
-    description: "Type has no properties in common — type mismatch after cherry-pick"
-    fix: "Update call sites to match new interface"
-  NG8002:
-    description: "Can't bind to 'X' — unknown property after component removal/rename"
-    fix: "Remove binding or replace with new component API"
-  NG5002:
-    description: "Parser error — template syntax broken after merge"
-    fix: "Fix HTML nesting, check for unclosed tags"
+  reference: "See adapter-angular for Angular-specific build fix patterns"
+  common: [TS2559, NG8002, NG5002]
 ```
 
 ---
