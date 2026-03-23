@@ -1,0 +1,9 @@
+required_states:
+  button: [default, hover, active, focus-visible, disabled, loading]
+  input: [default, hover, focus, filled, error, disabled]
+  link: [default, hover, active, focus-visible, visited]
+  dropdown: [closed, open, item-hover, item-selected, disabled]
+  card: [default, hover, selected (if selectable)]
+  modal: [opening-animation, open, closing-animation]
+  checkbox: [unchecked, checked, indeterminate, disabled]
+  toggle: [off, on, disabled]

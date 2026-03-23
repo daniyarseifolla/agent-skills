@@ -133,20 +133,20 @@ skill_unavailable:
 
 ## P5: UI-reviewer → 9.0 (HIGH)
 
-- [ ] **22. Добавить бюджеты** — per_agent: 40 calls / 8 min, total phase: 30 min, on_timeout: stop + aggregate partial
-- [ ] **23. Вынести шаблоны в templates/** — test-plan-template.md, visual-check-properties.yaml, required-states.yaml. SKILL.md с ~368 до ~272 строк
-- [ ] **24. Structured verdict** — PASS / PASS_WITH_ISSUES / ISSUES_FOUND + score 0-100 + breakdown
-- [ ] **25. Объединить brainstorming + qa-test-planner в один шаг** — qa-test-planner уже генерирует сценарии, brainstorming избыточен
-- [ ] **26. Degraded standalone mode** — no_figma: functional-only, no_browser: visual-only, no_dev_server: ask + abort
+- [x] **22. Добавить бюджеты** — per_agent: 40 calls / 8 min, total phase: 30 min, on_timeout: stop + aggregate partial
+- [x] **23. Вынести шаблоны в templates/** — test-plan-template.md, visual-check-properties.yaml, required-states.yaml. SKILL.md с ~368 до ~272 строк
+- [x] **24. Structured verdict** — PASS / PASS_WITH_ISSUES / ISSUES_FOUND + score 0-100 + breakdown
+- [x] **25. Объединить brainstorming + qa-test-planner в один шаг** — qa-test-planner уже генерирует сценарии, brainstorming избыточен
+- [x] **26. Degraded standalone mode** — no_figma: functional-only, no_browser: visual-only, no_dev_server: ask + abort
 
 ## P6: Core-metrics → 9.0 (HIGH)
 
-- [ ] **27. Validation rules** — required fields, enum values, value ranges, on_invalid: WARN + partial write
-- [ ] **28. Phase ID mapping** — нормализовать 0-7 (0=analysis, 1=workspace, 2=plan, 3=plan-review, 4=code, 5=code-review, 6=ui-review, 7=completion)
-- [ ] **29. Duration collection HOW** — checkpoint timestamps diff, fallback: null
-- [ ] **30. Убрать "Future" aggregation** — заменить на 2-line note
-- [ ] **31. Error handling** — source missing/malformed → WARN + null, never crash Phase 6
-- [ ] **32. Consumer docs** — кто читает: worker completion, /progress, re-routing
+- [x] **27. Validation rules** — required fields, enum values, value ranges, on_invalid: WARN + partial write
+- [x] **28. Phase ID mapping** — нормализовать 0-7 (0=analysis, 1=workspace, 2=plan, 3=plan-review, 4=code, 5=code-review, 6=ui-review, 7=completion)
+- [x] **29. Duration collection HOW** — checkpoint timestamps diff, fallback: null
+- [x] **30. Убрать "Future" aggregation** — заменить на 2-line note
+- [x] **31. Error handling** — source missing/malformed → WARN + null, never crash Phase 6
+- [x] **32. Consumer docs** — кто читает: worker completion, /progress, re-routing
 
 ## P7: Кросс-скиллы (MEDIUM)
 

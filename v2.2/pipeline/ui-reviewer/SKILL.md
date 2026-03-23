@@ -34,25 +34,13 @@ input:
 ```yaml
 test_planning:
   step_1:
-    action: "Invoke Skill: brainstorming to identify WHAT to test"
-    input: "branch changes + figma_urls + task AC"
-    output: "test scenarios and focus areas"
-    on_unavailable: |
-      WARN: Skill brainstorming unavailable.
-      Required for: identifying test scenarios and focus areas.
-      Options: (1) Install skill (2) Skip step (3) Abort phase
+    action: "Invoke Skill: qa-test-planner to generate test scenarios and detailed test cases"
+    input: "branch changes + figma_urls + task AC + .claude/qa-playbook.md"
+    output: "test cases grouped by type (functional, visual, edge, mobile, states)"
+    on_unavailable: "WARN: qa-test-planner unavailable. Generate basic test cases from AC directly."
+    note: "qa-test-planner covers both scenario identification and detailed test case generation — separate brainstorming step removed"
 
   step_1b:
-    action: "Invoke Skill: qa-test-planner to generate DETAILED test cases from scenarios"
-    input: "brainstorming scenarios + .claude/qa-playbook.md + figma_urls"
-    output: "test cases grouped by type (functional, visual, edge, mobile, states)"
-    note: "qa-test-planner generates manual test cases, regression suites, and bug scenarios"
-    on_unavailable: |
-      WARN: Skill qa-test-planner unavailable.
-      Required for: generating detailed test cases from scenarios.
-      Options: (1) Install skill (2) Skip step (3) Abort phase
-
-  step_1c:
     action: "Invoke Skill: ui-ux-pro-max for UX review checklist"
     input: "page screenshots or component list"
     output: "UX issues found (interaction states, accessibility, visual hierarchy)"
@@ -63,7 +51,7 @@ test_planning:
       Options: (1) Install skill (2) Skip step (3) Abort phase
 
   step_2:
-    action: "Merge brainstorming + qa-test-planner + ui-ux-pro-max + qa-playbook into test plan"
+    action: "Merge qa-test-planner + ui-ux-pro-max + qa-playbook into test plan"
     inputs:
       - "AC from task (via task-source adapter)"
       - ".claude/qa-playbook.md (if exists) → credentials, edge cases, fragile areas"
@@ -83,35 +71,7 @@ test_planning:
       - Each group = one parallel agent
       - Max 7 agents (avoid OOM)
 
-    test_plan_format: |
-      ## Test Plan: {task-key}
-
-      ### Agent Groups
-      | # | Agent Name | Test Cases | Type |
-      |---|-----------|-----------|------|
-      | 1 | QA: Search functional | F1-F4 | functional |
-      | 2 | QA: Search visual | V1-V2 | visual (Figma) |
-      | 3 | QA: Search edge cases | E1-E3 | edge cases |
-      | 4 | QA: Mobile responsive | M1-M2 | responsive |
-
-      ### Test Cases
-      Functional (F1-F8 style):
-      - F1: Navigate to /search → page loads, search input visible
-      - F2: Type "test" → results update, playlists filtered
-      - F3: Clear search → all results shown
-
-      Visual (V1-V5 style):
-      - V1: Search page (desktop) → compare with Figma frame
-      - V2: Search results card → per-element Figma check
-
-      Edge Cases (E1-E5 style, from qa-playbook):
-      - E1: Search with cyrillic "тест" → results correct
-      - E2: Search with empty string → no crash
-      - E3: Search with 500+ chars → graceful handling
-
-      Mobile (M1-M3 style):
-      - M1: Search page at 375px → responsive layout
-      - M2: Search page at 768px → tablet layout
+    test_plan_format: "See templates/test-plan-template.md"
 ```
 
 ---
@@ -286,6 +246,31 @@ parallel_agents:
 
 ---
 
+## 3c. Agent Budgets
+
+```yaml
+budgets:
+  per_qa_agent:
+    max_tool_calls: 40
+    timeout_minutes: 8
+    on_timeout: "Stop agent, collect partial results, mark as INCOMPLETE"
+
+  planning_skills:
+    brainstorming: "max 3 minutes"
+    qa_test_planner: "max 5 minutes"
+    ui_ux_pro_max: "max 5 minutes"
+
+  total_phase:
+    max_minutes: 30
+    on_exceeded: "Stop remaining agents, aggregate what exists, report partial results"
+
+  on_agent_failure:
+    action: "Log failure, continue with other agents, include failure in report"
+    never: "Do not retry failed agent — time budget does not allow"
+```
+
+---
+
 ## 3b. Missing States Audit
 
 ```yaml
@@ -294,15 +279,7 @@ missing_states_audit:
     For EVERY interactive component on the page, check if ALL required states are implemented.
     This catches the #2 most common issue: components with only default state.
 
-  required_states:
-    button: [default, hover, active, focus-visible, disabled, loading]
-    input: [default, hover, focus, filled, error, disabled]
-    link: [default, hover, active, focus-visible, visited]
-    dropdown: [closed, open, item-hover, item-selected, disabled]
-    card: [default, hover, selected (if selectable)]
-    modal: [opening-animation, open, closing-animation]
-    checkbox: [unchecked, checked, indeterminate, disabled]
-    toggle: [off, on, disabled]
+  required_states: "See templates/required-states.yaml"
 
   workflow:
     step_1: "List all interactive components on the page"
@@ -361,12 +338,25 @@ output:
     {findings or "No duplicates found"}
 
     ### Verdict
-    {PASS|ISSUES_FOUND}
-    {details if ISSUES_FOUND}
+    {verdict} — Score: {score}/100
+    Breakdown: functional={functional_pct}%, visual={visual_pct}%, states={states_pct}%
+    {blockers if any}
 
 verdict:
-  PASS: "All functional tests pass, visual comparison acceptable"
-  ISSUES_FOUND: "Failures in functional or visual tests"
+  scoring:
+    functional: "PASS count / total tests → percentage"
+    visual: "matching elements / total elements → percentage"
+    states: "implemented states / required states → percentage"
+    overall: "weighted average (functional: 0.5, visual: 0.3, states: 0.2)"
+  thresholds:
+    PASS: "overall >= 90% AND zero MAJOR functional failures"
+    PASS_WITH_ISSUES: "overall >= 70% OR only MINOR visual mismatches"
+    ISSUES_FOUND: "overall < 70% OR any MAJOR functional failure"
+  output_fields:
+    verdict: "PASS | PASS_WITH_ISSUES | ISSUES_FOUND"
+    score: "0-100"
+    breakdown: "{ functional_pct, visual_pct, states_pct }"
+    blockers: "list of MAJOR issues"
 ```
 
 ---
@@ -398,4 +388,10 @@ standalone:
       primary: "docs/plans/{task-key}/ui-review.md"
       fallback: "docs/plans/standalone-{branch-name}/ui-review.md"
       last_resort: "./ui-review.md (current directory)"
+
+  degraded_modes:
+    no_figma: "Skip visual comparison, run functional-only tests"
+    no_browser_agent: "WARN: agent-browser unavailable. Skip functional testing, run visual-only from Figma comparison"
+    no_qa_playbook: "Generate basic test cases from git diff + AC only"
+    no_dev_server: "Ask user to start dev server. If not possible → abort UI review with instructions"
 ```

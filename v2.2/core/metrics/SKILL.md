@@ -41,6 +41,47 @@ metrics:
   timestamp: "ISO-8601"
 ```
 
+## 1b. Validation Rules
+
+```yaml
+validation:
+  required: [task_key, complexity, route, phases_completed, outcome, timestamp]
+  rules:
+    task_key: "regex: [A-Z]+-\\d+"
+    complexity: "enum: S|M|L|XL"
+    route: "enum: MINIMAL|STANDARD|FULL"
+    phases_completed: "integer 0-7"
+    iterations.plan_review: "integer 0-3"
+    iterations.code_review: "integer 0-3"
+    iterations.evaluate_return: "integer 0-2"
+    outcome: "enum: success|failed|stopped_by_user|loop_exceeded"
+    files_changed: "integer >= 0"
+    lines_added: "integer >= 0"
+    lines_removed: "integer >= 0"
+    duration.total_minutes: "number > 0 or null"
+    timestamp: "ISO-8601 format"
+  on_invalid:
+    missing_required: "WARN, write partial metrics with _validation_errors field"
+    invalid_value: "WARN, coerce to closest valid value or set null"
+    never: "Do not skip metrics collection entirely due to one bad field"
+```
+
+## 1c. Phase ID Mapping
+
+```yaml
+phase_ids:
+  0: task-analysis
+  1: workspace-setup
+  2: planning
+  3: plan-review
+  4: implementation
+  5: code-review
+  6: ui-review
+  7: completion
+  storage_type: "integer 0-7"
+  note: "Worker uses 0, 0.5, 1, 2, 3, 4+5, 6. Normalize to 0-7 for metrics."
+```
+
 ---
 
 ## 2. Collection
@@ -75,6 +116,16 @@ collection_sources:
       - files_changed
       - lines_added
       - lines_removed
+
+  - source: "checkpoint timestamps"
+    fields: [duration.total_minutes, duration.per_phase]
+    method: |
+      For each phase transition:
+        phase_start = checkpoint[N-1].timestamp (or pipeline_start for phase 0)
+        phase_end = checkpoint[N].timestamp
+        per_phase[phase_name] = (phase_end - phase_start) in minutes
+      total_minutes = completion.timestamp - phase_0.timestamp
+    fallback: "If checkpoint timestamps missing → set duration fields to null"
 ```
 
 ---
@@ -99,21 +150,51 @@ storage:
 
 ---
 
-## 4. Aggregation (Future)
-
-Query interface for stored metrics across tasks.
+## 4. Aggregation
 
 ```yaml
-aggregation:
-  source: "docs/plans/**/metrics.yaml"
-  computations:
-    - name: avg_iterations_by_complexity
-      group_by: complexity
-      aggregate: "mean(iterations.plan_review + iterations.code_review)"
-    - name: common_issue_types
-      aggregate: "sum(issues_found.*), rank by count"
-    - name: re_route_frequency
-      aggregate: "count(re_routed == true) / total_tasks"
-    - name: evaluate_return_rate
-      aggregate: "count(evaluate_result == RETURN) / total_tasks"
+status: "Not yet implemented. Metrics files at docs/plans/*/metrics.yaml can be queried manually."
+```
+
+---
+
+## 5. Error Handling
+
+```yaml
+error_handling:
+  source_missing:
+    checkpoint_yaml: "WARN, set checkpoint-derived fields to null"
+    evaluate_md: "set evaluate_result to null"
+    code_review_payload: "set issues_found to all zeros"
+    git_diff: "WARN, try: git log --stat main..HEAD as fallback"
+  source_malformed:
+    action: "WARN, attempt partial parse, set unparseable fields to null"
+  storage_failure:
+    primary_file: "WARN, retry once. If still fails → dump metrics to stdout"
+    mcp_memory: "WARN only — MCP memory is optional, skip on failure"
+  rule: "Never crash Phase 7 (completion) over metrics. Metrics are best-effort."
+```
+
+---
+
+## 6. Consumers
+
+```yaml
+consumers:
+  worker_completion:
+    reads: "metrics.yaml after write"
+    purpose: "Display pipeline summary to user"
+    display: |
+      Pipeline complete: {task_key}
+      Duration: {total_minutes}min | Files: {files_changed} (+{lines_added}/-{lines_removed})
+      Iterations: plan {plan_review}/3, code {code_review}/3
+      Issues: {blocker}B / {major}M / {minor}m
+
+  progress_command:
+    reads: "checkpoint.yaml (partial metrics derivable)"
+    purpose: "Show current phase and iteration counts"
+
+  cleanup_command:
+    preserves: "metrics.yaml even when deleting other plan artifacts"
+    reason: "Historical data for future complexity calibration"
 ```
