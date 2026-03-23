@@ -150,18 +150,18 @@ skill_unavailable:
 
 ## P7: Кросс-скиллы (MEDIUM)
 
-- [ ] **33. Унифицировать severity** — consensus-review: CRITICAL/HIGH → BLOCKER/MAJOR/MINOR/NIT
-- [ ] **34. Исправить ссылку figma-adapter** — "pipeline-coder section 8d" → "figma-coding-rules section 4"
-- [ ] **35. Coder section 3 ссылки** — "section 8" → "figma-coding-rules section 1"
-- [ ] **36. Phase 4+5 checkpoint** — CHANGES_REQUESTED → phase_completed:3 + iteration++. APPROVED → phase_completed:6
+- [x] **33. Унифицировать severity** — consensus-review: CRITICAL/HIGH → BLOCKER/MAJOR/MINOR/NIT
+- [x] **34. Исправить ссылку figma-adapter** — "pipeline-coder section 8d" → "figma-coding-rules section 4"
+- [x] **35. Coder section 3 ссылки** — "section 8" → "figma-coding-rules section 1" (already fixed by P3/P4)
+- [x] **36. Phase 4+5 checkpoint** — CHANGES_REQUESTED → phase_completed:3 + iteration++. APPROVED → phase_completed:6
 
 ## P8: Consensus pattern integration (MEDIUM)
 
-- [ ] **37. Обновить consensus-review** — max_total: 9 → sequential sections (3×3, max 3 parallel)
-- [ ] **38. Добавить intermediate files protocol** — .tmp/ lifecycle в consensus-review skill
-- [ ] **39. Интегрировать consensus в worker** — Phase 2/4/5 используют consensus при complexity >= M
-- [ ] **40. Интегрировать consensus в /attach** — 3 агента оценивают state → consensus detection
-- [ ] **41. Интегрировать consensus в scan-*** — /scan-practices, /scan-qa используют 3 агента
+- [x] **37. Обновить consensus-review** — max_total: 9 → sequential sections (3×3, max 3 parallel)
+- [x] **38. Добавить intermediate files protocol** — .tmp/ lifecycle в consensus-review skill
+- [x] **39. Интегрировать consensus в worker** — Phase 2/4/5 используют consensus при complexity >= M
+- [x] **40. Интегрировать consensus в /attach** — 3 агента оценивают state → consensus detection
+- [x] **41. Интегрировать consensus в scan-*** — /scan-practices, /scan-qa используют 3 агента
 
 ## Notes
 

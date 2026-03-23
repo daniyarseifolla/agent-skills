@@ -220,5 +220,5 @@ errors:
 
   raster_instead_of_svg:
     symptom: "Asset URL returns PNG for icons"
-    fix: "See pipeline-coder section 8d (Icon Extraction). Ask user to export SVG."
+    fix: "See figma-coding-rules section 4 (Icon Extraction). Ask user to export SVG."
 ```

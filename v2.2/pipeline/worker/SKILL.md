@@ -246,6 +246,11 @@ phases:
       - "  → accept both results"
       - "  → proceed to Phase 6"
 
+    checkpoint_rules:
+      on_CHANGES_REQUESTED: "Write completed_phases: [...existing, 4] (code-review done), iteration.code_review += 1. Do NOT add 5 (ui-review discarded)."
+      on_APPROVED: "Write completed_phases: [...existing, 5, 6] (both done). Proceed to Phase 7."
+      on_APPROVED_plus_ISSUES_FOUND: "Write completed_phases: [...existing, 5, 6]. Log ISSUES_FOUND findings. Proceed."
+
     checkpoint: true
     loop: "max 3 with coder (per iron_laws)"
 

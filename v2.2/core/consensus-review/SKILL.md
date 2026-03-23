@@ -22,12 +22,13 @@ Dispatch multiple independent agents per review section. Aggregate findings. Cat
 consensus_review:
   sections: 3          # number of independent review sections
   agents_per_section: 3 # agents per section (2 minimum, 3 recommended)
-  max_total_agents: 9   # hard cap per Iron Law #5 adaptation
+  max_total_agents: 9 (3 sections × 3 agents, sections run sequentially)
 
   dispatch:
     rule: "Each agent in a section gets the SAME input but a DIFFERENT prompt/angle"
     parallel: true       # all agents in same section launch simultaneously
-    sequential_sections: false  # sections can also run in parallel if independent
+    sequential_sections: true   # sections run sequentially to respect Iron Law #5
+    note: "Iron Law #5 (max 7 parallel) applies per section. With sequential sections: max 3 parallel at once."
 
   agent_prompt_template: |
     You are reviewer {N} of {total} for section "{section_name}".
@@ -36,10 +37,10 @@ consensus_review:
     Input: {shared_input}
 
     Return structured findings:
-    - CRITICAL: {list}
-    - HIGH: {list}
-    - MEDIUM: {list}
-    - LOW: {list}
+    - BLOCKER: {list}
+    - MAJOR: {list}
+    - MINOR: {list}
+    - NIT: {list}
     - Score: {1-10}
     - Top 3 recommendations: {list}
 
@@ -63,6 +64,31 @@ consensus_review:
       | # | Finding | Severity | Source Agent | Confidence |
 
       ### Score: {avg}/10 (range: {min}-{max})
+```
+
+## Intermediate Files Protocol
+
+```yaml
+intermediate_files:
+  directory: "docs/plans/{task-key}/.tmp/"
+
+  lifecycle:
+    create: "mkdir -p docs/plans/{task-key}/.tmp/ at section start"
+    write: "Each agent writes to .tmp/agent-{N}-{section}-{angle}.md"
+    aggregate: "Orchestrator reads all .tmp/*.md → builds consensus"
+    promote: "Copy consensus results to docs/plans/{task-key}/ (parent dir)"
+    cleanup: "rm -rf .tmp/ ONLY after orchestrator confirms consensus"
+
+  benefits:
+    - "Agents don't load each other's results into context"
+    - "Orchestrator sees all results at aggregation time"
+    - "Debuggable: .tmp/ preserved until cleanup confirmed"
+
+  cleanup_rule: |
+    Cleanup is NOT automatic.
+    Happens ONLY after orchestrator confirms consensus is valid.
+    If pipeline interrupted → .tmp/ remains for recovery.
+    /cleanup command removes .tmp/ with other artifacts.
 ```
 
 ## Section Templates
@@ -167,15 +193,19 @@ budget:
 ```yaml
 integration:
   pipeline_worker:
-    Phase_2: "Load consensus-review, use plan_review_sections"
-    Phase_4: "Load consensus-review, use code_review_sections"
-    Phase_5: "Load consensus-review, use ui_review_sections"
-    condition: "complexity >= M"
+    Phase_3: "condition: complexity >= M. Use code_review_sections for per-part verification"
+    Phase_4: "condition: complexity >= M. Use code_review_sections"
+    Phase_5: "condition: complexity >= M. Use ui_review_sections"
 
-  attach_command:
-    Phase_0: "Dispatch 3 agents to assess state independently, aggregate"
+  commands:
+    /cr: "condition: user adds --thorough flag. Use code_review_sections"
+    /ui-review: "condition: user adds --thorough flag. Use ui_review_sections"
+    /attach: "Use 3 agents for state detection"
+    /scan-practices: "Use 3 agents for project analysis"
+    /scan-qa: "Use 3 agents for QA data collection"
 
-  standalone:
-    /cr: "Use code_review_sections for thorough review"
-    /ui-review: "Use ui_review_sections for thorough review"
+  activation: |
+    Consensus review is NOT default.
+    Activated by: complexity >= M in pipeline, OR --thorough flag in commands.
+    For S complexity: single-agent review is sufficient.
 ```
