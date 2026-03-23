@@ -1,5 +1,5 @@
 ---
-description: "Scan project for reusable UI components, SCSS mixins, and design tokens. Usage: /scan"
+description: "Scan project for reusable UI components, SCSS mixins, and design tokens. Usage: /scan-ui"
 ---
 
 # Scan UI Inventory

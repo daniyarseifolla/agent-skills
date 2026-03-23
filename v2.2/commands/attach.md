@@ -47,7 +47,18 @@ Detects what's done, creates checkpoint, runs missing phases.
    | Yes | Yes | Yes | No | Coded, tests pass → Phase 4 (review) |
    | Yes | Yes | Yes | Yes | Reviewed → Phase 6 (completion) |
 
-5. **Show summary:**
+5. **Write initial checkpoint immediately:**
+   ```yaml
+   # docs/plans/{task-key}/checkpoint.yaml
+   task_key: "{task-key}"
+   phase_completed: {detected_phase}
+   phase_name: "{detected state}"
+   attached_at: "{timestamp}"
+   attached_from: "existing task — not started with /worker"
+   ```
+   This checkpoint enables /progress and /continue to find this task.
+
+6. **Show summary:**
    ```
    Attaching pipeline to: ARGO-XXXXX — {title}
    Branch: {branch}
@@ -92,21 +103,25 @@ Skills are NOT agent types — they are loaded via `Skill("skill-name")`.
   1. Use the Skill tool to load "pipeline-plan-reviewer"
   2. Follow the loaded skill instructions to review the plan
   3. Save output to docs/plans/{task-key}/plan-review.md
+  4. Write checkpoint: `{ task_key, phase_completed: 2, phase_name: "plan-review", attached_at: timestamp }`
 
 - **Code review** → if no code-review.md:
   1. Use the Skill tool to load "pipeline-code-reviewer"
   2. Follow the loaded skill instructions (standalone mode: detect branch, find plan, run review)
   3. Save output to docs/plans/{task-key}/code-review.md
+  4. Write checkpoint: `{ task_key, phase_completed: 4, phase_name: "code-review", attached_at: timestamp }`
 
 - **UI review** → if no ui-review.md AND Figma URLs exist:
   1. Use the Skill tool to load "pipeline-ui-reviewer"
   2. Follow the loaded skill instructions (standalone mode)
   3. Save output to docs/plans/{task-key}/ui-review.md
+  4. Write checkpoint: `{ task_key, phase_completed: 5, phase_name: "ui-review", attached_at: timestamp }`
 
 - **Figma verify** → if no figma-verify.md:
   1. Use the Skill tool to load "pipeline-coder"
   2. Execute ONLY section 8b (Figma Self-Verify) — do NOT implement new code
   3. Save output to docs/plans/{task-key}/figma-verify.md
+  4. Write checkpoint: `{ task_key, phase_completed: 5, phase_name: "figma-verify", attached_at: timestamp }`
 
 NEVER use Agent tool with subagent_type for these — they are skills, not agent types.
 NEVER use: superpowers:code-reviewer, feature-dev:code-reviewer, or any agent type containing "code-reviewer".

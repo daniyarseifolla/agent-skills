@@ -168,6 +168,17 @@ phases:
     action: "Classify complexity, select route (steps 5-7 above)"
     checkpoint: true
 
+  - phase: 0.5
+    name: workspace-setup
+    model: inherited
+    mode: inline
+    actions:
+      - worktree: "Ask user: use worktree? (default y for M+) → if yes, Skill: superpowers:using-git-worktrees"
+      - branch: "If no worktree → create branch feat/{task_key}"
+      - ci: "Ask user: disable CI? (default y if .gitlab-ci.yml exists) → if yes, adapter disable_ci()"
+    checkpoint: true
+    skip_if: "resuming from checkpoint (workspace already set up)"
+
   - phase: 1
     name: planning
     skill: "pipeline-planner"
@@ -253,6 +264,10 @@ dispatch:
     - validate: "output handoff payload"
     - write_checkpoint: "docs/plans/{task-key}/checkpoint.yaml"
     - log: "Completed Phase {N}: {name}"
+    - message: |
+        Phase {N} ({phase_name}) complete.
+        Resume with: /continue {task_key}
+        Check progress: /progress {task_key}
 
   on_loop:
     - increment: "checkpoint.iteration.{loop_type}"

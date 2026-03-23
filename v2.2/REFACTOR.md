@@ -10,7 +10,7 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 - [x] **4. Tolerance conflict** → coder 8b: ±0px, ui-reviewer: ±2px. Make ui-reviewer stricter (±0px) or document why different
 - [x] **5. Duplicate ui-ux-pro-max** → remove from coder 8c, keep only in ui-reviewer (Phase 5). Coder uses refactoring-ui only
 - [x] **6. `/progress` references `/resume`** → fixed to `/continue`
-- [ ] **7. `/attach` bypasses checkpoints** → delegate to pipeline-worker resume mode or add checkpoint writing
+- [x] **7. `/attach` bypasses checkpoints** → added checkpoint writing after each phase dispatch + initial checkpoint in Phase 0
 - [x] **8. Commit strategy undefined** → add to pipeline-coder: commit per part. Worker Phase 6: final merge commit or squash
 - [ ] **9. "Task tool" → "Agent tool"** → fix in pipeline-planner, pipeline-code-researcher
 - [ ] **10. Duplicate section numbers in adapter-gitlab** → renumber sections 5-14 correctly
@@ -18,10 +18,10 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 ## MEDIUM — Should fix
 
 - [ ] **11. community-sync too thick** → extract workflow logic, move branch config to project.yaml
-- [ ] **12. `/scan` ambiguous** → rename to `/scan-ui`, add `/scan-all` umbrella
+- [x] **12. `/scan` ambiguous** → renamed to `/scan-ui`
 - [ ] **13. core-security Angular-specific** → add framework-agnostic base section, move Angular patterns to subsection
 - [ ] **14. core-metrics missing fields** → add: duration_per_phase, total_duration, success/failure flag, token_usage
-- [ ] **15. Workspace setup not formalized** → add as Phase 0.5 or explicit step in Phase 0
+- [x] **15. Workspace setup not formalized** → added as Phase 0.5 (workspace-setup) in pipeline-worker
 - [ ] **16. No Figma API rate limiting** → add throttle guidance in adapter-figma (max 5 calls/sec, batch where possible)
 - [ ] **17. No Angular version targeting** → add `angular_version: ">=19"` to adapter-angular, skip checks for older versions
 - [ ] **18. Duplicate section "10" in pipeline-coder** → renumber to 10 (Component Reuse) + 11 (Library Code)
@@ -34,7 +34,7 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 - [ ] **22. No rollback command** → add `/rollback` using adapter-gitlab rollback workflow
 - [ ] **23. `/continue` should fallback to heuristic recovery** when no checkpoint exists
 - [ ] **24. Merge STANDARD and FULL routes** → they have identical phase lists, simplify to 2 routes
-- [ ] **25. Add pause/resume messaging** → worker outputs "Resume with `/continue ARGO-XXX`" after each phase
+- [x] **25. Add pause/resume messaging** → added message block to after_phase in worker dispatch
 - [ ] **26. Add Figma error handling** → adapter-figma: handle invalid fileKey, access denied, node not found
 - [ ] **27. core-security: add modern threats** → prototype pollution, SSRF, open redirect, CSP, CORS checks
 - [ ] **28. core-metrics: add aggregation implementation** → remove "future" placeholder or implement
