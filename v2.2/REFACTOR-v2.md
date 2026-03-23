@@ -119,17 +119,17 @@ skill_unavailable:
 
 ## P3: Pipeline-coder → 9.0 (HIGH)
 
-- [ ] **14. Inline все "Per X, see Y"** — 5 ссылок на core-orchestration → вставить 3-5 строк каждую
-- [ ] **15. Failure triage decision trees** — "fix issues, retry" → конкретные шаги attempt_1/attempt_2/attempt_3
-- [ ] **16. Свернуть section 8 до 3 строк** — убрать дублирование step references
-- [ ] **17. Убрать section 7 (Superpowers)** — перенести routing decision в section 3
+- [x] **14. Inline все "Per X, see Y"** — 5 ссылок на core-orchestration → вставить 3-5 строк каждую
+- [x] **15. Failure triage decision trees** — "fix issues, retry" → конкретные шаги attempt_1/attempt_2/attempt_3
+- [x] **16. Свернуть section 8 до 3 строк** — убрать дублирование step references
+- [x] **17. Убрать section 7 (Superpowers)** — перенести routing decision в section 3
 
 ## P4: Figma-coding-rules → 9.0 (HIGH)
 
-- [ ] **18. Перенумеровать 8,8b,8c,8d,8e → 1,2,3,4,5**
-- [ ] **19. Section 5 (UI rules): группировать по severity** — BLOCKER tier / MAJOR tier / MINOR tier
-- [ ] **20. Убрать дублирование CSS properties** — определить один раз, ссылаться из section 2 и ui-reviewer
-- [ ] **21. Section 3 quality check: decision tree для score < 8** — что конкретно делать с каждым типом проблемы
+- [x] **18. Перенумеровать 8,8b,8c,8d,8e → 1,2,3,4,5**
+- [x] **19. Section 5 (UI rules): группировать по severity** — BLOCKER tier / MAJOR tier / MINOR tier
+- [x] **20. Убрать дублирование CSS properties** — определить один раз, ссылаться из section 2 и ui-reviewer
+- [x] **21. Section 3 quality check: decision tree для score < 8** — что конкретно делать с каждым типом проблемы
 
 ## P5: UI-reviewer → 9.0 (HIGH)
 

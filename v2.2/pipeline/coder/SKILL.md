@@ -28,7 +28,7 @@ input:
 
 ## 2. Evaluate Gate
 
-Per core-orchestration evaluate_gate protocol. Run before writing any code.
+Run before writing any code.
 
 ```yaml
 evaluate:
@@ -73,11 +73,16 @@ evaluate:
 implement:
   order: "Parts in dependency order from plan"
 
+  execution_mode:
+    if: "complexity in [M, L, XL] AND plan has 3+ parts"
+    then: "Invoke Skill: superpowers:subagent-driven-development"
+    else: "Execute in current session (superpowers:executing-plans)"
+
   for_each_part:
     step_0: "RESEARCH existing patterns — find the closest existing component in the project and study its approach"
-    step_1: "If part has UI/CSS → run Figma Extract (section 8) for EVERY element in this part"
+    step_1: "If part has UI/CSS → run Figma Extract (figma-coding-rules section 1) for EVERY element in this part"
     step_2: "Implement code changes per plan using extracted values + existing pattern as template"
-    step_3: "If part has UI/CSS → run Figma Self-Verify (section 8b) — compare EVERY CSS property against Figma"
+    step_3: "If part has UI/CSS → run Figma Self-Verify (figma-coding-rules section 2) — compare EVERY CSS property against Figma"
     step_4: "Run tech_stack_adapter lint command"
     step_5: "Run tech_stack_adapter test command"
     step_6: "If verify/lint/test fail → fix → retry"
@@ -131,15 +136,24 @@ implement:
 verify:
   step_1_lint:
     command: "tech_stack_adapter.commands.lint"
-    on_fail: "Fix issues, retry (max 3)"
+    on_fail:
+      attempt_1: "Read error output → identify file:line → apply targeted fix"
+      attempt_2: "If same error → re-read plan, check for missed dependency or wrong import"
+      attempt_3: "If still failing → STOP, include full error log in handoff, request user help"
 
   step_2_test:
     command: "tech_stack_adapter.commands.test"
-    on_fail: "Fix tests, retry (max 3)"
+    on_fail:
+      attempt_1: "Read error output → identify file:line → apply targeted fix"
+      attempt_2: "If same error → re-read plan, check for missed dependency or wrong import"
+      attempt_3: "If still failing → STOP, include full error log in handoff, request user help"
 
   step_3_build:
     command: "tech_stack_adapter.commands.build"
-    on_fail: "Fix build errors, retry (max 3)"
+    on_fail:
+      attempt_1: "Read error output → identify file:line → apply targeted fix"
+      attempt_2: "If same error → re-read plan, check for missed dependency or wrong import"
+      attempt_3: "If still failing → STOP, include full error log in handoff, request user help"
 
   on_all_pass: "Form handoff to code-reviewer"
   on_fail_3x: "STOP, show error details, request user help"
@@ -149,17 +163,15 @@ verify:
 
 ## 5. Handoff
 
-Per core-orchestration coder_to_reviewer contract.
-
 ```yaml
 handoff:
   to: "pipeline-code-reviewer"
-  payload:
+  required_fields:
     branch: "current git branch"
     parts_implemented: "list of completed parts with file paths"
     deviations_from_plan: "from evaluate.md adjustments section"
     risks_mitigated: "issues addressed during implementation"
-  validation: "All required fields per core-orchestration contract"
+  validation: "Required: branch, parts_implemented. Halt if missing."
 ```
 
 ---
@@ -178,47 +190,22 @@ loop:
     - "Re-run verification (section 4)"
     - "Form new handoff"
   max: 3
-  guard: "core-orchestration loop_limits"
+  guard: "max: 3 iterations. If exceeded → STOP, show iteration summary, request user help"
 ```
 
 ---
 
-## 7. Superpowers Integration
-
-```yaml
-execution_strategy:
-  FULL_mode:
-    skill: "superpowers:subagent-driven-development"
-    when: "complexity M/L/XL, plan has 3+ parts"
-    description: "Fresh subagent per task + two-stage review"
-
-  SIMPLE_mode:
-    skill: "superpowers:executing-plans"
-    when: "complexity S, plan has 1-2 parts"
-    description: "Execute in current session with checkpoints"
-```
-
----
-
-## 8. Figma Implementation
+## 7. Figma Rules
 
 ```yaml
 figma_rules:
-  PREREQUISITE: "If design adapter is active, load Skill: figma-coding-rules BEFORE implementing any part"
-  contains: "Figma extraction, self-verify, UI quality check, icon extraction, UI implementation rules"
-  loaded_via: "Skill tool — load figma-coding-rules at start of Phase 3"
-
-  integration_with_for_each_part:
-    step_0: "RESEARCH existing patterns (unchanged)"
-    step_1: "If part has UI → follow figma-coding-rules section 8 (Figma Extract)"
-    step_2: "Implement code (unchanged)"
-    step_3: "If part has UI → follow figma-coding-rules section 8b (Self-Verify)"
-    step_7: "Commit per part (unchanged)"
+  PREREQUISITE: "If design adapter active → load Skill: figma-coding-rules before implementing any part"
+  sections: "1 (extract), 2 (self-verify), 3 (quality check), 4 (icons), 5 (UI rules)"
 ```
 
 ---
 
-## 9. CSS Architecture
+## 8. CSS Architecture
 
 ```yaml
 css_architecture:
@@ -232,7 +219,7 @@ css_architecture:
     - "Cross-browser: progressive enhancement, feature detection"
     - "Accessibility: focus management, color contrast, screen reader support"
   workflow:
-    step_1: "Extract exact values from Figma (section 8)"
+    step_1: "Extract exact values from Figma (figma-coding-rules section 1)"
     step_2: "Before writing CSS, check css-styling-expert for patterns applicable to this layout"
     step_3: "Write CSS following expert recommendations + project conventions"
     step_4: "If layout is complex (grid, nested flex, responsive), invoke css-styling-expert for review"
@@ -246,7 +233,7 @@ css_architecture:
 
 ---
 
-## 10. Component Reuse Rules
+## 9. Component Reuse Rules
 
 ```yaml
 component_reuse:
@@ -262,7 +249,7 @@ component_reuse:
 
 ---
 
-## 11. Library Code
+## 10. Library Code
 
 ```yaml
 library_code:

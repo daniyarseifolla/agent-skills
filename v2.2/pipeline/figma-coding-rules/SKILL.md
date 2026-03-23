@@ -10,7 +10,7 @@ Loaded by pipeline-coder Phase 3 when design adapter is active. Contains all Fig
 
 ---
 
-## 8. Figma Implementation (MANDATORY for UI tasks)
+## 1. Figma Extraction (MANDATORY for UI tasks)
 
 ```yaml
 figma_implementation:
@@ -71,7 +71,7 @@ figma_implementation:
 
 ---
 
-## 8b. Figma Self-Verify (MANDATORY after writing CSS)
+## 2. Figma Self-Verify (MANDATORY after writing CSS)
 
 ```yaml
 figma_self_verify:
@@ -93,24 +93,9 @@ figma_self_verify:
         action: "Read the SCSS/CSS you just wrote for this element"
         how: "Read the .scss/.css file, find the selector for this element"
 
-      step_3_compare_property_by_property:
-        action: "Compare EVERY property from extraction_checklist"
-        checklist:
-          - "font-family: Figma says {X} → code has {Y} → MATCH/MISMATCH"
-          - "font-size: Figma says {X}px → code has {Y}px → MATCH/MISMATCH"
-          - "font-weight: Figma says {X} → code has {Y} → MATCH/MISMATCH"
-          - "line-height: Figma says {X}px → code has {Y}px → MATCH/MISMATCH"
-          - "letter-spacing: Figma says {X}px → code has {Y} → MATCH/MISMATCH"
-          - "color: Figma says {hex} → code has {var/hex} → MATCH/MISMATCH"
-          - "padding: Figma says {T R B L}px → code has {values} → MATCH/MISMATCH"
-          - "margin: Figma says {T R B L}px → code has {values} → MATCH/MISMATCH"
-          - "gap: Figma says {X}px → code has {Y}px → MATCH/MISMATCH"
-          - "width/height: Figma says {X}px → code has {Y} → MATCH/MISMATCH"
-          - "border-radius: Figma says {X}px → code has {Y}px → MATCH/MISMATCH"
-          - "background-color: Figma says {hex} → code has {var/hex} → MATCH/MISMATCH"
-          - "border: Figma says {width style color} → code has {values} → MATCH/MISMATCH"
-          - "box-shadow: Figma says {values} → code has {values} → MATCH/MISMATCH"
-          - "opacity: Figma says {X} → code has {Y} → MATCH/MISMATCH"
+      step_3_compare:
+        action: "Compare EVERY property from section 1 extraction_checklist"
+        format_per_property: "Property: Figma says {X} → code has {Y} → MATCH/MISMATCH"
 
       step_4_fix_mismatches:
         action: "For each MISMATCH → fix immediately"
@@ -150,7 +135,7 @@ figma_self_verify:
 
 ---
 
-## 8c. UI Quality Check (after all parts implemented)
+## 3. UI Quality Check (after all parts)
 
 ```yaml
 ui_quality_check:
@@ -162,8 +147,13 @@ ui_quality_check:
     step_1: "Take screenshot of implemented page(s)"
     step_2: "Invoke Skill: refactoring-ui for scoring (0-10)"
     step_3: "Check: hierarchy, spacing, color, typography, depth, layout"
-    step_4: "If refactoring-ui score < 8 → fix issues"
-    step_5: "Re-verify fixed elements against Figma (section 8b)"
+    step_4_fix:
+      if_score_below_8:
+        - "Read refactoring-ui feedback → identify top 3 issues by impact"
+        - "For each issue: check if fix would conflict with Figma specs"
+        - "If conflict → preserve Figma value, note discrepancy in handoff"
+        - "If no conflict → apply fix, re-run section 2 (Self-Verify) for changed elements"
+        - "If score still < 7 after fixes → STOP, include score + issues in handoff"
 
   what_it_catches:
     - "Wrong visual hierarchy (all text same weight/size)"
@@ -176,7 +166,7 @@ ui_quality_check:
 
 ---
 
-## 8d. Icon Extraction
+## 4. Icon Extraction
 
 ```yaml
   icon_extraction:
@@ -208,10 +198,12 @@ ui_quality_check:
 
 ---
 
-## 8e. UI Implementation Rules
+## 5. UI Implementation Rules
+
+### 5a. BLOCKER Tier (must fix before commit)
 
 ```yaml
-ui_rules:
+ui_rules_blocker:
   portal_overlay:
     rule: "Any menu, dropdown, tooltip, popover, or modal triggered by click MUST use portal/overlay"
     why: "Without portal, overlay clips by parent overflow:hidden"
@@ -219,7 +211,12 @@ ui_rules:
       angular: "Use Angular CDK Overlay (@angular/cdk/overlay) or ask user for preferred approach"
       action: "ASK user: use CDK Overlay, PrimeNG OverlayPanel, or custom portal?"
     severity: BLOCKER
+```
 
+### 5b. MAJOR Tier (must fix before handoff)
+
+```yaml
+ui_rules_major:
   missing_states:
     rule: "For EVERY interactive component, verify ALL states exist"
     required_states:
@@ -238,16 +235,6 @@ ui_rules:
       step_3: "If user says 'придумай' → generate reasonable states from project patterns"
     severity: MAJOR
 
-  transitions:
-    rule: "Every interactive element MUST have CSS transition"
-    defaults:
-      hover: "transition: background-color 200ms ease, color 200ms ease"
-      focus: "transition: box-shadow 200ms ease, outline 200ms ease"
-      expand: "transition: height 300ms ease, opacity 200ms ease"
-    never: "transition: all (too broad, causes layout jank)"
-    duration: "200-300ms for UI interactions, never 0ms, never >500ms"
-    severity: MINOR
-
   hidden_fields:
     rule: "Hidden/collapsed elements must use correct CSS"
     patterns:
@@ -262,6 +249,34 @@ ui_rules:
     default: "outline: 2px solid var(--color-focus, #4A90D9); outline-offset: 2px"
     never: "outline: none without replacement (breaks keyboard navigation)"
     severity: MAJOR
+
+  responsive:
+    rule: "If Figma has mobile/tablet frames → implement responsive"
+    action: "Check Figma for breakpoint variants. If none → ask user"
+    severity: MAJOR
+
+  skeleton_loading:
+    rule: "Components that load async data MUST have loading state"
+    options:
+      - "Skeleton placeholder (preferred for content areas)"
+      - "Spinner (for buttons, small actions)"
+      - "Progress bar (for uploads, long operations)"
+    severity: MAJOR
+```
+
+### 5c. MINOR Tier (fix if time permits)
+
+```yaml
+ui_rules_minor:
+  transitions:
+    rule: "Every interactive element MUST have CSS transition"
+    defaults:
+      hover: "transition: background-color 200ms ease, color 200ms ease"
+      focus: "transition: box-shadow 200ms ease, outline 200ms ease"
+      expand: "transition: height 300ms ease, opacity 200ms ease"
+    never: "transition: all (too broad, causes layout jank)"
+    duration: "200-300ms for UI interactions, never 0ms, never >500ms"
+    severity: MINOR
 
   z_index:
     rule: "Never hardcode z-index: 9999. Use project scale."
@@ -286,19 +301,6 @@ ui_rules:
       draggable: "cursor: grab / cursor: grabbing"
       loading: "cursor: wait"
     severity: MINOR
-
-  responsive:
-    rule: "If Figma has mobile/tablet frames → implement responsive"
-    action: "Check Figma for breakpoint variants. If none → ask user"
-    severity: MAJOR
-
-  skeleton_loading:
-    rule: "Components that load async data MUST have loading state"
-    options:
-      - "Skeleton placeholder (preferred for content areas)"
-      - "Spinner (for buttons, small actions)"
-      - "Progress bar (for uploads, long operations)"
-    severity: MAJOR
 
   animation_duration:
     rule: "Standard durations for UI animations"
