@@ -248,7 +248,7 @@ skills:
 
 ---
 
-## 8. Cherry-Pick Build Fix Patterns
+## 7. Cherry-Pick Build Fix Patterns
 
 ```yaml
 cherry_pick_fixes:

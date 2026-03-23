@@ -28,20 +28,21 @@ facades/scan-practices ┘           ├─ pipeline/code-reviewer (sonnet)
 
 | Skill | Lines | Purpose |
 |-------|-------|---------|
-| core/orchestration | 221 | Handoff, checkpoints, recovery, loop limits, evaluate gate, complexity routing, re-routing |
-| core/security | 187 | OWASP security checklist with grep patterns (XSS, injection, auth, secrets, CSRF) |
-| core/metrics | 113 | Pipeline metrics collection and storage |
+| core/orchestration | 337 | Handoff, checkpoints, recovery, loop limits, evaluate gate, complexity routing, re-routing |
+| core/security | 241 | OWASP security checklist with grep patterns (XSS, injection, auth, secrets, CSRF) |
+| core/metrics | 119 | Pipeline metrics collection and storage |
 
 ### Pipeline (project-agnostic phases)
 
 | Skill | Lines | Model | Run as | Purpose |
 |-------|-------|-------|--------|---------|
-| pipeline/worker | 388 | — | inline | Orchestrator: config, adapters, phases, checkpoints |
+| pipeline/worker | 408 | — | inline | Orchestrator: config, adapters, phases, checkpoints |
 | pipeline/planner | 264 | opus | inline | Research codebase, create plan |
-| pipeline/coder | 548 | sonnet | inline | Evaluate gate + implement code |
+| pipeline/coder | 270 | sonnet | inline | Evaluate gate + implement code |
+| pipeline/figma-coding-rules | ~312 | — (disable-model-invocation) | loaded by coder | Figma extraction, self-verify, UI quality, icon rules |
 | pipeline/plan-reviewer | 164 | sonnet | subagent | Validate plan against AC and architecture |
 | pipeline/code-reviewer | 219 | sonnet | subagent/worktree | Review diff: plan compliance, security, quality |
-| pipeline/ui-reviewer | 362 | sonnet | subagent | Functional + visual testing, parallel QA |
+| pipeline/ui-reviewer | 367 | sonnet | subagent | Functional + visual testing, parallel QA |
 | pipeline/code-researcher | 101 | haiku | Agent tool | Cheap read-only codebase search (L/XL only) |
 
 ### Adapters (swappable per project)
@@ -50,8 +51,8 @@ facades/scan-practices ┘           ├─ pipeline/code-reviewer (sonnet)
 |-------|-------|------|---------|
 | adapters/jira | 178 | task-source | Fetch task, parse AC, transitions, MR description |
 | adapters/gitlab | 304 | ci-cd | MR creation, pipeline monitoring, deploy, cherry-pick, CI disable/restore |
-| adapters/angular | 229 | tech-stack | Lint/test/build commands, quality patterns, module lookup |
-| adapters/figma | 156 | design | Design context, screenshots, visual comparison, self-verify extraction |
+| adapters/angular | 265 | tech-stack | Lint/test/build commands, quality patterns, module lookup |
+| adapters/figma | 206 | design | Design context, screenshots, visual comparison, self-verify extraction |
 
 ### Facades (user-facing entry points)
 
@@ -59,28 +60,29 @@ facades/scan-practices ┘           ├─ pipeline/code-reviewer (sonnet)
 |-------|-------|----------|
 | facades/jira-worker | 45 | ARGO-XXX, "сделай задачу", "возьми тикет", "implement" |
 | facades/deploy | 34 | "задеплой", "deploy to test/prod", "check pipeline" |
-| facades/community-sync | 179 | "обновить ветки", "sync branches", "distribute commit" |
+| facades/community-sync | 181 | "обновить ветки", "sync branches", "distribute commit" |
 | facades/scan-ui-inventory | 132 | "скан UI", "scan components", "обнови инвентарь" |
 | facades/scan-qa-playbook | 211 | "скан QA", "scan QA", "сгенерируй playbook", "generate playbook" |
 | facades/scan-practices | 149 | "скан практик", "scan practices", "обнови практики", "собери грабли" |
 
-### Commands (14 slash commands)
+### Commands (15 slash commands, including /code-review alias)
 
 | Command | Lines | Trigger |
 |---------|-------|---------|
 | /worker | 13 | Start full pipeline |
 | /plan | 14 | Run planner only |
 | /cr | 15 | Code review current diff |
+| /code-review | 15 | Alias for /cr |
 | /ui-review | 13 | UI review current state |
 | /deploy | 14 | Deploy to environment |
 | /sync | 11 | Sync community branches |
-| /scan | 9 | Scan UI inventory |
+| /scan-ui | 9 | Scan UI inventory |
 | /scan-qa | 9 | Generate QA playbook |
 | /scan-practices | 9 | Scan project practices |
-| /attach | 131 | Attach context (files, URLs, Figma) |
+| /attach | 146 | Attach context (files, URLs, Figma) |
 | /verify-figma | 53 | Verify Figma-to-code fidelity |
 | /progress | 24 | Show pipeline progress |
-| /continue | 16 | Resume from checkpoint |
+| /continue | 28 | Resume from checkpoint |
 | /cleanup | 18 | Clean up worktrees and branches |
 
 ## Model Routing
@@ -104,9 +106,9 @@ facades/scan-practices ┘           ├─ pipeline/code-reviewer (sonnet)
 
 | Feature | v1.0 | v2.2 |
 |---------|------|------|
-| Skills | 8 monolithic | 20 focused |
-| Commands | — | 14 slash commands |
-| Max lines/skill | 443 | 548 |
+| Skills | 8 monolithic | 21 focused |
+| Commands | — | 15 slash commands |
+| Max lines/skill | 443 | 408 |
 | Model routing | none | opus/sonnet/haiku |
 | Security checks | none | OWASP checklist |
 | Session recovery | none | checkpoint + heuristic |

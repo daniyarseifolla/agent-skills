@@ -12,8 +12,8 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 - [x] **6. `/progress` references `/resume`** → fixed to `/continue`
 - [x] **7. `/attach` bypasses checkpoints** → added checkpoint writing after each phase dispatch + initial checkpoint in Phase 0
 - [x] **8. Commit strategy undefined** → add to pipeline-coder: commit per part. Worker Phase 6: final merge commit or squash
-- [ ] **9. "Task tool" → "Agent tool"** → fix in pipeline-planner, pipeline-code-researcher
-- [ ] **10. Duplicate section numbers in adapter-gitlab** → renumber sections 5-14 correctly
+- [x] **9. "Task tool" → "Agent tool"** → fix in pipeline-planner, pipeline-code-researcher
+- [x] **10. Duplicate section numbers in adapter-gitlab** → renumber sections 5-14 correctly
 
 ## MEDIUM — Should fix
 
@@ -24,11 +24,11 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 - [x] **15. Workspace setup not formalized** → added as Phase 0.5 (workspace-setup) in pipeline-worker
 - [x] **16. No Figma API rate limiting** → add throttle guidance in adapter-figma (max 5 calls/sec, batch where possible)
 - [x] **17. No Angular version targeting** → add `angular_version: ">=19"` to adapter-angular, skip checks for older versions
-- [ ] **18. Duplicate section "10" in pipeline-coder** → renumber to 10 (Component Reuse) + 11 (Library Code)
+- [x] **18. Duplicate section "10" in pipeline-coder** → renumber to 10 (Component Reuse) + 11 (Library Code)
 
 ## LOW — Nice to have
 
-- [ ] **19. SKILLS_OVERVIEW line counts stale** → regenerate from actual file sizes
+- [x] **19. SKILLS_OVERVIEW line counts stale** → regenerate from actual file sizes
 - [x] **20. project.yaml.example says v2.1** → updated to v2.2
 - [ ] **21. No `/scan-all` umbrella command** → add: runs scan-ui + scan-practices + scan-qa
 - [ ] **22. No rollback command** → add `/rollback` using adapter-gitlab rollback workflow

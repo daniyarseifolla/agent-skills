@@ -69,7 +69,7 @@ test_planning:
       - Group by page/feature (tests on /search are independent from /profile)
       - Group by test type (functional vs visual vs edge cases)
       - Each group = one parallel agent
-      - Max 10 agents (avoid OOM)
+      - Max 7 agents (avoid OOM)
 
     test_plan_format: |
       ## Test Plan: {task-key}
@@ -132,7 +132,8 @@ parallel_agents:
     launch: "Agent(subagent, model: sonnet)"
     skill: "agent-browser"
     parallel: true
-    max_agents: 10
+    max_agents: 7
+    note: "Per Iron Law #5 from core-orchestration"
 
   per_agent_prompt: |
     You are QA agent "{group_name}".

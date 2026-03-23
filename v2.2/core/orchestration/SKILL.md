@@ -323,12 +323,15 @@ verdict_parsing:
 
   keywords:
     positive: ["APPROVED", "APPROVED_WITH_COMMENTS", "PROCEED", "PASS"]
-    negative: ["NEEDS_CHANGES", "CHANGES_REQUESTED", "REJECTED", "RETURN", "FAIL", "ISSUES_FOUND"]
+    negative: ["NEEDS_CHANGES", "CHANGES_REQUESTED", "REJECTED", "RETURN", "FAIL"]
+    non_blocking_negative: ["ISSUES_FOUND"]
     error: ["ERROR", "STOP", "BLOCKED"]
 
   algorithm:
     step_1: "Search agent output for any keyword from negative list"
-    step_2: "If found → extract the specific verdict (e.g., CHANGES_REQUESTED)"
+    step_1b: "Search for non_blocking_negative keywords (ISSUES_FOUND)"
+    step_1b_action: "If found → log findings, do NOT block progress. Proceed to step_3."
+    step_2: "If negative found → extract the specific verdict (e.g., CHANGES_REQUESTED)"
     step_3: "If no negative → search for positive keyword"
     step_4: "If positive found → extract verdict"
     step_5: "If NO keyword found → treat as ERROR, show output to user, ask for interpretation"
