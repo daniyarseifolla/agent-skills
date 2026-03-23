@@ -81,6 +81,33 @@ handoff_validation: >
   handoff are present and non-empty. On failure: halt, report missing fields.
 ```
 
+### Verdict Vocabulary Reference
+
+```yaml
+verdict_mapping:
+  plan_review:
+    verdicts: [APPROVED, NEEDS_CHANGES, REJECTED]
+    note: "NEEDS_CHANGES = plan needs revision, loop back to planner"
+
+  code_review:
+    verdicts: [APPROVED, APPROVED_WITH_COMMENTS, CHANGES_REQUESTED]
+    note: "CHANGES_REQUESTED = code needs fixes, loop back to coder"
+
+  ui_review:
+    verdicts: [PASS, ISSUES_FOUND]
+    note: "ISSUES_FOUND = issues logged, proceed to completion (no loop)"
+
+  evaluate_gate:
+    verdicts: [PROCEED, REVISE, RETURN]
+    note: "RETURN = plan not implementable, loop back to plan-review"
+
+  mapping_for_worker:
+    description: "Worker must handle all verdict vocabularies. Use this mapping:"
+    blocks_progress: [NEEDS_CHANGES, CHANGES_REQUESTED, RETURN, REJECTED]
+    allows_progress: [APPROVED, APPROVED_WITH_COMMENTS, PROCEED, REVISE, PASS]
+    logs_only: [ISSUES_FOUND]
+```
+
 ---
 
 ## 4. Checkpoint Protocol
@@ -218,4 +245,93 @@ gate_rules:
   never_auto_approve: true
   on_timeout: "halt pipeline, preserve checkpoint"
   on_rejection: "halt pipeline, preserve checkpoint, await instructions"
+```
+
+---
+
+## 10. Iron Laws of Agent Orchestration
+
+```yaml
+iron_laws:
+  1_parallel_first:
+    rule: "Never spawn workers sequentially when they are independent"
+    action: "Dispatch all independent agents in ONE message with multiple Agent tool calls"
+    example: "code-review + ui-review are independent → dispatch both in parallel"
+
+  2_detect_failures:
+    rule: "Always check agent results for failure signals"
+    action: "After each agent completes, parse output for verdict keywords (APPROVED/FAIL/CHANGES_REQUESTED). If no verdict found → treat as ERROR, ask user."
+    never: "Silence does not mean success. Missing verdict = failed agent."
+
+  3_no_cross_worker:
+    rule: "Agents do not communicate with each other — everything goes through the orchestrator"
+    action: "Worker dispatches agents, collects results, decides next step. Agents never reference other agents' output directly."
+
+  4_structured_handoff:
+    rule: "Every agent result must contain: verdict + findings + recommendations"
+    enforcement: "Worker parses for verdict keyword. If missing → ERROR."
+
+  5_max_workers:
+    rule: "Maximum 7 parallel agents per fan-out"
+    why: "More than 7 causes OOM, context pollution, and resource contention"
+    applies_to: "ui-reviewer QA agent groups, any dispatching-parallel-agents usage"
+```
+
+---
+
+## 11. Task Classification
+
+```yaml
+task_classification:
+  independent:
+    description: "Tasks with no shared state, can run in parallel"
+    examples:
+      - "Phase 4 (code-review) + Phase 5 (ui-review)"
+      - "QA agent groups in ui-reviewer"
+    dispatch: "Parallel — multiple Agent calls in one message"
+
+  dependent:
+    description: "Task B needs Task A's output"
+    examples:
+      - "Phase 1 (plan) → Phase 2 (plan-review) — reviewer needs the plan"
+      - "Phase 3 (code) → Phase 4 (code-review) — reviewer needs the diff"
+    dispatch: "Sequential — wait for A, then start B"
+
+  fan_out_fan_in:
+    description: "One input splits into N parallel tasks, results merge back"
+    examples:
+      - "ui-reviewer: 1 test plan → N QA agents → 1 merged report"
+    dispatch: "Parallel dispatch, then aggregate"
+    max_fan_out: 7
+
+  pipeline:
+    description: "Data flows through a chain of transformations"
+    examples:
+      - "plan → review → code → review → completion"
+    dispatch: "Strictly sequential with handoff contracts"
+```
+
+---
+
+## 12. Verdict Parsing Protocol
+
+```yaml
+verdict_parsing:
+  description: "How worker extracts verdicts from agent free-text output"
+
+  method: "Keyword search in agent output text"
+
+  keywords:
+    positive: ["APPROVED", "APPROVED_WITH_COMMENTS", "PROCEED", "PASS"]
+    negative: ["NEEDS_CHANGES", "CHANGES_REQUESTED", "REJECTED", "RETURN", "FAIL", "ISSUES_FOUND"]
+    error: ["ERROR", "STOP", "BLOCKED"]
+
+  algorithm:
+    step_1: "Search agent output for any keyword from negative list"
+    step_2: "If found → extract the specific verdict (e.g., CHANGES_REQUESTED)"
+    step_3: "If no negative → search for positive keyword"
+    step_4: "If positive found → extract verdict"
+    step_5: "If NO keyword found → treat as ERROR, show output to user, ask for interpretation"
+
+  never: "Do not assume success when no verdict is found. Missing verdict = failed agent."
 ```

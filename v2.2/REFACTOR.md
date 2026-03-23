@@ -6,7 +6,7 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 
 - [x] **1. `/review` conflicts with Claude Code built-in** → renamed to `/cr` with `/code-review` alias
 - [ ] **2. pipeline-coder too long (549 lines)** → extract sections 8-8e into separate skill `figma-coding-rules` or split into `pipeline-coder` (implementation) + `pipeline-coder-figma` (verify)
-- [ ] **3. Verdict mismatch** → unify: plan-reviewer uses `NEEDS_CHANGES`, code-reviewer uses `CHANGES_REQUESTED`. Pick one vocabulary or document mapping in core-orchestration
+- [x] **3. Verdict mismatch** → documented verdict vocabulary mapping in core-orchestration section 3
 - [x] **4. Tolerance conflict** → coder 8b: ±0px, ui-reviewer: ±2px. Make ui-reviewer stricter (±0px) or document why different
 - [x] **5. Duplicate ui-ux-pro-max** → remove from coder 8c, keep only in ui-reviewer (Phase 5). Coder uses refactoring-ui only
 - [x] **6. `/progress` references `/resume`** → fixed to `/continue`
@@ -41,14 +41,14 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 
 ## ORCHESTRATION — From swarm-coordination review (2026-03-23)
 
-- [ ] **29. Add Iron Laws to core-orchestration** — 5 rules from swarm-coordination:
+- [x] **29. Add Iron Laws to core-orchestration** — 5 rules from swarm-coordination:
   1. Never spawn workers sequentially (parallel if independent)
   2. Always detect failures (structured error reporting, not silence = ok)
   3. No cross-worker communication (everything through orchestrator)
   4. Structured handoff required (mandatory template with Context/Findings/Recommendations/Artifacts)
   5. Max 7 workers per fan-out (reduce from current max 10 in ui-reviewer)
 
-- [ ] **30. Add task classification to core-orchestration** — classify phases as:
+- [x] **30. Add task classification to core-orchestration** — classify phases as:
   - Independent (can parallel): code-review + ui-review
   - Dependent (sequential): plan → plan-review, code → code-review
   - Fan-out/Fan-in: ui-reviewer test groups
@@ -56,7 +56,7 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 
 - [ ] **31. Parallelize Phase 4 + Phase 5** — code-review and ui-review are independent, can run simultaneously. Worker currently runs them sequentially.
 
-- [ ] **32. Structured agent error reporting** — every subagent must return `{ status: success|fail, findings: [], errors: [] }`, not free text. Worker must check status before proceeding.
+- [x] **32. Structured agent error reporting** — rewritten as verdict parsing protocol (keyword-based, not structured JSON). Added as section 12 in core-orchestration.
 
 - [ ] **33. Aggregation template for multi-agent results** — when fan-out agents complete, merge results into: consensus points, conflicts, combined recommendations.
 
