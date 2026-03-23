@@ -76,6 +76,27 @@ handoff_contracts:
     iteration: "N/3"
     required: [verdict, iteration]
 
+  worker_to_planner:
+    required: [task, complexity, route, figma_urls, ui_inventory_path]
+    optional: [tech_stack_adapter, design_adapter]
+    note: "Worker passes full task object + classification results to planner"
+
+  worker_to_ui_reviewer:
+    required: [branch, figma_urls, app_url, credentials]
+    optional: [design_adapter, tech_stack_adapter, ui_inventory_path]
+    note: "Worker resolves app_url and credentials BEFORE dispatching ui-reviewer"
+
+  coder_evaluate_return:
+    required: [plan_issues, blocked_parts]
+    optional: [suggestions]
+    note: "Coder returns to plan-reviewer when plan is not implementable (RETURN verdict)"
+
+  ui_reviewer_to_completion:
+    required: [verdict, score]
+    optional: [breakdown, blockers, suggestions]
+    verdict_values: "PASS | PASS_WITH_ISSUES | ISSUES_FOUND"
+    note: "ISSUES_FOUND is non-blocking (logs_only in verdict_mapping)"
+
 handoff_validation: >
   Before starting a phase, verify all required fields in the incoming
   handoff are present and non-empty. On failure: halt, report missing fields.
@@ -119,13 +140,15 @@ checkpoint_schema:
   task_key: string
   phase_completed: "0-6"
   phase_name: string
-  iteration: { plan_review: "N/3", code_review: "N/3" }
+  iteration: { plan_review: "N/3", code_review: "N/3", evaluate_return: "N/2" }
   verdict: string
   complexity: "S|M|L|XL"
   route: "MINIMAL|STANDARD|FULL"
   timestamp: "ISO-8601"
   ci_disabled: "boolean — whether CI was disabled during development"
   worktree_path: "string|null — path to worktree if used, null if working in main repo"
+  app_url: "string|null — dev server URL for UI review, resolved in Phase 0.5"
+  credentials: "object|null — test credentials from task description"
   handoff_payload: object
   issues_history: object[]
 
@@ -171,6 +194,17 @@ artifact_paths:
 loop_limits:
   plan_review: { max: 3, participants: [planner, plan-reviewer], counter: "checkpoint.iteration.plan_review" }
   code_review: { max: 3, participants: [coder, code-reviewer],   counter: "checkpoint.iteration.code_review" }
+
+  evaluate_return:
+    max: 2
+    participants: [coder_evaluate, plan_reviewer]
+    counter: "checkpoint.iteration.evaluate_return"
+    on_exceeded: "STOP → show plan issues from all attempts → request user intervention"
+    note: "RETURN from evaluate gate is more severe than NEEDS_CHANGES — lower budget"
+
+  rejected_handling:
+    rule: "REJECTED from plan-reviewer → STOP immediately, do not consume loop iteration"
+    action: "Show rejection reason to user. Do not re-plan without explicit user guidance."
 
 guard_check:
   when: "BEFORE launching any re-loop phase"

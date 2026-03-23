@@ -209,6 +209,11 @@ standalone:
 
   behavior:
     step_1: "Detect current git branch"
+      command: "git branch --show-current"
+      if_empty_detached_head:
+        - "git log --oneline -5 | grep -oE '[A-Z]+-[0-9]+' | head -1"
+        - "If found → use as task_key"
+        - "If not found → ask user for branch name or task key"
     step_2: "Search docs/plans/ for plan matching branch or task key"
     step_3_plan_found: "Run full review including plan compliance"
     step_3_no_plan: "Run review without plan compliance (diff-only mode)"
@@ -216,4 +221,8 @@ standalone:
     step_5: "Load core-security"
     step_6: "Execute review areas (section 3), skip plan_compliance if no plan"
     step_7: "Output code-review.md"
+    output_path:
+      primary: "docs/plans/{task-key}/code-review.md"
+      fallback: "docs/plans/standalone-{branch-name}/code-review.md"
+      last_resort: "./code-review.md (current directory)"
 ```

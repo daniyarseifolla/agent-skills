@@ -37,18 +37,30 @@ test_planning:
     action: "Invoke Skill: brainstorming to identify WHAT to test"
     input: "branch changes + figma_urls + task AC"
     output: "test scenarios and focus areas"
+    on_unavailable: |
+      WARN: Skill brainstorming unavailable.
+      Required for: identifying test scenarios and focus areas.
+      Options: (1) Install skill (2) Skip step (3) Abort phase
 
   step_1b:
     action: "Invoke Skill: qa-test-planner to generate DETAILED test cases from scenarios"
     input: "brainstorming scenarios + .claude/qa-playbook.md + figma_urls"
     output: "test cases grouped by type (functional, visual, edge, mobile, states)"
     note: "qa-test-planner generates manual test cases, regression suites, and bug scenarios"
+    on_unavailable: |
+      WARN: Skill qa-test-planner unavailable.
+      Required for: generating detailed test cases from scenarios.
+      Options: (1) Install skill (2) Skip step (3) Abort phase
 
   step_1c:
     action: "Invoke Skill: ui-ux-pro-max for UX review checklist"
     input: "page screenshots or component list"
     output: "UX issues found (interaction states, accessibility, visual hierarchy)"
     skip_if: "no screenshots available yet"
+    on_unavailable: |
+      WARN: Skill ui-ux-pro-max unavailable.
+      Required for: UX review checklist (interaction states, accessibility, visual hierarchy).
+      Options: (1) Install skill (2) Skip step (3) Abort phase
 
   step_2:
     action: "Merge brainstorming + qa-test-planner + ui-ux-pro-max + qa-playbook into test plan"
@@ -134,6 +146,14 @@ parallel_agents:
     parallel: true
     max_agents: 7
     note: "Per Iron Law #5 from core-orchestration"
+    on_unavailable_agent_browser: |
+      WARN: Skill agent-browser unavailable.
+      Required for: functional UI testing via browser automation.
+      Options: (1) Install skill (2) Skip step (3) Abort phase
+    on_unavailable_dispatching_parallel_agents: |
+      WARN: Skill superpowers:dispatching-parallel-agents unavailable.
+      Required for: parallel agent dispatch for test groups.
+      Options: (1) Install skill (2) Skip step — run agents sequentially (3) Abort phase
 
   per_agent_prompt: |
     You are QA agent "{group_name}".
@@ -247,6 +267,10 @@ parallel_agents:
     skill: "visual-qa"
     when: "After per-element Figma comparison is done"
     purpose: "Catch issues that per-element check misses: overall visual rhythm, alignment across elements, responsive problems, polish details"
+    on_unavailable: |
+      WARN: Skill visual-qa unavailable.
+      Required for: post-implementation screenshot QA (visual rhythm, alignment, responsive, polish).
+      Options: (1) Install skill (2) Skip step (3) Abort phase
     workflow:
       - "Take full-page screenshot of implemented page"
       - "Invoke Skill: visual-qa with screenshot + Figma screenshot as reference"
@@ -359,10 +383,19 @@ standalone:
 
   behavior:
     step_1: "Detect current git branch"
+      command: "git branch --show-current"
+      if_empty_detached_head:
+        - "git log --oneline -5 | grep -oE '[A-Z]+-[0-9]+' | head -1"
+        - "If found → use as task_key"
+        - "If not found → ask user for branch name or task key"
     step_2: "Search docs/plans/ for task plan — extract figma_urls"
     step_3: "If no figma_urls found, ask user"
     step_4: "Ask user for app_url if not known"
     step_5: "Load adapters from project.yaml or autodetect"
     step_6: "Run full UI review (sections 2-5)"
     step_7: "Output ui-review.md"
+    output_path:
+      primary: "docs/plans/{task-key}/ui-review.md"
+      fallback: "docs/plans/standalone-{branch-name}/ui-review.md"
+      last_resort: "./ui-review.md (current directory)"
 ```

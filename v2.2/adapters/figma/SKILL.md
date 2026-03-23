@@ -10,6 +10,24 @@ Implements the `design` adapter contract. Loaded when `project.yaml` has `design
 
 ---
 
+## 0. Preflight Check
+
+```yaml
+preflight:
+  check: "Verify Figma MCP is available before any API calls"
+  method: "Attempt get_metadata with a known fileKey, or check tool availability"
+  on_unavailable: |
+    WARN: Figma MCP is not connected.
+    Figma-dependent features will be skipped:
+    - Visual comparison (ui-reviewer)
+    - CSS extraction (figma-coding-rules)
+    - Figma verification (/verify-figma)
+    Action: Check Figma MCP connection in Claude Code settings.
+  skip_signal: "figma_mcp_available: false — pass to consuming skills"
+```
+
+---
+
 ## 1. parse_urls(text)
 
 ```yaml

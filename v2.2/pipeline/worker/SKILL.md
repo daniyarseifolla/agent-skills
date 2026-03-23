@@ -81,7 +81,7 @@ display_before_start:
     step_1_worktree: "If user chose worktree=y → Invoke Skill: superpowers:using-git-worktrees"
     step_2_branch: "If worktree=n → create branch feat/{task_key} in current repo"
     step_3_ci: "If user chose CI=y AND not in worktree → ci-cd adapter disable_ci(task_key)"
-    step_4_checkpoint: "Save checkpoint: phase_completed: 0, ci_disabled: bool, worktree_path: string|null"
+    step_4_checkpoint: "Save checkpoint: phase_completed: 0, ci_disabled: bool, worktree_path: string|null, app_url: string|null, credentials: object|null"
 
 ---
 
@@ -136,6 +136,16 @@ workspace:
     skip_if:
       - "Working in worktree (pushes from worktree don't trigger CI on feature branch)"
       - "No .gitlab-ci.yml exists"
+
+  app_url_resolution:
+    prompt: "Dev server URL? (auto-detect или укажи вручную)"
+    auto_detect:
+      - "curl -s -o /dev/null -w '%{http_code}' http://localhost:4200"
+      - "curl -s -o /dev/null -w '%{http_code}' http://localhost:6200"
+      - "curl -s -o /dev/null -w '%{http_code}' http://localhost:3000"
+    if_detected: "Store in checkpoint.app_url"
+    if_not_detected: "Ask user for URL, store in checkpoint.app_url"
+    skip_if: "no design adapter (no UI review needed)"
 ```
 
 ---

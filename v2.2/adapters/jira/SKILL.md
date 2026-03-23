@@ -25,7 +25,8 @@ steps:
       assignee: "fields.assignee.displayName"
       status: "fields.status.name"
       figma_urls: "parse_urls(fields.description)"
-  - return: structured task object
+      credentials: "parse_credentials(fields.description)"
+  - return: "structured task object: title, description, acceptance_criteria, priority, assignee, status, figma_urls, credentials"
 
   extended_parsing:
     subtasks: "Extract subtask list if present"

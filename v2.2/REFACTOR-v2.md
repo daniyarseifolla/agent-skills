@@ -100,22 +100,22 @@ skill_unavailable:
 
 ## P1: Handoff контракты (CRITICAL)
 
-- [ ] **1. Добавить worker_to_planner контракт** — fields: task, complexity, route, tech_stack_adapter, design_adapter, figma_urls, ui_inventory_path
-- [ ] **2. Добавить worker_to_ui_reviewer контракт** — fields: branch, figma_urls, app_url, credentials, design_adapter, tech_stack_adapter, ui_inventory_path
-- [ ] **3. Добавить evaluate_return контракт** — fields: plan_issues[], suggestions[], blocked_parts[]
-- [ ] **4. Добавить ui_reviewer_to_completion контракт** — fields: verdict (PASS/PASS_WITH_ISSUES/ISSUES_FOUND), score, breakdown, blockers
-- [ ] **5. credentials: добавить в return block jira-адаптера + в checkpoint schema**
-- [ ] **6. app_url: спрашивать в Phase 0.5, хранить в checkpoint**
-- [ ] **7. evaluate_return: добавить счётчик (max 2) + REJECTED → halt сразу**
+- [x] **1. Добавить worker_to_planner контракт** — fields: task, complexity, route, tech_stack_adapter, design_adapter, figma_urls, ui_inventory_path
+- [x] **2. Добавить worker_to_ui_reviewer контракт** — fields: branch, figma_urls, app_url, credentials, design_adapter, tech_stack_adapter, ui_inventory_path
+- [x] **3. Добавить evaluate_return контракт** — fields: plan_issues[], suggestions[], blocked_parts[]
+- [x] **4. Добавить ui_reviewer_to_completion контракт** — fields: verdict (PASS/PASS_WITH_ISSUES/ISSUES_FOUND), score, breakdown, blockers
+- [x] **5. credentials: добавить в return block jira-адаптера + в checkpoint schema**
+- [x] **6. app_url: спрашивать в Phase 0.5, хранить в checkpoint**
+- [x] **7. evaluate_return: добавить счётчик (max 2) + REJECTED → halt сразу**
 
 ## P2: Standalone (CRITICAL)
 
-- [ ] **8. Skill unavailable → WARN, не fallback** — pattern P-C выше, применить ко всем standalone скиллам
-- [ ] **9. Detached HEAD fallback** — git log → parse task key → спросить юзера. В code-reviewer, ui-reviewer, /cr, /verify-figma
-- [ ] **10. Figma MCP preflight** — проверка доступности перед вызовом. В adapter-figma section 0
-- [ ] **11. Standalone output path fallback** — `docs/plans/standalone-{branch-name}/` если task-key не определяется
-- [ ] **12. /attach: обрабатывать blocking verdicts** — если review вернул CHANGES_REQUESTED → показать юзеру, не игнорировать
-- [ ] **13. /attach: checkpoint как SET фаз** — `completed_phases: [0, 1, 3]` вместо watermark `phase_completed: 3`
+- [x] **8. Skill unavailable → WARN, не fallback** — pattern P-C выше, применить ко всем standalone скиллам
+- [x] **9. Detached HEAD fallback** — git log → parse task key → спросить юзера. В code-reviewer, ui-reviewer, /cr, /verify-figma
+- [x] **10. Figma MCP preflight** — проверка доступности перед вызовом. В adapter-figma section 0
+- [x] **11. Standalone output path fallback** — `docs/plans/standalone-{branch-name}/` если task-key не определяется
+- [x] **12. /attach: обрабатывать blocking verdicts** — если review вернул CHANGES_REQUESTED → показать юзеру, не игнорировать
+- [x] **13. /attach: checkpoint как SET фаз** — `completed_phases: [0, 1, 3]` вместо watermark `phase_completed: 3`
 
 ## P3: Pipeline-coder → 9.0 (HIGH)
 
