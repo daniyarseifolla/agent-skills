@@ -9,6 +9,24 @@ Implements the `tech-stack` adapter contract. Loaded when `project.yaml` has `te
 
 ---
 
+## Version Targeting
+
+```yaml
+angular_version:
+  minimum: ">=19"
+  signal_inputs: ">=17.1 (input(), input.required())"
+  signal_outputs: ">=17.3 (output())"
+  new_control_flow: ">=17 (@if, @for, @switch)"
+  signal_forms: ">=21 (experimental)"
+  httpResource: ">=19"
+
+  check: "Read package.json → @angular/core version. Skip checks for features above project version."
+
+  override: "project.yaml → angular_version field (if specified, use that instead of package.json)"
+```
+
+---
+
 ## 1. Commands
 
 Default commands. Override via `project.yaml -> project.commands`.

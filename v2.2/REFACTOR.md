@@ -19,11 +19,11 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 
 - [ ] **11. community-sync too thick** → extract workflow logic, move branch config to project.yaml
 - [x] **12. `/scan` ambiguous** → renamed to `/scan-ui`
-- [ ] **13. core-security Angular-specific** → add framework-agnostic base section, move Angular patterns to subsection
-- [ ] **14. core-metrics missing fields** → add: duration_per_phase, total_duration, success/failure flag, token_usage
+- [x] **13. core-security Angular-specific** → add framework-agnostic base section, move Angular patterns to subsection
+- [x] **14. core-metrics missing fields** → add: duration_per_phase, total_duration, success/failure flag, token_usage
 - [x] **15. Workspace setup not formalized** → added as Phase 0.5 (workspace-setup) in pipeline-worker
-- [ ] **16. No Figma API rate limiting** → add throttle guidance in adapter-figma (max 5 calls/sec, batch where possible)
-- [ ] **17. No Angular version targeting** → add `angular_version: ">=19"` to adapter-angular, skip checks for older versions
+- [x] **16. No Figma API rate limiting** → add throttle guidance in adapter-figma (max 5 calls/sec, batch where possible)
+- [x] **17. No Angular version targeting** → add `angular_version: ">=19"` to adapter-angular, skip checks for older versions
 - [ ] **18. Duplicate section "10" in pipeline-coder** → renumber to 10 (Component Reuse) + 11 (Library Code)
 
 ## LOW — Nice to have
@@ -35,8 +35,8 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 - [ ] **23. `/continue` should fallback to heuristic recovery** when no checkpoint exists
 - [ ] **24. Merge STANDARD and FULL routes** → they have identical phase lists, simplify to 2 routes
 - [x] **25. Add pause/resume messaging** → added message block to after_phase in worker dispatch
-- [ ] **26. Add Figma error handling** → adapter-figma: handle invalid fileKey, access denied, node not found
-- [ ] **27. core-security: add modern threats** → prototype pollution, SSRF, open redirect, CSP, CORS checks
+- [x] **26. Add Figma error handling** → adapter-figma: handle invalid fileKey, access denied, node not found
+- [x] **27. core-security: add modern threats** → prototype pollution, SSRF, open redirect, CSP, CORS checks
 - [ ] **28. core-metrics: add aggregation implementation** → remove "future" placeholder or implement
 
 ## ORCHESTRATION — From swarm-coordination review (2026-03-23)

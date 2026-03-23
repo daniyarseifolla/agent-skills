@@ -154,3 +154,53 @@ steps:
       fileKey: "{fileKey}"
   - return: "file name, last modified, version, editors"
 ```
+
+---
+
+## 8. Rate Limiting
+
+```yaml
+rate_limits:
+  description: "Figma API has rate limits. Multiple get_design_context calls can hit them."
+  guidance:
+    - "Max 5 get_design_context calls per minute"
+    - "For pages with 10+ elements: batch by component group, not per-element"
+    - "If rate limited (429 error): wait 60 seconds, retry"
+    - "Cache results: if same nodeId requested twice in one session, reuse first result"
+    - "Prefer get_design_context with parent node over multiple child node calls"
+
+  optimization:
+    strategy: "Fetch parent container first, extract child values from parent's code hints"
+    example: "Instead of 5 calls for header/title/subtitle/icon/button → 1 call for the card container"
+```
+
+---
+
+## 9. Error Handling
+
+```yaml
+errors:
+  invalid_file_key:
+    symptom: "get_design_context returns empty or error"
+    fix: "Verify fileKey from URL. Check if file is accessible (not deleted/restricted)."
+
+  access_denied:
+    symptom: "401 or 403 from Figma MCP"
+    fix: "Check Figma MCP connection. User may need to re-authenticate in Figma."
+
+  node_not_found:
+    symptom: "get_design_context returns null for nodeId"
+    fix: "Node may have been deleted or moved. Re-extract nodeId from current Figma URL."
+
+  rate_limited:
+    symptom: "429 Too Many Requests"
+    fix: "Wait 60 seconds. Reduce call frequency. Use parent-node batching."
+
+  empty_code_hints:
+    symptom: "get_design_context returns screenshot but no code"
+    fix: "Node may be a group/frame without auto-layout. Try child nodes individually."
+
+  raster_instead_of_svg:
+    symptom: "Asset URL returns PNG for icons"
+    fix: "See pipeline-coder section 8d (Icon Extraction). Ask user to export SVG."
+```

@@ -32,6 +32,12 @@ metrics:
   files_changed: number
   lines_added: number
   lines_removed: number
+  duration:
+    total_minutes: "number — total pipeline duration"
+    per_phase: "object — { planning: N, implementation: N, code_review: N, ui_review: N }"
+  outcome: "success | failed | stopped_by_user | loop_exceeded"
+  stopped_at_phase: "number | null — which phase stopped (if not completed)"
+  stopped_reason: "string | null — why stopped"
   timestamp: "ISO-8601"
 ```
 

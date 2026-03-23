@@ -30,7 +30,40 @@ severity_levels:
 
 ---
 
-## 2. XSS Checks (BLOCKER)
+## 2. Framework-Agnostic Checks
+
+```yaml
+universal_checks:
+  secrets_in_code:
+    patterns: ['password\s*=\s*[''"]', 'secret\s*=', 'apiKey\s*=', 'token\s*=\s*[''"]', 'private_key', 'AWS_SECRET']
+    exclude: [".env.example", "*.test.*", "*.spec.*", "*.mock.*"]
+    severity: BLOCKER
+
+  eval_injection:
+    patterns: ['eval\(', 'Function\(', 'setTimeout\([''"]', 'setInterval\([''"]']
+    severity: BLOCKER
+
+  console_sensitive:
+    patterns: ['console\.log.*password', 'console\.log.*token', 'console\.log.*secret']
+    severity: MAJOR
+
+  error_info_leak:
+    patterns: ['stack.*trace', 'err\.message.*response', 'catch.*res\.json.*err']
+    severity: MAJOR
+
+  hardcoded_urls:
+    patterns: ['http://localhost', 'https://staging', 'https://dev\.']
+    exclude: [".env*", "*.config.*", "proxy.conf.*"]
+    severity: MINOR
+```
+
+---
+
+## 3. Angular-Specific Checks
+
+> These checks apply when tech-stack adapter is Angular.
+
+### 3a. XSS Checks (BLOCKER)
 
 ```yaml
 xss_checks:
@@ -53,9 +86,7 @@ xss_checks:
       fix: "Remove eval; use safe alternatives"
 ```
 
----
-
-## 3. Injection Checks (BLOCKER)
+### 3b. Injection Checks (BLOCKER)
 
 ```yaml
 injection_checks:
@@ -72,9 +103,7 @@ injection_checks:
       fix: "Use parameterized queries exclusively"
 ```
 
----
-
-## 4. Auth/AuthZ Checks (BLOCKER)
+### 3c. Auth/AuthZ Checks (BLOCKER)
 
 ```yaml
 auth_checks:
@@ -95,9 +124,7 @@ auth_checks:
       risk: "Missing centralized auth — requests may leak or omit tokens"
 ```
 
----
-
-## 5. Secrets Detection (BLOCKER)
+### 3d. Secrets Detection (BLOCKER)
 
 ```yaml
 secrets_detection:
@@ -117,9 +144,7 @@ secrets_detection:
     - "**/fixtures/**"
 ```
 
----
-
-## 6. CSRF Checks (MAJOR)
+### 3e. CSRF Checks (MAJOR)
 
 ```yaml
 csrf_checks:
@@ -133,9 +158,7 @@ csrf_checks:
       risk: "Missing global CSRF protection"
 ```
 
----
-
-## 7. Error Info Leak (MAJOR)
+### 3f. Error Info Leak (MAJOR)
 
 ```yaml
 error_leak_checks:
@@ -154,7 +177,38 @@ error_leak_checks:
 
 ---
 
-## 8. Review Procedure
+## 4. Modern Threat Patterns
+
+```yaml
+modern_threats:
+  prototype_pollution:
+    patterns: ['Object\.assign\(.*req\.', '__proto__', 'constructor\[', 'prototype\[']
+    severity: BLOCKER
+    fix: "Use Object.create(null) for dictionaries, validate object keys"
+
+  open_redirect:
+    patterns: ['window\.location\s*=.*req', 'redirect.*req\.query', 'router\.navigate.*param']
+    severity: MAJOR
+    fix: "Whitelist allowed redirect URLs, never use user input directly"
+
+  clickjacking:
+    check: "Verify X-Frame-Options or CSP frame-ancestors header exists"
+    severity: MAJOR
+
+  cors_misconfiguration:
+    patterns: ['Access-Control-Allow-Origin.*\*', 'cors\(\).*origin.*true']
+    severity: MAJOR
+    fix: "Whitelist specific origins, never use wildcard in production"
+
+  ssrf:
+    patterns: ['fetch\(.*req\.', 'http\.get\(.*param', 'axios\(.*user']
+    severity: BLOCKER
+    fix: "Validate and whitelist URLs, block internal network ranges"
+```
+
+---
+
+## 5. Review Procedure
 
 How `code-reviewer` applies this checklist:
 
