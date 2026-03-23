@@ -81,6 +81,8 @@ implement:
     step_4: "Run tech_stack_adapter lint command"
     step_5: "Run tech_stack_adapter test command"
     step_6: "If verify/lint/test fail → fix → retry"
+    step_7: "git add changed files && git commit -m '{task_key}: Part {N} — {part_description}'"
+    commit_rule: "One commit per successfully verified part. Do not batch multiple parts into one commit."
     max_retries_per_part: 3
 
     RESEARCH_FIRST: |
@@ -321,6 +323,12 @@ figma_self_verify:
     font_weight: "exact match (700 ≠ 600, bold ≠ semibold)"
     spacing: "±0px — padding and margin must be exact"
     border_radius: "exact match"
+    tolerance_rationale: |
+      Author tolerance (±0px): you are writing CSS values directly from Figma.
+      There is no reason for approximation — write the exact value.
+      This is stricter than the UI reviewer's render tolerance (±2px)
+      because browser rendering introduces sub-pixel variance.
+      Two-stage quality gate: coder writes exact → reviewer catches render drift.
 
   blocking_rule: |
     Do NOT proceed to the next component/part if current component has unresolved mismatches.
@@ -343,10 +351,9 @@ ui_quality_check:
   workflow:
     step_1: "Take screenshot of implemented page(s)"
     step_2: "Invoke Skill: refactoring-ui for scoring (0-10)"
-    step_3: "Invoke Skill: ui-ux-pro-max — review existing UI for UX issues (interaction states, a11y, guidelines)"
-    step_4: "Check combined: hierarchy, spacing, color, typography, depth, layout, interaction states"
-    step_5: "If refactoring-ui score < 8 OR ui-ux-pro-max finds issues → fix"
-    step_6: "Re-verify fixed elements against Figma (section 8b)"
+    step_3: "Check: hierarchy, spacing, color, typography, depth, layout"
+    step_4: "If refactoring-ui score < 8 → fix issues"
+    step_5: "Re-verify fixed elements against Figma (section 8b)"
 
   what_it_catches:
     - "Wrong visual hierarchy (all text same weight/size)"

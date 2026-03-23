@@ -215,6 +215,11 @@ parallel_agents:
         font_size: "±1px"
         spacing: "±2px"
         border_radius: "exact match"
+        tolerance_rationale: |
+          Render tolerance (±2px): browser rendering introduces sub-pixel differences
+          from font rendering engines, box model calculations, and viewport-dependent layout.
+          This is looser than the coder's author tolerance (±0px) by design.
+          The coder writes exact values; the reviewer checks rendered output.
 
     output_per_element: |
       | Element | Property | Figma | Actual | Match? |

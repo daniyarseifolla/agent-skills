@@ -7,11 +7,11 @@ Review results from 3 parallel agents (2026-03-21). Fix by priority.
 - [x] **1. `/review` conflicts with Claude Code built-in** → renamed to `/cr` with `/code-review` alias
 - [ ] **2. pipeline-coder too long (549 lines)** → extract sections 8-8e into separate skill `figma-coding-rules` or split into `pipeline-coder` (implementation) + `pipeline-coder-figma` (verify)
 - [ ] **3. Verdict mismatch** → unify: plan-reviewer uses `NEEDS_CHANGES`, code-reviewer uses `CHANGES_REQUESTED`. Pick one vocabulary or document mapping in core-orchestration
-- [ ] **4. Tolerance conflict** → coder 8b: ±0px, ui-reviewer: ±2px. Make ui-reviewer stricter (±0px) or document why different
-- [ ] **5. Duplicate ui-ux-pro-max** → remove from coder 8c, keep only in ui-reviewer (Phase 5). Coder uses refactoring-ui only
+- [x] **4. Tolerance conflict** → coder 8b: ±0px, ui-reviewer: ±2px. Make ui-reviewer stricter (±0px) or document why different
+- [x] **5. Duplicate ui-ux-pro-max** → remove from coder 8c, keep only in ui-reviewer (Phase 5). Coder uses refactoring-ui only
 - [x] **6. `/progress` references `/resume`** → fixed to `/continue`
 - [ ] **7. `/attach` bypasses checkpoints** → delegate to pipeline-worker resume mode or add checkpoint writing
-- [ ] **8. Commit strategy undefined** → add to pipeline-coder: commit per part. Worker Phase 6: final merge commit or squash
+- [x] **8. Commit strategy undefined** → add to pipeline-coder: commit per part. Worker Phase 6: final merge commit or squash
 - [ ] **9. "Task tool" → "Agent tool"** → fix in pipeline-planner, pipeline-code-researcher
 - [ ] **10. Duplicate section numbers in adapter-gitlab** → renumber sections 5-14 correctly
 

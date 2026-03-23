@@ -228,7 +228,7 @@ phases:
     model: sonnet
     mode: inline
     actions:
-      - commit: "Create git commit (MANDATORY)"
+      - commit: "If uncommitted changes exist (from review fixes), commit them. If all parts already committed in Phase 3, skip."
       - restore_ci: "IF checkpoint.ci_disabled == true → ci-cd adapter restore_ci(task_key)"
       - mr: "ASK user → if yes, ci-cd adapter create_mr()"
       - deploy: "ASK user → if yes, ci-cd adapter deploy()"
