@@ -8,7 +8,7 @@
 **Версия:** v2.2 (активная), v1.0 (бэкап)
 **Глобальные скиллы:** ~/.claude/skills/ (22 скилла)
 **Глобальные команды:** ~/.claude/commands/ (15 команд)
-**Последний коммит:** 877fbcb — REFACTOR-v2 complete
+**Последний коммит:** ad0d04f — consensus review P1-P10 fixes
 
 ## Архитектура
 
@@ -39,9 +39,31 @@ Ops: `/deploy`, `/sync`
 
 visual-qa, css-styling-expert, refactoring-ui, qa-test-planner, ui-ux-pro-max, agent-browser, brainstorming (superpowers)
 
+## Как использовать pipeline
+
+### Полный цикл через Jira
+```
+/worker ARGO-12345
+```
+
+### Задача по макету (Figma → код)
+```
+# Вариант 1: Jira-задача с Figma-ссылками в описании
+/worker ARGO-12345
+# Pipeline сам найдёт Figma URLs в описании, извлечёт дизайн, реализует
+
+# Вариант 2: Только Figma, без Jira
+# Описать задачу словами + дать Figma ссылку:
+"Реализуй компонент карточки по этому макету: https://figma.com/design/XXX/YYY?node-id=123:456"
+# Coder загрузит figma-coding-rules, extract → write → self-verify → commit
+
+# Вариант 3: Проверить существующий код против Figma
+/verify-figma https://figma.com/design/XXX/YYY?node-id=123:456
+```
+
 ## Ключевые паттерны
 
-### 1. Consensus Review (3 секции × 3 агента)
+### 1. Consensus Review (3 секции x 3 агента)
 - Для review, анализа, статистики — НИКОГДА не доверять одному агенту
 - Каждая секция: 3 агента с разных углов → consensus + conflicts + unique
 - Intermediate files: агенты пишут в `.tmp/`, orchestrator мержит, cleanup после
@@ -50,95 +72,98 @@ visual-qa, css-styling-expert, refactoring-ui, qa-test-planner, ui-ux-pro-max, a
 ### 2. WARN вместо fallback
 - Если внешний скилл не загрузился — сообщить юзеру, НЕ пытаться заменить
 - Формат: WARN + 3 опции (Install / Skip / Abort)
+- Применяется к: css-styling-expert, refactoring-ui, visual-qa, qa-test-planner, ui-ux-pro-max, agent-browser
 
-### 3. Figma Self-Verify
+### 3. Figma Self-Verify + Commit Gate
 - Coder: extract CSS из Figma → write → verify КАЖДОЕ свойство → fix → next
+- **Commit gate:** figma-verify.md обязателен до коммита (flex-direction проверяется явно)
 - Tolerance: coder ±0px (author), ui-reviewer ±2px (render)
 - Icon rule: НИКОГДА не рисовать SVG вручную
+- **Hook активирован:** PostToolUse на Write|Edit для .scss/.css/.component.html файлов
+- **Figma MCP fallback:** если MCP недоступен → skip/use-cached/abort (не стопорить pipeline)
 
-## Оценки скиллов (post-refactor v2)
+### 4. Layer Separation
+- **core/security** — только universal checks (secrets, eval, SSRF, prototype pollution)
+- **Angular security** (XSS, CSRF, route guards) — в adapter-angular Section 7
+- **Phase numbering** — единая таблица в orchestration, нормализация в metrics
+- **task_schema** — типизирован в orchestration, все handoff contracts ссылаются
+
+## Оценки скиллов (post-consensus review)
+
+9-agent consensus review дал **6.3/10** (вместо предсказанных 8.5-9.0).
+После 10 фиксов (P1-P10) — ожидается **7.5-8.0**.
 
 | Score | Скиллы |
 |-------|--------|
-| 9/10 | core-orchestration, code-researcher |
-| 8-8.5 | adapter-gitlab, adapter-figma, plan-reviewer, code-reviewer, planner, core-security, adapter-jira, adapter-angular, worker, figma-coding-rules, consensus-review |
-| 7-7.5 → ожидается 9 | pipeline-coder, ui-reviewer, core-metrics |
+| 8.5-9 | code-researcher, plan-reviewer, adapter-angular, adapter-figma, adapter-jira |
+| 7.5-8 | orchestration, adapter-gitlab, figma-coding-rules, worker |
+| 7-7.5 | planner, coder, code-reviewer, metrics, consensus-review |
+| 6-6.5 | ui-reviewer, scan-qa-playbook, scan-practices, deploy, jira-worker facade |
+| 4-5.5 | community-sync, scan-ui-inventory, core-security (до фикса — после ~7) |
 
-## Что было сделано (REFACTOR v1 + v2)
+Полный отчёт: `v2.2/CONSENSUS-REVIEW-v2.2.md`
 
-### REFACTOR v1 (33 пункта → 28 выполнено, 4 dropped)
-- `/review` → `/cr` (конфликт с built-in Claude Code)
-- Split coder 549→270 строк + figma-coding-rules 312 строк
-- Verdict vocabulary mapping в orchestration
-- Tolerance documented (author vs render)
-- Commit per part в Phase 3
-- Phase 4+5 параллельно
-- Iron Laws, task classification, verdict parsing
-- CI disable/restore, worktree safety
-- Файл: v2.2/REFACTOR.md (все [x])
+## Что было сделано
 
-### REFACTOR v2 (41 пункт → все выполнены)
-- 4 новых handoff контракта (worker→planner, worker→ui-reviewer, evaluate_return, ui_reviewer→completion)
-- credentials + app_url в checkpoint и Phase 0.5
-- evaluate_return counter (max 2) + REJECTED → halt
-- WARN pattern для всех external skills
-- Detached HEAD fallback
-- Figma MCP preflight check
-- /attach: checkpoint как SET + blocking verdicts
-- Coder: inline все "Per X see Y", failure triage decision trees
-- figma-coding-rules: renumbered 1-5, severity tiers
-- UI-reviewer: agent budgets 40 calls/8min, structured verdict 0-100, templates extracted
-- Core-metrics: validation, phase ID mapping 0-7, duration HOW, error handling, consumers
-- Severity unified: BLOCKER/MAJOR/MINOR/NIT everywhere
-- Intermediate files protocol в consensus-review
-- Файл: v2.2/REFACTOR-v2.md (все [x])
+### REFACTOR v1 + v2 (74 пункта — все выполнены)
+Файлы: v2.2/REFACTOR.md, v2.2/REFACTOR-v2.md
+
+### Consensus Review Session (2026-03-24)
+- Sync проверка: 22/22 скилла OK
+- Hook figma-verify-reminder.sh: активирован + баг-фикс ($CLAUDE_FILE_PATH → stdin JSON)
+- 9-agent consensus review → CONSENSUS-REVIEW-v2.2.md
+- 10 фиксов P1-P10 (коммит ad0d04f)
+- Global sync: все 8 изменённых скиллов скопированы
 
 ## Что НЕ сделано (следующий этап)
 
-### Нужно проверить (финальный review)
-1. Запустить 9-agent consensus review ПОСЛЕ всех фиксов — сравнить новые оценки с прогнозом 8.5-9.0
-2. Проверить sync: v2.2/ файлы ↔ ~/.claude/skills/ (могут рассинхронизироваться)
-3. Тест на реальной задаче: `/worker ARGO-XXXXX` от начала до конца
+### Приоритет 1 — Валидация
+1. Тест на реальной задаче: `/worker ARGO-XXXXX` от начала до конца
+2. Повторный consensus review после фиксов (ожидание: 7.5-8.0)
 
-### Нужно реализовать
-1. Консолидация команд 15 → 9 (предложение UX агента: `/cr [code|ui|figma|all]`, `/scan [ui|qa|all]`, merge `/progress` в `/continue`)
-2. Cross-agent portability (#34-36): адаптеры для Gemini/Codex
-3. `--thorough` флаг для `/cr` и `/ui-review` (активирует consensus review)
+### Приоритет 2 — Доработки из consensus review (unique findings)
+- Русские AC headings в Jira adapter (`Критерии приемки`)
+- `grep -P` для lookahead паттернов в core-security
+- Preflight health-check для MCP серверов на Phase 0
+- Atomic checkpoint write (tmp + rename)
+- Post-STOP recovery instructions в loop-exceeded messages
+- /attach: вынести 146 строк логики в facade/skill
 
-### Известные проблемы из боевого опыта
-- Агент игнорирует LAYOUT_RULE — ставит column вместо row
-- Агент пропускает Self-Verify — пишет approximate CSS
-- Hook `figma-verify-reminder.sh` существует но не активирован (нужно добавить в project settings.json)
+### Приоритет 3 — UX
+- Консолидация команд 15 → 9
+- Cross-agent portability (Gemini/Codex адаптеры)
+- `--thorough` флаг для `/cr` и `/ui-review`
+
+### Известные проблемы
+- LAYOUT_RULE: commit gate добавлен (P4), но нужен реальный тест
 - feature-dev plugin отключён глобально (--scope user)
 
 ## Memory файлы
 
 ```
-~/.claude/projects/-Users-dannywayne/memory/
-├── MEMORY.md                         ← индекс
-├── user_profile.md                   ← fullstack dev, Angular/Go/React
-├── project_agent_skills_v2.md        ← архитектура v2.2
-├── feedback_figma_icons.md           ← SVG иконки: never hand-draw
-├── feedback_ci_worktree.md           ← CI disable, worktree safety
-├── feedback_figma_css_enforcement.md ← agents guess CSS, need verify
-├── feedback_research_before_code.md  ← study patterns BEFORE coding
-└── feedback_ui_rules.md              ← portal, states, transitions, focus
+~/.claude/projects/-Users-dannywayne-Desktop-pet-agent-skills/memory/
+├── MEMORY.md
+├── user_profile.md
+├── project_agent_skills_v2.md
+├── feedback_figma_icons.md
+├── feedback_ci_worktree.md
+├── feedback_figma_css_enforcement.md
+├── feedback_research_before_code.md
+└── feedback_ui_rules.md
 ```
 
 ## Как продолжить
 
 ```
-# 1. Проверить sync
-cd ~/Desktop/pet/agent-skills
-# Запустить команду из v2.2/SKILLS_OVERVIEW.md для проверки
-
-# 2. Финальный review (9 агентов consensus)
-# Скопировать промпт из предыдущей сессии или:
-"Запусти consensus review v2.2 скиллов: 3 секции × 3 агента"
-
-# 3. Тест на задаче
+# 1. Тест на реальной задаче
 /worker ARGO-XXXXX
 
-# 4. Консолидация команд
-# Обсудить: /cr [code|ui|figma|all] vs отдельные команды
+# 2. Задача по макету
+"Реализуй по макету: https://figma.com/design/..."
+
+# 3. Проверить Figma-fidelity текущего кода
+/verify-figma https://figma.com/design/...
+
+# 4. Повторный consensus review
+"Запусти consensus review v2.2 скиллов: 3 секции x 3 агента"
 ```
