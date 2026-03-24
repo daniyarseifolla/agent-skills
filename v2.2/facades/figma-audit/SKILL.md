@@ -269,3 +269,152 @@ node_map:
     output: "docs/figma-audit/{audit_id}/figma-node-map.md"
     cleanup: "Bash: rm -rf docs/figma-audit/{audit_id}/.tmp/ — ONLY after figma-node-map.md is written and confirmed"
 ```
+
+---
+
+## Phase 2: Consensus Comparison
+
+3 agents in parallel. Requires app-url. Phase 1 aggregation must complete first.
+
+```yaml
+comparison:
+  dispatch: "Use Skill: superpowers:dispatching-parallel-agents"
+  prerequisite: "figma-node-map.md exists and has ≥1 mapped component"
+
+  agent_1_visual:
+    name: "visual-comparator"
+    model: sonnet
+    budget: "max 40 tool calls, 8 min"
+    prompt: |
+      You are the Visual Comparator for Figma audit Phase 2.
+
+      Inputs:
+      - figma-node-map.md at: docs/figma-audit/{audit_id}/figma-node-map.md
+      - Figma fileKey: {fileKey}, nodeId: {nodeId}
+      - App URL: {app_url}
+      - Output path: docs/figma-audit/{audit_id}/.tmp/comparison-visual.md
+
+      Steps:
+      1. Read figma-node-map.md → get list of frames/components
+      2. For each frame:
+         a. get_screenshot(fileKey, frame_nodeId) → Figma screenshot
+         b. browser_take_screenshot at matching viewport → browser screenshot
+         c. Compare: spacing rhythm, alignment, visual hierarchy, color consistency
+      3. Repeat at 3 viewports:
+         - Desktop: browser_resize(1440, 900) → take_screenshot
+         - Tablet:  browser_resize(768, 1024) → take_screenshot
+         - Mobile:  browser_resize(375, 812)  → take_screenshot
+      4. Score each frame 1-10 per viewport
+      5. Load Skill: visual-qa if available (on_unavailable: score based on manual comparison)
+
+      Output format:
+      ## Visual Comparison
+      | Frame | Desktop | Tablet | Mobile | Score | Findings |
+      |-------|---------|--------|--------|-------|----------|
+
+      Overall score: average of all frame scores.
+      Write to: docs/figma-audit/{audit_id}/.tmp/comparison-visual.md
+      Budget: max 40 tool calls.
+
+  agent_2_property:
+    name: "property-auditor"
+    model: sonnet
+    budget: "max 40 tool calls, 8 min"
+    prompt: |
+      You are the Property Auditor for Figma audit Phase 2.
+
+      Inputs:
+      - figma-node-map.md at: docs/figma-audit/{audit_id}/figma-node-map.md
+      - App URL: {app_url}
+      - Output path: docs/figma-audit/{audit_id}/.tmp/comparison-properties.md
+
+      Steps:
+      1. Read figma-node-map.md → list of MAPPED components with CSS selectors
+      2. browser_navigate(app_url)
+      3. For each mapped component:
+         a. Get Figma CSS values from node map (or call get_design_context if needed)
+         b. browser_evaluate: `window.getComputedStyle(document.querySelector('{selector}'))`
+         c. Compare property-by-property:
+            - font-size, font-weight, line-height, letter-spacing
+            - color, background-color, border, border-radius
+            - padding-top, padding-right, padding-bottom, padding-left
+            - margin, gap, width, height
+            - flex-direction, justify-content, align-items
+            - box-shadow, opacity
+         d. Tolerance policy:
+            - spacing (padding, margin, gap, width, height): ±0px
+            - colors: exact hex match
+            - font-weight: exact match
+            - font-size: ±0px
+            - border-radius: ±1px (subpixel rendering)
+         e. Classify each property: OK | MISMATCH | MISSING
+      4. Score: (OK_count / total_properties) * 10
+
+      Output format:
+      | Component | Property | Figma | Browser | Status |
+      |-----------|----------|-------|---------|--------|
+
+      Write to: docs/figma-audit/{audit_id}/.tmp/comparison-properties.md
+      Budget: max 40 tool calls.
+
+  agent_3_ux:
+    name: "ux-reviewer"
+    model: sonnet
+    budget: "max 40 tool calls, 8 min"
+    prompt: |
+      You are the UX/Interaction Reviewer for Figma audit Phase 2.
+
+      Inputs:
+      - figma-node-map.md at: docs/figma-audit/{audit_id}/figma-node-map.md
+      - App URL: {app_url}
+      - Output path: docs/figma-audit/{audit_id}/.tmp/comparison-ux.md
+
+      Steps:
+      1. Read figma-node-map.md → identify interactive components
+      2. browser_navigate(app_url)
+      3. For each interactive component:
+         a. browser_hover → browser_take_screenshot (hover state)
+         b. browser_press_key Tab → check focus-visible (focus state)
+         c. Test disabled state if applicable
+         d. Test loading state if async
+      4. Responsive: browser_resize to each breakpoint → browser_take_screenshot
+         - 375px, 768px, 1024px, 1440px
+         - Check for overflow, broken layouts, hidden content
+      5. Accessibility:
+         - browser_evaluate contrast ratios for text/background pairs
+         - Check focus order (Tab sequence makes sense)
+         - browser_snapshot → inspect aria-labels, roles
+      6. Load Skill: ui-ux-pro-max if available (on_unavailable: basic checks only)
+      7. Score 1-10 per category: states, responsive, accessibility
+         Overall score: average of 3 categories.
+
+      Write to: docs/figma-audit/{audit_id}/.tmp/comparison-ux.md
+      Budget: max 40 tool calls.
+
+  aggregation:
+    trigger: "After all 3 agents complete"
+    steps:
+      - read: "Read all 3 files: .tmp/comparison-visual.md, .tmp/comparison-properties.md, .tmp/comparison-ux.md"
+      - consensus_logic: |
+          For each finding:
+          - Reported by 2+ agents → confirmed
+          - Reported by 1 agent only → flag as lower confidence
+          - Agents explicitly disagree → flag as conflict for user
+      - scoring: "Overall score = average of 3 agent scores (visual + property + UX)"
+      - verdict:
+          PASS: "score ≥8.5 — implementation matches design"
+          PASS_WITH_ISSUES: "score 7.0–8.4 — minor deviations"
+          ISSUES_FOUND: "score <7.0 — significant mismatches"
+    property_diff_serialization:
+      action: "Parse comparison-properties.md → structured YAML for Phase 3 subagents"
+      format: |
+        components:
+          - selector: "app-card .header"
+            mismatches:
+              - { property: font-size, figma: 16px, browser: 14px }
+            ok_count: 12
+            mismatch_count: 1
+      output: "docs/figma-audit/{audit_id}/property-diff.yaml"
+    output: "docs/figma-audit/{audit_id}/figma-comparison.md"
+    cleanup: "Bash: rm -rf docs/figma-audit/{audit_id}/.tmp/ — ONLY after figma-comparison.md and property-diff.yaml are written"
+```
