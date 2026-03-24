@@ -524,3 +524,115 @@ reload_gate:
     on_confirm: "Proceed to Phase 4"
     on_deny: "HALT — wait for user to resolve"
 ```
+
+---
+
+## Phase 4: Consensus Verification
+
+Same 3 agents as Phase 2, re-run after fixes. Phase 3 must be fully complete before Phase 4 starts.
+
+```yaml
+verification:
+  dispatch: "Same as Phase 2 — reuse agent prompts with updated context"
+  prerequisite: "implementation-summary.md written AND reload gate confirmed"
+  input_change: "Agents compare AFTER implementation (new browser state post-reload)"
+
+  agents:
+    agent_1_visual:
+      name: "visual-comparator"
+      model: sonnet
+      prompt: "Same as Phase 2 agent_1_visual — compare updated browser screenshots vs Figma"
+      budget: "max 40 tool calls, 8 min"
+
+    agent_2_property:
+      name: "property-auditor"
+      model: sonnet
+      prompt: "Same as Phase 2 agent_2_property — re-evaluate computed CSS properties after fixes"
+      budget: "max 40 tool calls, 8 min"
+
+    agent_3_ux:
+      name: "ux-reviewer"
+      model: sonnet
+      prompt: "Same as Phase 2 agent_3_ux — re-check states, responsive, accessibility after fixes"
+      budget: "max 40 tool calls, 8 min"
+
+  additional_output:
+    before_score: "Phase 2 overall average score"
+    after_score: "Phase 4 overall average score"
+    delta: "after_score - before_score"
+    remaining_mismatches: "list of MISMATCH rows still present from property auditor"
+
+  aggregation:
+    steps:
+      - "Read all 3 Phase 4 agent outputs"
+      - "Consensus: 2+ agents agree → confirmed finding"
+      - "Conflicts: flag for user"
+      - "Compute after_score = average of 3 agent scores"
+      - "Compute delta = after_score - before_score"
+      - "Collect remaining_mismatches from Phase 4 property auditor"
+    output: "docs/figma-audit/{audit_id}/figma-verification.md"
+
+  verdict:
+    PASS: "after_score ≥8.5 — implementation matches design"
+    PASS_WITH_ISSUES: "after_score 7.0–8.4 — minor deviations remain"
+    ISSUES_FOUND: "after_score <7.0 — significant mismatches remain"
+
+  no_reloop: "Phase 4 runs ONCE. User decides on remaining issues — no automatic re-entry."
+```
+
+---
+
+## Final Report
+
+Generated after Phase 4 completes (or after Phase 2 in audit-only mode).
+
+```yaml
+report:
+  output: "docs/figma-audit/{audit_id}/figma-audit-report.md"
+  format: |
+    # Figma Audit Report
+
+    **Audit ID:** {audit_id}
+    **Date:** {date}
+    **Mode:** {mode}
+    **Figma:** {figma_url}
+    **App:** {app_url}
+
+    ---
+
+    ## Scores
+
+    | Phase | Visual | Property | UX | Average |
+    |-------|--------|----------|----|---------|
+    | Before (Phase 2) | {v1} | {p1} | {u1} | {avg1} |
+    | After (Phase 4)  | {v2} | {p2} | {u2} | {avg2} |
+    | Delta            | {dv} | {dp} | {du} | {davg} |
+
+    ## Verdict: {PASS|PASS_WITH_ISSUES|ISSUES_FOUND}
+
+    ---
+
+    ## Node Map Summary
+
+    | Metric | Count |
+    |--------|-------|
+    | Total Figma nodes | {total} |
+    | Mapped (high confidence) | {mapped} |
+    | Built (new components) | {built} |
+    | Fixed | {fixed} |
+    | Remaining issues | {remaining} |
+
+    ---
+
+    ## Remaining Issues
+
+    | # | Component | Property | Figma | Browser | Severity |
+    |---|-----------|----------|-------|---------|----------|
+
+    ---
+
+    ## Components Modified
+
+    | # | Component | Mode | Properties Fixed | Commit |
+    |---|-----------|------|-----------------|--------|
+```
