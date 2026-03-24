@@ -418,3 +418,109 @@ comparison:
     output: "docs/figma-audit/{audit_id}/figma-comparison.md"
     cleanup: "Bash: rm -rf docs/figma-audit/{audit_id}/.tmp/ — ONLY after figma-comparison.md and property-diff.yaml are written"
 ```
+
+---
+
+## Phase 3: Implementation
+
+Triggered in audit+fix and build modes. Skipped in audit-only. Phase 2 COMPLETE → Phase 3 → all COMPLETE → reload gate → Phase 4.
+
+```yaml
+implementation:
+  prerequisite: "figma-comparison.md exists (audit+fix) OR figma-node-map.md has unmapped nodes (build)"
+
+  routing:
+    for_each_component:
+      - "Read property-diff.yaml → get mismatch_count per component"
+      - "If mismatch_count ≤ 3 AND code exists → INLINE FIX"
+      - "If mismatch_count > 3 AND code exists → SUBAGENT FIX"
+      - "If component is UNMAPPED (no code) → SUBAGENT BUILD"
+
+  inline_fix:
+    steps:
+      - "Read Figma values from property-diff.yaml"
+      - "Edit .scss/.css file: replace mismatched values"
+      - "Self-Verify: load figma-coding-rules Section 2 — compare every CSS property against Figma"
+      - "Update figma-verify.md → no MISMATCH rows for this component"
+      - "Commit gate: verify figma-verify.md clean → git commit"
+
+  subagent_dispatch:
+    method: "Use Skill: superpowers:dispatching-parallel-agents"
+    max_parallel: 5
+    per_subagent_timeout: "10 min"
+
+    subagent_prompt_template: |
+      You are a Figma implementation subagent.
+
+      Mode: {mode}  (fix | build)
+      Component: {component_name}
+      Figma node: {figma_node_id}
+
+      Figma CSS (exact values to match):
+      {figma_css_yaml}
+
+      {if fix}
+      Current mismatches:
+      {property_diff_for_component}
+      {endif}
+
+      Closest existing component (STUDY THIS FIRST):
+      {closest_pattern_path}
+
+      Project SCSS variables: {variables_path}
+
+      Steps:
+      1. RESEARCH_FIRST: Read closest_pattern — understand project conventions before writing any code
+      2. {if fix} Read current component, fix each MISMATCH using exact Figma values
+         {if build} Create component from scratch: .ts + .html + .scss using Figma extract + pattern
+      3. Self-Verify: load Skill figma-coding-rules Section 2
+         - Compare EVERY CSS property against Figma values
+         - flex-direction MUST be verified explicitly
+      4. Commit gate: figma-verify.md must have ZERO MISMATCH rows for this component before committing
+      5. git commit -m "figma-{mode}: {component_name}"
+
+      Output (write to stdout):
+      component_file: {path}
+      properties_fixed: {N}
+      properties_remaining: {N}
+      commit_hash: {hash}
+
+    on_timeout: "Mark component as UNVERIFIED in implementation-summary.md, proceed to reload gate"
+
+  after_all_complete:
+    collect: "Read all subagent outputs + inline fix results"
+    output: "docs/figma-audit/{audit_id}/implementation-summary.md"
+    format: |
+      # Implementation Summary
+
+      **Audit ID:** {audit_id}
+      **Phase 3 completed:** {datetime}
+
+      | Component | Mode | Properties Fixed | Properties Remaining | Status | Commit |
+      |-----------|------|-----------------|---------------------|--------|--------|
+```
+
+---
+
+## Reload Gate
+
+Runs after all Phase 3 fixes/builds complete, before Phase 4.
+
+```yaml
+reload_gate:
+  step_1:
+    action: "Confirm all Phase 3 subagents and inline fixes are complete"
+    condition: "implementation-summary.md written"
+  step_2:
+    action: "Run tech_stack_adapter.commands.build"
+    on_failure: "HALT — show build errors, ask user to fix before proceeding"
+  step_3:
+    check: "Hot-reload detected? (watch for browser auto-refresh or server log)"
+    on_hot_reload: "Proceed automatically to Phase 4"
+    on_no_hot_reload: "Prompt user: 'Please restart your dev server, then confirm when ready.'"
+  step_4:
+    action: "Wait for user confirmation"
+    prompt: "Dev server restarted and app is running? (y/n)"
+    on_confirm: "Proceed to Phase 4"
+    on_deny: "HALT — wait for user to resolve"
+```
