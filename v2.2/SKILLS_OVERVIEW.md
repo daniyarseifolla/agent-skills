@@ -65,6 +65,7 @@ facades/scan-practices ┘           ├─ pipeline/code-reviewer (sonnet)
 | facades/scan-ui-inventory | 132 | "скан UI", "scan components", "обнови инвентарь" |
 | facades/scan-qa-playbook | 211 | "скан QA", "scan QA", "сгенерируй playbook", "generate playbook" |
 | facades/scan-practices | 149 | "скан практик", "scan practices", "обнови практики", "собери грабли" |
+| facades/figma-audit | ~640 | "проверь верстку", "figma audit", "/figma", "сравни с макетом" |
 
 ### Commands (15 slash commands, including /code-review alias)
 
@@ -82,6 +83,7 @@ facades/scan-practices ┘           ├─ pipeline/code-reviewer (sonnet)
 | /scan-practices | 9 | Scan project practices |
 | /attach | 146 | Attach context (files, URLs, Figma) |
 | /verify-figma | 53 | Verify Figma-to-code fidelity |
+| /figma | ~25 | Figma audit & implementation pipeline |
 | /progress | 24 | Show pipeline progress |
 | /continue | 28 | Resume from checkpoint |
 | /cleanup | 18 | Clean up worktrees and branches |
@@ -107,7 +109,7 @@ facades/scan-practices ┘           ├─ pipeline/code-reviewer (sonnet)
 
 | Feature | v1.0 | v2.2 |
 |---------|------|------|
-| Skills | 8 monolithic | 21 focused |
+| Skills | 8 monolithic | 22 focused |
 | Commands | — | 15 slash commands |
 | Max lines/skill | 443 | 408 |
 | Model routing | none | opus/sonnet/haiku |

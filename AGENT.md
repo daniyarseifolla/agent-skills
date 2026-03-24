@@ -6,7 +6,7 @@
 
 **Repo:** ~/Desktop/pet/agent-skills/ (github.com/daniyarseifolla/agent-skills)
 **Версия:** v2.2 (активная), v1.0 (бэкап)
-**Глобальные скиллы:** ~/.claude/skills/ (22 скилла)
+**Глобальные скиллы:** ~/.claude/skills/ (23 скилла)
 **Глобальные команды:** ~/.claude/commands/ (15 команд)
 **Последний коммит:** ad0d04f — consensus review P1-P10 fixes
 
@@ -19,19 +19,19 @@ facades (точки входа, триггеры)
       → adapters (сменные: jira, gitlab, angular, figma)
 ```
 
-### Скиллы (22)
+### Скиллы (23)
 
 | Layer | Скиллы |
 |-------|--------|
 | core (4) | orchestration, security, metrics, consensus-review |
 | pipeline (8) | worker, planner, coder, figma-coding-rules, plan-reviewer, code-reviewer, ui-reviewer, code-researcher |
 | adapters (4) | jira, gitlab, angular, figma |
-| facades (6) | jira-worker, deploy, community-sync, scan-ui-inventory, scan-practices, scan-qa-playbook |
+| facades (7) | jira-worker, deploy, community-sync, scan-ui-inventory, scan-practices, scan-qa-playbook, figma-audit |
 
 ### Команды (15)
 
 Pipeline: `/worker`, `/plan`, `/continue`, `/progress`, `/attach`, `/cleanup`
-Review: `/cr`, `/code-review` (alias), `/ui-review`, `/verify-figma`
+Review: `/cr`, `/code-review` (alias), `/ui-review`, `/verify-figma`, `/figma`
 Scan: `/scan-ui`, `/scan-practices`, `/scan-qa`
 Ops: `/deploy`, `/sync`
 
