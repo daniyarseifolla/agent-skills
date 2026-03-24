@@ -29,7 +29,8 @@ facades/scan-practices ┘           ├─ pipeline/code-reviewer (sonnet)
 | Skill | Lines | Purpose |
 |-------|-------|---------|
 | core/orchestration | 337 | Handoff, checkpoints, recovery, loop limits, evaluate gate, complexity routing, re-routing |
-| core/security | 241 | OWASP security checklist with grep patterns (XSS, injection, auth, secrets, CSRF) |
+| core/security | ~150 | OWASP security checklist — universal checks only. Framework-specific checks in tech-stack adapters |
+| core/consensus-review | 212 | Multi-agent consensus review pattern: 3 sections x 3 agents |
 | core/metrics | 119 | Pipeline metrics collection and storage |
 
 ### Pipeline (project-agnostic phases)
@@ -51,7 +52,7 @@ facades/scan-practices ┘           ├─ pipeline/code-reviewer (sonnet)
 |-------|-------|------|---------|
 | adapters/jira | 178 | task-source | Fetch task, parse AC, transitions, MR description |
 | adapters/gitlab | 304 | ci-cd | MR creation, pipeline monitoring, deploy, cherry-pick, CI disable/restore |
-| adapters/angular | 265 | tech-stack | Lint/test/build commands, quality patterns, module lookup |
+| adapters/angular | ~310 | tech-stack | Lint/test/build commands, quality patterns, security checks, module lookup |
 | adapters/figma | 206 | design | Design context, screenshots, visual comparison, self-verify extraction |
 
 ### Facades (user-facing entry points)
@@ -132,7 +133,7 @@ facades/scan-practices ┘           ├─ pipeline/code-reviewer (sonnet)
 | visual-qa | pipeline/ui-reviewer | Screenshot-based QA: spacing rhythm, alignment, typography consistency, polish |
 | css-styling-expert | pipeline/coder | CSS architecture: Grid/Flex decisions, responsive, performance, accessibility |
 | refactoring-ui | pipeline/coder, pipeline/ui-reviewer | UI design rules: spacing, typography, color, layout patterns |
-| qa-test-planner | pipeline/plan-reviewer | Test strategy, edge cases, risk analysis |
+| qa-test-planner | pipeline/ui-reviewer | Test strategy, edge cases, risk analysis |
 | ui-ux-pro-max | pipeline/ui-reviewer | Advanced UI/UX review: micro-interactions, accessibility, design system compliance |
 
 ## Adapter Contracts
@@ -142,7 +143,7 @@ Each adapter type implements a known interface:
 ```yaml
 task-source:     fetch_task, parse_ac, get_complexity_hints, transition, format_mr_description
 ci-cd:           create_mr, get_pipeline, wait_for_stage, deploy, retry_job, create_tag
-tech-stack:      commands (lint/test/build), quality_checks, patterns, module_lookup
+tech-stack:      commands (lint/test/build), quality_checks, security_checks, patterns, module_lookup
 design:          parse_urls, get_design, get_screenshot, compare_visual, extract_tokens
 ```
 
@@ -163,9 +164,9 @@ Fallback: autodetect from package.json, .gitlab-ci.yml, task URL.
 
 | Superpowers Skill | Used by |
 |-------------------|---------|
-| brainstorming | pipeline/planner, pipeline/ui-reviewer |
+| brainstorming | pipeline/planner |
 | writing-plans | pipeline/planner |
-| executing-plans | pipeline/worker (SIMPLE mode) |
-| subagent-driven-development | pipeline/worker (FULL mode) |
+| executing-plans | pipeline/coder (S complexity, <3 parts) |
+| subagent-driven-development | pipeline/coder (M/L/XL, 3+ parts) |
 | dispatching-parallel-agents | pipeline/ui-reviewer, facades/community-sync |
-| figma:implement-design | pipeline/coder (when design adapter active) |
+| figma:implement-design | pipeline/coder via figma-coding-rules (when design adapter active) |

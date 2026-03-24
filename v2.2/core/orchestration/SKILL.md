@@ -13,14 +13,39 @@ Internal protocol definitions for pipeline execution. Not a user-facing skill.
 ## 1. Pipeline Phases
 
 ```yaml
+# CANONICAL phase table — single source of truth for all skills
 phase_sequence:
-  - { id: 0, name: task-analysis,  model: sonnet, mode: inline,            action: "classify complexity, select route" }
-  - { id: 1, name: planner,        model: opus,   mode: inline,            action: "research codebase, produce plan" }
-  - { id: 2, name: plan-reviewer,  model: sonnet, mode: subagent,          action: "validate plan against AC", skip_when: "complexity == S" }
-  - { id: 3, name: coder,          model: sonnet, mode: inline,            action: "evaluate gate, then implement" }
-  - { id: 4, name: code-reviewer,  model: sonnet, mode: subagent_worktree, action: "architecture + security review (core-security)" }
-  - { id: 5, name: ui-reviewer,    model: sonnet, mode: subagent,          action: "functional + visual review", skip_when: "complexity == S OR no design adapter" }
-  - { id: 6, name: completion,     model: sonnet, mode: inline,            action: "commit, collect metrics, store lessons" }
+  - { id: 0,   name: task-analysis,    model: sonnet, mode: inline,            action: "classify complexity, select route" }
+  - { id: 0.5, name: workspace-setup,  model: sonnet, mode: inline,            action: "worktree, CI disable, dev server, confirmation" }
+  - { id: 1,   name: planner,          model: opus,   mode: inline,            action: "research codebase, produce plan" }
+  - { id: 2,   name: plan-reviewer,    model: sonnet, mode: subagent,          action: "validate plan against AC", skip_when: "complexity == S" }
+  - { id: 3,   name: coder,            model: sonnet, mode: inline,            action: "evaluate gate, then implement" }
+  - { id: 4,   name: code-reviewer,    model: sonnet, mode: subagent_worktree, action: "architecture + security review (core-security + tech-stack security_checks)" }
+  - { id: 5,   name: ui-reviewer,      model: sonnet, mode: subagent,          action: "functional + visual review", skip_when: "complexity == S OR no design adapter" }
+  - { id: 6,   name: completion,        model: sonnet, mode: inline,            action: "commit, collect metrics, store lessons" }
+
+# Phase 4+5 run in PARALLEL when both are active (Iron Law #1)
+
+phase_id_normalization:
+  note: "Worker uses fractional/compound IDs. All storage and metrics use this canonical integer mapping."
+  mapping:
+    "0":     0    # task-analysis
+    "0.5":   0.5  # workspace-setup (stored as 0.5 in checkpoint, normalized to 1 for metrics)
+    "1":     1    # planner
+    "2":     2    # plan-reviewer
+    "3":     3    # coder
+    "4":     4    # code-reviewer (worker dispatches as part of "4+5" parallel block)
+    "5":     5    # ui-reviewer  (worker dispatches as part of "4+5" parallel block)
+    "6":     6    # completion
+  metrics_mapping:
+    0: task-analysis
+    1: workspace-setup
+    2: planning
+    3: plan-review
+    4: implementation
+    5: code-review
+    6: ui-review
+    7: completion
 ```
 
 ---
@@ -35,9 +60,9 @@ complexity_matrix:
   XL: { ac: "7+",  modules: "4+", plan_review: standard, ui_review: true,              code_researcher: true,  seq_thinking: required,    route: FULL }
 
 route_definitions:
-  MINIMAL:  { phases: [0, 1, 3, 4, 6],       note: "skip plan-review, ui-review" }
-  STANDARD: { phases: [0, 1, 2, 3, 4, 5, 6], note: "all phases, ui-review conditional" }
-  FULL:     { phases: [0, 1, 2, 3, 4, 5, 6], note: "all phases, all tools enabled" }
+  MINIMAL:  { phases: [0, 0.5, 1, 3, 4, 6],       note: "skip plan-review, ui-review" }
+  STANDARD: { phases: [0, 0.5, 1, 2, 3, 4, 5, 6], note: "all phases, ui-review conditional on design adapter" }
+  FULL:     { phases: [0, 0.5, 1, 2, 3, 4, 5, 6], note: "all phases, all tools enabled" }
 ```
 
 ---
@@ -47,6 +72,17 @@ route_definitions:
 Typed contracts validated before each receiving phase starts.
 
 ```yaml
+task_schema:
+  title: string
+  description: string
+  acceptance_criteria: string[]
+  figma_urls: string[]
+  credentials: "object|null — { username, password } or { token } or null"
+  priority: "string|null"
+  subtasks: "string[]|null"
+  source_url: "string — original task URL"
+  note: "Produced by task-source adapter fetch_task(). All consumers reference this schema."
+
 handoff_contracts:
   planner_to_reviewer:
     artifact_path: string         # path to plan file
@@ -77,9 +113,10 @@ handoff_contracts:
     required: [verdict, iteration]
 
   worker_to_planner:
+    task: "task_schema — typed object from task-source adapter"
     required: [task, complexity, route, figma_urls, ui_inventory_path]
     optional: [tech_stack_adapter, design_adapter]
-    note: "Worker passes full task object + classification results to planner"
+    note: "Worker passes full task object (see task_schema above) + classification results to planner"
 
   worker_to_ui_reviewer:
     required: [branch, figma_urls, app_url, credentials]
@@ -115,8 +152,8 @@ verdict_mapping:
     note: "CHANGES_REQUESTED = code needs fixes, loop back to coder"
 
   ui_review:
-    verdicts: [PASS, ISSUES_FOUND]
-    note: "ISSUES_FOUND = issues logged, proceed to completion (no loop)"
+    verdicts: [PASS, PASS_WITH_ISSUES, ISSUES_FOUND]
+    note: "PASS_WITH_ISSUES = minor issues logged, proceed. ISSUES_FOUND = issues logged, proceed (no loop)"
 
   evaluate_gate:
     verdicts: [PROCEED, REVISE, RETURN]
@@ -125,7 +162,7 @@ verdict_mapping:
   mapping_for_worker:
     description: "Worker must handle all verdict vocabularies. Use this mapping:"
     blocks_progress: [NEEDS_CHANGES, CHANGES_REQUESTED, RETURN, REJECTED]
-    allows_progress: [APPROVED, APPROVED_WITH_COMMENTS, PROCEED, REVISE, PASS]
+    allows_progress: [APPROVED, APPROVED_WITH_COMMENTS, PROCEED, REVISE, PASS, PASS_WITH_ISSUES]
     logs_only: [ISSUES_FOUND]
 ```
 
@@ -138,7 +175,7 @@ Path: `docs/plans/{task-key}/checkpoint.yaml`. Overwritten after each phase.
 ```yaml
 checkpoint_schema:
   task_key: string
-  phase_completed: "0-6"
+  phase_completed: "0|0.5|1|2|3|4|5|6"
   phase_name: string
   iteration: { plan_review: "N/3", code_review: "N/3", evaluate_return: "N/2" }
   verdict: string
@@ -356,7 +393,7 @@ verdict_parsing:
   method: "Keyword search in agent output text"
 
   keywords:
-    positive: ["APPROVED", "APPROVED_WITH_COMMENTS", "PROCEED", "PASS"]
+    positive: ["APPROVED", "APPROVED_WITH_COMMENTS", "PROCEED", "PASS", "PASS_WITH_ISSUES"]
     negative: ["NEEDS_CHANGES", "CHANGES_REQUESTED", "REJECTED", "RETURN", "FAIL"]
     non_blocking_negative: ["ISSUES_FOUND"]
     error: ["ERROR", "STOP", "BLOCKED"]

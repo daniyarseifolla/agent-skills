@@ -3,9 +3,13 @@
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
-        "command": "bash ~/.claude/scripts/figma-verify-reminder.sh",
-        "description": "Remind agent to verify CSS against Figma after editing style files",
-        "blocking": false
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/figma-verify-reminder.sh",
+            "statusMessage": "Checking Figma self-verify"
+          }
+        ]
       }
     ]
   }

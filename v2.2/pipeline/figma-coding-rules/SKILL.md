@@ -140,6 +140,13 @@ figma_self_verify:
 ```yaml
 ui_quality_check:
   skill: "refactoring-ui"
+  on_unavailable:
+    warn: "WARN: Skill refactoring-ui not installed. UI quality scoring unavailable."
+    options:
+      1_install: "Install skill: refactoring-ui"
+      2_skip: "Skip UI quality check — rely on Figma Self-Verify only"
+      3_abort: "Abort UI quality phase"
+    default: "Option 2 (skip)"
   when: "After ALL parts with UI are implemented and Figma Self-Verified"
   purpose: "Catch design quality issues that per-property check misses: hierarchy, spacing rhythm, visual weight balance"
 

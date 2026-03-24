@@ -112,12 +112,13 @@ grep -r "functionX" path/to/file && echo "CONFLICT RESOLUTION FAILED — code st
 
 ---
 
-## Build Fix Strategy (Angular-specific)
+## Build Fix Strategy
 
 ```yaml
 build_fixes:
-  reference: "See adapter-angular for Angular-specific build fix patterns"
-  common: [TS2559, NG8002, NG5002]
+  strategy: "Delegate to tech-stack adapter for framework-specific fixes"
+  action: "After cherry-pick, if build fails → load tech_stack_adapter → use cherry_pick_fixes section"
+  note: "Do NOT hardcode framework-specific error codes here. Adapters own that knowledge."
 ```
 
 ---
@@ -153,6 +154,10 @@ lessons:
   - lesson: "Worktree agents can silently lose commits"
     why: "Agent completes successfully but commit wasn't actually applied. Always verify with git log check (Step 4b)"
     mitigation: "Branch integrity verification before push"
+
+  - lesson: "Worktree cleanup must check for uncommitted changes"
+    why: "Unconditional git worktree remove can lose work"
+    mitigation: "Check git status before removing worktree"
 ```
 
 ---

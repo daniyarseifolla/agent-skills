@@ -16,10 +16,11 @@ Phase 3. Evaluate gate, then implement. Plan-driven, adapter-aware.
 input:
   plan_path: "docs/plans/{task-key}/plan.md"
   reviewer_handoff:
-    verdict: "APPROVED|NEEDS_CHANGES"
+    verdict: "APPROVED|NEEDS_CHANGES|REJECTED"
     approved_notes: string[]
     issues: string[]
     iteration: "N/3"
+    on_REJECTED: "HALT immediately. Do not evaluate, do not implement. Surface rejection reason to user."
   tech_stack_adapter: "for lint/test/build commands"
   complexity: "S|M|L|XL"
 ```
@@ -87,6 +88,13 @@ implement:
     step_5: "Run tech_stack_adapter test command"
     step_6: "If verify/lint/test fail → fix → retry"
     step_7: "git add changed files && git commit -m '{task_key}: Part {N} — {part_description}'"
+    commit_gate: |
+      BEFORE git commit, if this part touches CSS/SCSS/HTML:
+      1. Verify docs/plans/{task-key}/figma-verify.md exists for this part
+      2. Verify it contains NO rows with status MISMATCH
+      3. Verify flex-direction is explicitly listed and matches Figma
+      If ANY check fails → run Self-Verify (figma-coding-rules section 2) BEFORE committing.
+      Do NOT commit with unresolved mismatches.
     commit_rule: "One commit per successfully verified part. Do not batch multiple parts into one commit."
     max_retries_per_part: 3
 
@@ -201,6 +209,15 @@ loop:
 figma_rules:
   PREREQUISITE: "If design adapter active → load Skill: figma-coding-rules before implementing any part"
   sections: "1 (extract), 2 (self-verify), 3 (quality check), 4 (icons), 5 (UI rules)"
+
+  on_figma_unavailable:
+    trigger: "get_design_context call fails OR Figma MCP server not connected"
+    options:
+      1_use_last_known: "If previous successful extraction exists for this node → use cached values from figma-verify.md"
+      2_skip_figma: "Skip Figma extraction for this part. Add WARN to evaluate.md: 'Part {N} — Figma verification skipped: MCP unavailable'. Continue with plan values."
+      3_abort_part: "Halt this part. Move to next part. Report skipped part in handoff."
+    default: "Option 2 (skip) — do not stall the pipeline on MCP issues"
+    user_notify: "WARN: Figma MCP unavailable. Using option {N}. Figma verification deferred."
 ```
 
 ---
@@ -210,6 +227,13 @@ figma_rules:
 ```yaml
 css_architecture:
   skill: "css-styling-expert"
+  on_unavailable:
+    warn: "WARN: Skill css-styling-expert not installed. CSS architecture guidance unavailable."
+    options:
+      1_install: "Install skill: css-styling-expert"
+      2_skip: "Continue without CSS expert guidance — use project conventions only"
+      3_abort: "Abort CSS-heavy implementation"
+    default: "Option 2 (skip)"
   when: "Writing CSS/SCSS for new components or significant UI changes"
   use_for:
     - "Layout decisions: Grid vs Flexbox, when to use which"

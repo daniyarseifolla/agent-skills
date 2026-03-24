@@ -1,12 +1,14 @@
 ---
 name: core-security
-description: "OWASP-adapted security checklist with grep patterns for Angular/TypeScript. Loaded by pipeline/code-reviewer — never invoked directly."
+description: "OWASP-adapted security checklist with grep patterns — framework-agnostic universal checks. Tech-stack-specific checks live in the respective adapter. Loaded by pipeline/code-reviewer — never invoked directly."
 disable-model-invocation: true
 ---
 
 # Core Security
 
-OWASP-adapted checklist for web frontend review. Framework-primary: Angular/TypeScript.
+OWASP-adapted checklist for web frontend/backend review. Framework-agnostic only.
+
+> Tech-stack-specific security checks (Angular XSS, React dangerouslySetInnerHTML, etc.) live in the `tech-stack` adapter under `security_checks`.
 
 ---
 
@@ -30,13 +32,13 @@ severity_levels:
 
 ---
 
-## 2. Framework-Agnostic Checks
+## 2. Universal Checks
 
 ```yaml
 universal_checks:
   secrets_in_code:
-    patterns: ['password\s*=\s*[''"]', 'secret\s*=', 'apiKey\s*=', 'token\s*=\s*[''"]', 'private_key', 'AWS_SECRET']
-    exclude: [".env.example", "*.test.*", "*.spec.*", "*.mock.*"]
+    patterns: ['password\s*=\s*[''"]', 'secret\s*=', 'apiKey\s*=', 'token\s*=\s*[''"]', 'private_key', 'AWS_SECRET', '-----BEGIN (RSA |EC )?PRIVATE KEY-----']
+    exclude: [".env.example", "*.test.*", "*.spec.*", "*.mock.*", "**/fixtures/**"]
     severity: BLOCKER
 
   eval_injection:
@@ -44,140 +46,26 @@ universal_checks:
     severity: BLOCKER
 
   console_sensitive:
-    patterns: ['console\.log.*password', 'console\.log.*token', 'console\.log.*secret']
+    patterns: ['console\.(log|debug|info)\(.*(?:token|password|secret|key)']
     severity: MAJOR
 
   error_info_leak:
-    patterns: ['stack.*trace', 'err\.message.*response', 'catch.*res\.json.*err']
+    patterns: ['stack.*trace|stackTrace', 'err\.message.*response', 'catch.*res\.json.*err', 'error\.message.*(?:response|render|display|show)']
     severity: MAJOR
 
   hardcoded_urls:
     patterns: ['http://localhost', 'https://staging', 'https://dev\.']
     exclude: [".env*", "*.config.*", "proxy.conf.*"]
     severity: MINOR
+
+  template_injection:
+    patterns: ['\$\{.*\}.*(?:url|endpoint|api|query)', '\+\s*[''"].*(?:SELECT|INSERT|UPDATE|DELETE)']
+    severity: BLOCKER
 ```
 
 ---
 
-## 3. Angular-Specific Checks
-
-> These checks apply when tech-stack adapter is Angular.
-
-### 3a. XSS Checks (BLOCKER)
-
-```yaml
-xss_checks:
-  severity: BLOCKER
-  patterns:
-    - pattern: "innerHTML"
-      risk: "Direct HTML injection into DOM"
-      fix: "Use Angular template binding or DomSanitizer"
-    - pattern: "bypassSecurityTrust"
-      risk: "Explicit Angular security bypass"
-      fix: "Remove bypass; sanitize input upstream"
-    - pattern: "\\[href\\]"
-      risk: "URL injection via user-controlled input"
-      fix: "Validate URL scheme (allow only https:)"
-    - pattern: "document\\.write"
-      risk: "DOM manipulation with unsanitized content"
-      fix: "Use framework rendering; never document.write"
-    - pattern: "eval\\("
-      risk: "Arbitrary code execution"
-      fix: "Remove eval; use safe alternatives"
-```
-
-### 3b. Injection Checks (BLOCKER)
-
-```yaml
-injection_checks:
-  severity: BLOCKER
-  patterns:
-    - pattern: "eval\\(|Function\\(|setTimeout\\(['\"]"
-      risk: "Code injection via string evaluation"
-      fix: "Use function references, never string-to-code"
-    - pattern: "\\$\\{.*\\}.*(?:url|endpoint|api|query)"
-      risk: "Template literal injection in URLs/queries"
-      fix: "Use parameterized queries or URL builder utilities"
-    - pattern: "\\+\\s*['\"].*(?:SELECT|INSERT|UPDATE|DELETE)"
-      risk: "String concatenation in SQL-like queries"
-      fix: "Use parameterized queries exclusively"
-```
-
-### 3c. Auth/AuthZ Checks (BLOCKER)
-
-```yaml
-auth_checks:
-  severity: BLOCKER
-  patterns:
-    - pattern: "path:\\s*['\"].*['\"](?!.*canActivate)"
-      risk: "Route without canActivate guard"
-      fix: "Add appropriate route guard"
-      scope: "routing module files"
-    - pattern: "localStorage\\.setItem\\(.*token"
-      risk: "Token stored in localStorage (XSS-accessible)"
-      fix: "Use httpOnly cookies for token storage"
-    - pattern: "Authorization.*hardcoded|Bearer\\s+[a-zA-Z0-9]"
-      risk: "Hardcoded auth token"
-      fix: "Use environment config or secure token service"
-  structural:
-    - check: "HTTP interceptor exists for auth headers"
-      risk: "Missing centralized auth — requests may leak or omit tokens"
-```
-
-### 3d. Secrets Detection (BLOCKER)
-
-```yaml
-secrets_detection:
-  severity: BLOCKER
-  patterns:
-    - pattern: "password\\s*=\\s*['\"]"
-    - pattern: "secret\\s*="
-    - pattern: "apiKey\\s*="
-    - pattern: "token\\s*=\\s*['\"]"
-    - pattern: "private_key\\s*="
-    - pattern: "-----BEGIN (RSA |EC )?PRIVATE KEY-----"
-  exclude_paths:
-    - ".env.example"
-    - "*.test.*"
-    - "*.spec.*"
-    - "*.mock.*"
-    - "**/fixtures/**"
-```
-
-### 3e. CSRF Checks (MAJOR)
-
-```yaml
-csrf_checks:
-  severity: MAJOR
-  patterns:
-    - pattern: "HttpClient.*(?:post|put|patch|delete)(?!.*Xsrf)"
-      risk: "State-changing request without CSRF protection"
-      fix: "Enable HttpXsrfInterceptor or equivalent"
-  structural:
-    - check: "XSRF interceptor registered in app module"
-      risk: "Missing global CSRF protection"
-```
-
-### 3f. Error Info Leak (MAJOR)
-
-```yaml
-error_leak_checks:
-  severity: MAJOR
-  patterns:
-    - pattern: "console\\.(log|debug|info)\\(.*(?:token|password|secret|key)"
-      risk: "Sensitive data logged to console"
-      fix: "Remove sensitive data from log statements"
-    - pattern: "stack.*trace|stackTrace"
-      risk: "Stack trace exposure in HTTP response or UI"
-      fix: "Return generic error messages to user"
-    - pattern: "error\\.message.*(?:response|render|display|show)"
-      risk: "Verbose error details shown to user"
-      fix: "Map to user-friendly error messages"
-```
-
----
-
-## 4. Modern Threat Patterns
+## 3. Modern Threat Patterns
 
 ```yaml
 modern_threats:
@@ -193,6 +81,7 @@ modern_threats:
 
   clickjacking:
     check: "Verify X-Frame-Options or CSP frame-ancestors header exists"
+    grep_pattern: "X-Frame-Options|frame-ancestors"
     severity: MAJOR
 
   cors_misconfiguration:
@@ -208,6 +97,23 @@ modern_threats:
 
 ---
 
+## 4. Auth Token Checks (Universal)
+
+```yaml
+auth_token_checks:
+  hardcoded_auth:
+    patterns: ['Authorization.*hardcoded|Bearer\s+[a-zA-Z0-9]{20,}']
+    severity: BLOCKER
+    fix: "Use environment config or secure token service"
+
+  token_in_localstorage:
+    patterns: ['localStorage\.setItem\(.*token', 'localStorage\.setItem\(.*auth']
+    severity: MAJOR
+    fix: "Use httpOnly cookies for token storage"
+```
+
+---
+
 ## 5. Review Procedure
 
 How `code-reviewer` applies this checklist:
@@ -216,7 +122,8 @@ How `code-reviewer` applies this checklist:
 review_steps:
   - step: 1
     action: "Run grep patterns for each category against changed files"
-    command: "grep -rn '{pattern}' {changed_files}"
+    command: "grep -Prn '{pattern}' {changed_files}"
+    note: "Use grep -P (Perl regex) for patterns with lookaheads. Fallback: grep -rn for simple patterns."
   - step: 2
     action: "Filter false positives"
     exclude:
@@ -224,9 +131,12 @@ review_steps:
       - mock files
       - comments and disabled code
   - step: 3
+    action: "Load tech_stack_adapter.security_checks and run those patterns too"
+    condition: "If tech-stack adapter is loaded"
+  - step: 4
     action: "Classify each finding by severity"
     reference: "severity_levels defined above"
-  - step: 4
+  - step: 5
     action: "Add findings to review handoff"
     format:
       finding: string

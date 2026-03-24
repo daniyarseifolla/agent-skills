@@ -70,16 +70,28 @@ validation:
 
 ```yaml
 phase_ids:
-  0: task-analysis
-  1: workspace-setup
-  2: planning
-  3: plan-review
-  4: implementation
-  5: code-review
-  6: ui-review
-  7: completion
+  source: "core/orchestration phase_id_normalization.metrics_mapping"
+  mapping:
+    0: task-analysis
+    1: workspace-setup
+    2: planning
+    3: plan-review
+    4: implementation
+    5: code-review
+    6: ui-review
+    7: completion
   storage_type: "integer 0-7"
-  note: "Worker uses 0, 0.5, 1, 2, 3, 4+5, 6. Normalize to 0-7 for metrics."
+
+  normalization_table:
+    # Worker phase → Metrics phase ID
+    "0":     0   # task-analysis → 0
+    "0.5":   1   # workspace-setup → 1
+    "1":     2   # planner → 2
+    "2":     3   # plan-review → 3
+    "3":     4   # coder (implementation) → 4
+    "4":     5   # code-review → 5
+    "5":     6   # ui-review → 6
+    "6":     7   # completion → 7
 ```
 
 ---

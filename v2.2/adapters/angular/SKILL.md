@@ -248,7 +248,57 @@ skills:
 
 ---
 
-## 7. Cherry-Pick Build Fix Patterns
+## 7. Security Checks (Angular-specific)
+
+Loaded by code-reviewer alongside core-security universal checks.
+
+```yaml
+security_checks:
+  xss:
+    severity: BLOCKER
+    patterns:
+      - pattern: "innerHTML"
+        risk: "Direct HTML injection into DOM"
+        fix: "Use Angular template binding or DomSanitizer"
+      - pattern: "bypassSecurityTrust"
+        risk: "Explicit Angular security bypass"
+        fix: "Remove bypass; sanitize input upstream"
+      - pattern: "\\[href\\]"
+        risk: "URL injection via user-controlled input"
+        fix: "Validate URL scheme (allow only https:)"
+      - pattern: "document\\.write"
+        risk: "DOM manipulation with unsanitized content"
+        fix: "Use framework rendering; never document.write"
+
+  csrf:
+    severity: MAJOR
+    patterns:
+      - pattern: "HttpClient.*(post|put|patch|delete)"
+        check_also: "Verify HttpXsrfInterceptor is registered in app module"
+        fix: "Enable HttpXsrfInterceptor or equivalent"
+    structural:
+      - check: "XSRF interceptor registered in app module"
+        risk: "Missing global CSRF protection"
+
+  route_guards:
+    severity: BLOCKER
+    check: "Every route with sensitive data has canActivate guard"
+    how_to_check: |
+      1. grep -rn 'path:' in routing files
+      2. For each route WITHOUT canActivate → flag as BLOCKER
+      3. Skip routes: '', '**', login, register, public pages
+    note: "Two-pass check avoids negative lookahead issues with basic grep"
+
+  auth_interceptor:
+    severity: MAJOR
+    check: "HTTP interceptor exists for auth headers"
+    grep_pattern: "HttpInterceptor|HttpInterceptorFn|intercept.*HttpRequest"
+    risk: "Missing centralized auth — requests may leak or omit tokens"
+```
+
+---
+
+## 8. Cherry-Pick Build Fix Patterns
 
 ```yaml
 cherry_pick_fixes:
