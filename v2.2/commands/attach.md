@@ -30,7 +30,8 @@ Detects what's done, creates checkpoint, runs missing phases.
    Branch: git branch --show-current
    Commits: git log --oneline develop..HEAD (or main..HEAD)
    Changed files: git diff develop...HEAD --stat
-   Plan: ls docs/plans/{task-key}/
+   Task analysis: ls docs/plans/{task-key}/task-analysis.md
+   Plan: ls docs/plans/{task-key}/plan.md
    Checkpoint: cat docs/plans/{task-key}/checkpoint.yaml
    CI status: is .gitlab-ci.yml modified?
    Worktree: is this a worktree? (git rev-parse --git-dir)
@@ -38,14 +39,16 @@ Detects what's done, creates checkpoint, runs missing phases.
 
 4. **Classify state:**
 
-   | Plan? | Code changes? | Tests pass? | Reviews exist? | State |
-   |-------|--------------|-------------|---------------|-------|
-   | No | No | — | — | Just started → Phase 1 |
-   | No | Yes | — | — | Coded without plan → Phase 1 + retro-plan |
-   | Yes | No | — | — | Planned, not coded → Phase 3 |
-   | Yes | Yes | No | — | Coded, tests fail → Phase 3 (fix) |
-   | Yes | Yes | Yes | No | Coded, tests pass → Phase 4 (review) |
-   | Yes | Yes | Yes | Yes | Reviewed → Phase 6 (completion) |
+   | Analysis? | Plan? | Code changes? | Tests pass? | Reviews exist? | State |
+   |-----------|-------|--------------|-------------|---------------|-------|
+   | No | No | No | — | — | Nothing done → Phase 0.7 (deep analysis) |
+   | Yes | No | No | — | — | Analyzed, not planned → Phase 1 |
+   | No | No | Yes | — | — | Coded without plan → Phase 0.7 + retro-plan |
+   | No | Yes | No | — | — | Planned without analysis → Phase 3 (analysis skipped) |
+   | Yes | Yes | No | — | — | Planned, not coded → Phase 3 |
+   | Yes | Yes | Yes | No | — | Coded, tests fail → Phase 3 (fix) |
+   | Yes | Yes | Yes | Yes/No | No | Tests pass → Phase 4 (review) |
+   | Yes | Yes | Yes | Yes | Yes | Reviewed → Phase 6 (completion) |
 
 5. **Write initial checkpoint immediately:**
    ```yaml
