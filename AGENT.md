@@ -6,163 +6,109 @@
 
 **Repo:** ~/Desktop/pet/agent-skills/ (github.com/daniyarseifolla/agent-skills)
 **Версия:** v2.2 (активная), v1.0 (бэкап)
-**Глобальные скиллы:** ~/.claude/skills/ (23 скилла)
-**Глобальные команды:** ~/.claude/commands/ (16 команд)
-**Последний коммит:** e5112f0 — plan-reviewer → opus, consensus in worker phases
+**Глобальные скиллы:** ~/.claude/skills/ (23 скилла, 5863 строки)
+**Глобальные команды:** ~/.claude/commands/ (16 команд, 432 строки)
+**Последний коммит:** 84fcad5
+**Полный отчёт:** `v2.2/REPORT.md`
 
 ## Архитектура
 
 ```
-facades (точки входа, триггеры)
-  → pipeline (фазы, project-agnostic)
-    → core (невидимые протоколы)
-      → adapters (сменные: jira, gitlab, angular, figma)
+User → Command → Facade → Worker → [Phase 0 → 0.5 → 0.7 → 1 → 2 → 3 → 4+5 → 6]
+                                      ↓         ↓         ↓        ↓       ↓
+                                    Adapters   Core    Consensus  Subagents  MCP
 ```
 
-### Скиллы (23)
+| Layer | Count | Скиллы |
+|-------|-------|--------|
+| core (4) | 989 lines | orchestration, security, metrics, consensus-review |
+| pipeline (8) | 3089 lines | worker, planner, coder, figma-coding-rules, plan-reviewer, code-reviewer, ui-reviewer, code-researcher |
+| adapters (4) | 1068 lines | jira, gitlab, angular, figma |
+| facades (7) | 717 lines | jira-worker, deploy, community-sync, scan-ui-inventory, scan-practices, scan-qa-playbook, figma-audit |
 
-| Layer | Скиллы |
-|-------|--------|
-| core (4) | orchestration, security, metrics, consensus-review |
-| pipeline (8) | worker, planner, coder, figma-coding-rules, plan-reviewer, code-reviewer, ui-reviewer, code-researcher |
-| adapters (4) | jira, gitlab, angular, figma |
-| facades (7) | jira-worker, deploy, community-sync, scan-ui-inventory, scan-practices, scan-qa-playbook, figma-audit |
+## Основные команды
 
-### Команды (15)
+| Команда | Что делает |
+|---------|------------|
+| `/worker ARGO-XXX` | Полный цикл: deep analysis → plan → review → code → review → MR → deploy |
+| `/figma URL [app-url]` | Consensus node map → visual/property/UX сравнение → fix/build → verify |
+| `/sync` | Cherry-pick на community ветки |
+| `/deploy test\|prod` | Deploy через GitLab CI |
 
-Pipeline: `/worker`, `/plan`, `/continue`, `/progress`, `/attach`, `/cleanup`
-Review: `/cr`, `/code-review` (alias), `/ui-review`, `/verify-figma`, `/figma`
-Scan: `/scan-ui`, `/scan-practices`, `/scan-qa`
-Ops: `/deploy`, `/sync`
+Дополнительные: `/plan`, `/cr`, `/ui-review`, `/verify-figma`, `/attach`, `/continue`, `/progress`, `/cleanup`, `/scan-ui`, `/scan-qa`, `/scan-practices`
 
-### Внешние зависимости (скиллы)
+## Pipeline `/worker` (M+ задачи)
 
-visual-qa, css-styling-expert, refactoring-ui, qa-test-planner, ui-ux-pro-max, agent-browser, brainstorming (superpowers)
-
-## Как использовать pipeline
-
-### Полный цикл через Jira
 ```
-/worker ARGO-12345
+Phase 0   → classify (S/M/L/XL)
+Phase 0.5 → workspace (branch, worktree, CI)
+Phase 0.7 → deep analysis: 3 agents (Figma explorer opus + API discovery sonnet + Functional mapper opus)
+            → task-analysis.md + confirmation gate
+Phase 1   → planner (opus, reads task-analysis.md)
+Phase 2   → plan review (3x opus consensus: AC + Architecture + Design)
+Phase 3   → coder (sonnet, commit gate: figma-verify.md required)
+Phase 4   → code review (3x sonnet consensus: Bugs + Compliance + Security)
+Phase 5   → UI review (3x sonnet consensus: Functional + Visual + States/A11y)
+Phase 6   → MR + deploy + metrics
 ```
 
-### Задача по макету (Figma → код)
-```
-# Вариант 1: Jira-задача с Figma-ссылками в описании
-/worker ARGO-12345
-# Pipeline сам найдёт Figma URLs в описании, извлечёт дизайн, реализует
-
-# Вариант 2: Только Figma, без Jira
-# Описать задачу словами + дать Figma ссылку:
-"Реализуй компонент карточки по этому макету: https://figma.com/design/XXX/YYY?node-id=123:456"
-# Coder загрузит figma-coding-rules, extract → write → self-verify → commit
-
-# Вариант 3: Проверить существующий код против Figma
-/verify-figma https://figma.com/design/XXX/YYY?node-id=123:456
-```
+S задачи: Phases 0.7, 2, 5 skip. Single agent на 4.
 
 ## Ключевые паттерны
 
-### 1. Consensus Review (3 секции x 3 агента)
-- Для review, анализа, статистики — НИКОГДА не доверять одному агенту
-- Каждая секция: 3 агента с разных углов → consensus + conflicts + unique
-- Intermediate files: агенты пишут в `.tmp/`, orchestrator мержит, cleanup после
-- Активация: complexity >= M в pipeline, или `--thorough` в командах
+### Consensus Review
+- 3 агента с разных углов → consensus + conflicts
+- Активация: M+ в pipeline
+- Где: Phase 0.7, Phase 2, Phase 4, Phase 5, `/figma` (все 4 фазы)
 
-### 2. WARN вместо fallback
-- Если внешний скилл не загрузился — сообщить юзеру, НЕ пытаться заменить
-- Формат: WARN + 3 опции (Install / Skip / Abort)
-- Применяется к: css-styling-expert, refactoring-ui, visual-qa, qa-test-planner, ui-ux-pro-max, agent-browser
+### Deep Task Analysis (Phase 0.7)
+- Figma Explorer: все экраны, states, flows, screenshots
+- API Discovery: Swagger → endpoints → OPTIONS test → working/broken/missing
+- Functional Mapper: screens × endpoints → user flows + gaps
+- Confirmation gate: показать юзеру, предложить создать Jira на бэк
+- api_discovery в adapter-angular (proxy.conf → environment.ts → swagger)
 
-### 3. Figma Self-Verify + Commit Gate
-- Coder: extract CSS из Figma → write → verify КАЖДОЕ свойство → fix → next
-- **Commit gate:** figma-verify.md обязателен до коммита (flex-direction проверяется явно)
-- Tolerance: coder ±0px (author), ui-reviewer ±2px (render)
-- Icon rule: НИКОГДА не рисовать SVG вручную
-- **Hook активирован:** PostToolUse на Write|Edit для .scss/.css/.component.html файлов
-- **Figma MCP fallback:** если MCP недоступен → skip/use-cached/abort (не стопорить pipeline)
+### Figma Self-Verify + Commit Gate
+- Extract CSS → write → verify КАЖДОЕ свойство → fix → commit
+- Commit blocked if figma-verify.md has MISMATCH
+- Hook: PostToolUse на .scss/.css/.component.html
+- Figma MCP fallback: skip/use-cached/abort
 
-### 4. Layer Separation
-- **core/security** — только universal checks (secrets, eval, SSRF, prototype pollution)
-- **Angular security** (XSS, CSRF, route guards) — в adapter-angular Section 7
-- **Phase numbering** — единая таблица в orchestration, нормализация в metrics
-- **task_schema** — типизирован в orchestration, все handoff contracts ссылаются
+### WARN вместо fallback
+- Если внешний скилл не загрузился → WARN + Install/Skip/Abort
+- Applies to: css-styling-expert, refactoring-ui, visual-qa, qa-test-planner, ui-ux-pro-max, agent-browser
 
-## Оценки скиллов (post-consensus review)
+## Model Routing
 
-9-agent consensus review дал **6.3/10** (вместо предсказанных 8.5-9.0).
-После 10 фиксов (P1-P10) — ожидается **7.5-8.0**.
+| Model | Skills | Purpose |
+|-------|--------|---------|
+| opus | planner, plan-reviewer (consensus) | Deep research, analytical review |
+| sonnet | coder, code-reviewer, ui-reviewer, figma-audit | Implementation, pattern matching |
+| haiku | code-researcher | Cheap read-only search |
 
-| Score | Скиллы |
-|-------|--------|
-| 8.5-9 | code-researcher, plan-reviewer, adapter-angular, adapter-figma, adapter-jira |
-| 7.5-8 | orchestration, adapter-gitlab, figma-coding-rules, worker |
-| 7-7.5 | planner, coder, code-reviewer, metrics, consensus-review |
-| 6-6.5 | ui-reviewer, scan-qa-playbook, scan-practices, deploy, jira-worker facade |
-| 4-5.5 | community-sync, scan-ui-inventory, core-security (до фикса — после ~7) |
+## Что НЕ сделано
 
-Полный отчёт: `v2.2/CONSENSUS-REVIEW-v2.2.md`
+### Приоритет 1 — Тестирование
+1. `/worker ARGO-XXXXX` на реальной задаче end-to-end
+2. `/figma` на реальном макете
+3. Skill-creator eval-тесты trigger accuracy
 
-## Что было сделано
-
-### REFACTOR v1 + v2 (74 пункта — все выполнены)
-Файлы: v2.2/REFACTOR.md, v2.2/REFACTOR-v2.md
-
-### Session 2026-03-24/25 (большая)
-- Sync проверка: 22/22 скилла OK
-- Hook figma-verify-reminder.sh: активирован + баг-фикс ($CLAUDE_FILE_PATH → stdin JSON)
-- 9-agent consensus review → CONSENSUS-REVIEW-v2.2.md (6.3/10)
-- 10 фиксов P1-P10 (layer separation, contracts, safety)
-- `/figma` command + figma-audit facade (638 строк, 4 фазы consensus)
-- Consensus mode добавлен в Phase 2 (opus), Phase 4, Phase 5
-- Plan-reviewer → opus model
-- Phase 0.7 (Deep Task Analysis) реализован: worker + orchestration + adapter-angular + planner
-- 23 скилла + 16 команд, все в sync
-
-## Что НЕ сделано (следующий этап)
-
-### Приоритет 1 — Валидация (всё реализовано, нужно тестировать)
-1. Тест `/worker ARGO-XXXXX` на реальной задаче end-to-end (с Phase 0.7)
-2. Тест `/figma` на реальном макете
-3. Skill-creator eval-тесты для trigger accuracy
-
-### Приоритет 3 — Доработки из consensus review
+### Приоритет 2 — Мелкие фиксы
 - Русские AC headings в Jira adapter (`Критерии приемки`)
 - `grep -P` для lookahead паттернов в core-security
-- Atomic checkpoint write (tmp + rename)
-- Post-STOP recovery instructions в loop-exceeded messages
-- /attach: вынести 146 строк логики в facade/skill
-
-### Известные проблемы
-- LAYOUT_RULE: commit gate добавлен (P4), но нужен реальный тест
-- feature-dev plugin отключён глобально (--scope user)
-
-## Memory файлы
-
-```
-~/.claude/projects/-Users-dannywayne-Desktop-pet-agent-skills/memory/
-├── MEMORY.md
-├── user_profile.md
-├── project_agent_skills_v2.md
-├── feedback_figma_icons.md
-├── feedback_ci_worktree.md
-├── feedback_figma_css_enforcement.md
-├── feedback_research_before_code.md
-└── feedback_ui_rules.md
-```
+- Atomic checkpoint write (tmp → rename)
+- `/attach` вынести 162 строки в facade/skill
+- `/code-review` → 1-line redirect на `/cr`
 
 ## Как продолжить
 
 ```
-# 1. Тест на реальной задаче
+# Тест на реальной задаче
 /worker ARGO-XXXXX
 
-# 2. Задача по макету
-"Реализуй по макету: https://figma.com/design/..."
+# Figma audit
+/figma https://figma.com/design/... http://localhost:4200
 
-# 3. Проверить Figma-fidelity текущего кода
+# Проверить верстку против Figma
 /verify-figma https://figma.com/design/...
-
-# 4. Повторный consensus review
-"Запусти consensus review v2.2 скиллов: 3 секции x 3 агента"
 ```
