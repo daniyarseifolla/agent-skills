@@ -108,31 +108,38 @@ visual-qa, css-styling-expert, refactoring-ui, qa-test-planner, ui-ux-pro-max, a
 ### REFACTOR v1 + v2 (74 пункта — все выполнены)
 Файлы: v2.2/REFACTOR.md, v2.2/REFACTOR-v2.md
 
-### Consensus Review Session (2026-03-24)
+### Session 2026-03-24/25 (большая)
 - Sync проверка: 22/22 скилла OK
 - Hook figma-verify-reminder.sh: активирован + баг-фикс ($CLAUDE_FILE_PATH → stdin JSON)
-- 9-agent consensus review → CONSENSUS-REVIEW-v2.2.md
-- 10 фиксов P1-P10 (коммит ad0d04f)
-- Global sync: все 8 изменённых скиллов скопированы
+- 9-agent consensus review → CONSENSUS-REVIEW-v2.2.md (6.3/10)
+- 10 фиксов P1-P10 (layer separation, contracts, safety)
+- `/figma` command + figma-audit facade (638 строк, 4 фазы consensus)
+- Consensus mode добавлен в Phase 2 (opus), Phase 4, Phase 5
+- Plan-reviewer → opus model
+- Deep Task Analysis spec утверждён (Phase 0.7: Figma + Swagger + Functional Map)
+- 23 скилла + 16 команд, все в sync
 
 ## Что НЕ сделано (следующий этап)
 
-### Приоритет 1 — Валидация
-1. Тест на реальной задаче: `/worker ARGO-XXXXX` от начала до конца
-2. Повторный consensus review после фиксов (ожидание: 7.5-8.0)
+### Приоритет 1 — Реализация Phase 0.7 (Deep Task Analysis)
+Spec утверждён: `docs/superpowers/specs/2026-03-25-deep-task-analysis-design.md`
+Нужно:
+1. Расширить worker SKILL.md — добавить Phase 0.7
+2. Обновить core/orchestration — phase_sequence, checkpoint, recovery heuristic, handoff
+3. Добавить api_discovery в adapter-angular
+4. Обновить planner — skip step_2 когда task-analysis.md есть
+5. Использовать skill-creator для eval-тестов
 
-### Приоритет 2 — Доработки из consensus review (unique findings)
+### Приоритет 2 — Валидация
+1. Тест `/worker ARGO-XXXXX` на реальной задаче end-to-end
+2. Тест `/figma` на реальном макете
+
+### Приоритет 3 — Доработки из consensus review
 - Русские AC headings в Jira adapter (`Критерии приемки`)
 - `grep -P` для lookahead паттернов в core-security
-- Preflight health-check для MCP серверов на Phase 0
 - Atomic checkpoint write (tmp + rename)
 - Post-STOP recovery instructions в loop-exceeded messages
 - /attach: вынести 146 строк логики в facade/skill
-
-### Приоритет 3 — UX
-- Консолидация команд 15 → 9
-- Cross-agent portability (Gemini/Codex адаптеры)
-- `--thorough` флаг для `/cr` и `/ui-review`
 
 ### Известные проблемы
 - LAYOUT_RULE: commit gate добавлен (P4), но нужен реальный тест
