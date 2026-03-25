@@ -27,6 +27,25 @@ input:
   tech_stack_adapter: "loaded adapter for patterns/commands"
   design_adapter: "loaded adapter for Figma (optional, null if none)"
   ui_inventory_path: ".claude/ui-inventory.md (if exists)"
+  task_analysis_path: "docs/plans/{task-key}/task-analysis.md (from Phase 0.7, null for S complexity)"
+```
+
+---
+
+## 1b. Task Analysis Context
+
+```yaml
+task_analysis:
+  when: "task_analysis_path is not null"
+  action: "Read task-analysis.md BEFORE any research"
+  provides:
+    screens: "Figma screens with node-ids, types, states — becomes basis for Implementation Parts"
+    api: "API endpoints with schemas — informs service design and model creation"
+    flows: "User flows — informs component wiring, routing, and navigation"
+    gaps: "Missing/broken endpoints — documented as risks/blockers in plan"
+    api_strategy: "real|mock — affects service implementation approach"
+  skip_step_2: "If task-analysis.md has '## Figma Screens' section → skip step_2_design_context entirely"
+  reason: "Phase 0.7 already explored all Figma frames. Re-scanning wastes tokens and API calls."
 ```
 
 ---
@@ -69,7 +88,7 @@ steps:
     purpose: "Avoid reinventing existing components"
 
   step_2_design_context:
-    skip_if: "no design_adapter or no figma_urls"
+    skip_if: "no design_adapter or no figma_urls OR (task_analysis_path exists AND task-analysis.md contains '## Figma Screens')"
     action: "Extract Figma node map for EVERY UI component"
     CRITICAL: |
       For each Figma URL:
