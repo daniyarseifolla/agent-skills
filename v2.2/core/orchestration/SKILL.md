@@ -17,6 +17,7 @@ Internal protocol definitions for pipeline execution. Not a user-facing skill.
 phase_sequence:
   - { id: 0,   name: task-analysis,    model: sonnet, mode: inline,            action: "classify complexity, select route" }
   - { id: 0.5, name: workspace-setup,  model: sonnet, mode: inline,            action: "worktree, CI disable, dev server, confirmation" }
+  - { id: 0.7, name: deep-analysis,   model: opus,   mode: inline,            action: "Figma exploration + API discovery + functional map", skip_when: "complexity == S" }
   - { id: 1,   name: planner,          model: opus,   mode: inline,            action: "research codebase, produce plan" }
   - { id: 2,   name: plan-reviewer,    model: sonnet, mode: subagent,          action: "validate plan against AC", skip_when: "complexity == S" }
   - { id: 3,   name: coder,            model: sonnet, mode: inline,            action: "evaluate gate, then implement" }
@@ -31,6 +32,7 @@ phase_id_normalization:
   mapping:
     "0":     0    # task-analysis
     "0.5":   0.5  # workspace-setup (stored as 0.5 in checkpoint, normalized to 1 for metrics)
+    "0.7":   0.7  # deep-analysis
     "1":     1    # planner
     "2":     2    # plan-reviewer
     "3":     3    # coder
@@ -60,9 +62,9 @@ complexity_matrix:
   XL: { ac: "7+",  modules: "4+", plan_review: standard, ui_review: true,              code_researcher: true,  seq_thinking: required,    route: FULL }
 
 route_definitions:
-  MINIMAL:  { phases: [0, 0.5, 1, 3, 4, 6],       note: "skip plan-review, ui-review" }
-  STANDARD: { phases: [0, 0.5, 1, 2, 3, 4, 5, 6], note: "all phases, ui-review conditional on design adapter" }
-  FULL:     { phases: [0, 0.5, 1, 2, 3, 4, 5, 6], note: "all phases, all tools enabled" }
+  MINIMAL:  { phases: [0, 0.5, 1, 3, 4, 6],              note: "skip deep-analysis, plan-review, ui-review" }
+  STANDARD: { phases: [0, 0.5, 0.7, 1, 2, 3, 4, 5, 6],   note: "all phases, ui-review conditional on design adapter" }
+  FULL:     { phases: [0, 0.5, 0.7, 1, 2, 3, 4, 5, 6],   note: "all phases, all tools enabled" }
 ```
 
 ---
@@ -114,8 +116,9 @@ handoff_contracts:
 
   worker_to_planner:
     task: "task_schema — typed object from task-source adapter"
-    required: [task, complexity, route, figma_urls, ui_inventory_path]
+    required: [task, complexity, route, figma_urls, ui_inventory_path, task_analysis_path]
     optional: [tech_stack_adapter, design_adapter]
+    task_analysis_path: "string|null — path to task-analysis.md from Phase 0.7. Null for S complexity."
     note: "Worker passes full task object (see task_schema above) + classification results to planner"
 
   worker_to_ui_reviewer:
@@ -175,7 +178,7 @@ Path: `docs/plans/{task-key}/checkpoint.yaml`. Overwritten after each phase.
 ```yaml
 checkpoint_schema:
   task_key: string
-  phase_completed: "0|0.5|1|2|3|4|5|6"
+  phase_completed: "0|0.5|0.7|1|2|3|4|5|6"
   phase_name: string
   iteration: { plan_review: "N/3", code_review: "N/3", evaluate_return: "N/2" }
   verdict: string
@@ -210,6 +213,7 @@ recovery_from_checkpoint:
 
 recovery_heuristic:
   # Artifact presence -> resume point (when no checkpoint exists)
+  - { task_analysis: yes, plan: no, evaluate: "-", code: "-", tests: "-", resume: "Phase 1 — planning (with task-analysis.md context)" }
   - { plan: no,  evaluate: "-", code: "-", tests: "-", resume: "Phase 1 — start planning" }
   - { plan: yes, evaluate: no,  code: no,  tests: "-", resume: "Phase 3 — evaluate gate" }
   - { plan: yes, evaluate: yes, code: no,  tests: "-", resume: "Phase 3 — start coding" }
