@@ -7,8 +7,8 @@
 **Repo:** ~/Desktop/pet/agent-skills/ (github.com/daniyarseifolla/agent-skills)
 **Версия:** v2.2 (активная), v1.0 (бэкап)
 **Глобальные скиллы:** ~/.claude/skills/ (23 скилла)
-**Глобальные команды:** ~/.claude/commands/ (15 команд)
-**Последний коммит:** ad0d04f — consensus review P1-P10 fixes
+**Глобальные команды:** ~/.claude/commands/ (16 команд)
+**Последний коммит:** e5112f0 — plan-reviewer → opus, consensus in worker phases
 
 ## Архитектура
 
