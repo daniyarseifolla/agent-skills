@@ -195,6 +195,12 @@ phases:
     mode: inline
     skip_if: "complexity == S"
     action: "Deep task analysis: Figma screens + API discovery + functional map"
+    MANDATORY: |
+      ALL 3 agents MUST run. Do NOT skip any agent.
+      Do NOT do inline analysis instead of dispatching agents.
+      Do NOT decide "this is retro mode, skip Agent 3".
+      Even for /attach — run all 3 agents if task-analysis.md doesn't exist.
+      Use Agent(subagent_type: 'general-purpose') — NOT 'Explore' (Explore can't Write files).
     dispatch: |
       Step 1: mkdir -p docs/plans/{task-key}/screenshots/ && mkdir -p docs/plans/{task-key}/.tmp/
       Step 2: Launch Agent 1 + Agent 2 IN PARALLEL (dispatching-parallel-agents)
@@ -246,7 +252,7 @@ phases:
     model: opus
     mode: subagent
     skip_if: "complexity == S"
-    consensus: "complexity >= M → activate plan-reviewer consensus mode (3 opus agents: AC, Architecture, Design)"
+    consensus: "complexity >= M → MANDATORY: dispatch 3 opus subagents (AC, Architecture, Design). Do NOT do inline review. Do NOT skip consensus."
     input: "handoff: planner_to_reviewer (core-orchestration contract)"
     output: "verdict: APPROVED|NEEDS_CHANGES|REJECTED"
     checkpoint: true
@@ -267,7 +273,7 @@ phases:
   - phase: "4+5"
     name: "review (parallel)"
     description: "Code review + UI review run in parallel (they are independent)"
-    consensus: "complexity >= M → activate consensus mode in BOTH reviewers (3 agents each)"
+    consensus: "complexity >= M → MANDATORY: dispatch 3 subagents per reviewer. Do NOT do inline review. Do NOT run Phase 4+5 sequentially — PARALLEL."
     parallel:
       - skill: "pipeline-code-reviewer"
         model: sonnet
