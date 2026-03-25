@@ -201,10 +201,10 @@ phases:
   - phase: 2
     name: plan-review
     skill: "pipeline-plan-reviewer"
-    model: sonnet
+    model: opus
     mode: subagent
     skip_if: "complexity == S"
-    consensus: "complexity >= M → activate plan-reviewer consensus mode (3 agents: AC, Architecture, Design)"
+    consensus: "complexity >= M → activate plan-reviewer consensus mode (3 opus agents: AC, Architecture, Design)"
     input: "handoff: planner_to_reviewer (core-orchestration contract)"
     output: "verdict: APPROVED|NEEDS_CHANGES|REJECTED"
     checkpoint: true
