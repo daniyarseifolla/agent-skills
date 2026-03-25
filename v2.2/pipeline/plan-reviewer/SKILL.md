@@ -162,3 +162,54 @@ loop:
     - "Report new findings if any"
   on_exceeded: "STOP, show iteration summary, request user intervention"
 ```
+
+---
+
+## 7. Consensus Mode
+
+Activated when `complexity >= M` (STANDARD/FULL routes). 3 agents review the same plan from different angles.
+
+```yaml
+consensus_mode:
+  activation: "complexity >= M"
+  dispatch: "Use Skill: superpowers:dispatching-parallel-agents"
+
+  agent_1_ac_coverage:
+    name: "ac-coverage-reviewer"
+    angle: "AC coverage and completeness"
+    focus:
+      - "Every AC maps to implementation part (BLOCKER if missing)"
+      - "AC are correctly interpreted (not over/under-scoped)"
+      - "Edge cases from AC are addressed"
+      - "Test plan covers all AC scenarios"
+    checks_from_section_2: [ac_coverage, test_plan, scope_completeness]
+
+  agent_2_architecture:
+    name: "architecture-reviewer"
+    angle: "Architecture patterns and dependency structure"
+    focus:
+      - "tech_stack_adapter quality patterns followed"
+      - "Dependency order is correct (no circular deps)"
+      - "Module boundaries respected"
+      - "Component reuse (check ui-inventory)"
+      - "Risk assessment and mitigation"
+    checks_from_section_2: [architecture_alignment, dependency_order, risk_assessment, config_changes]
+
+  agent_3_design:
+    name: "design-coverage-reviewer"
+    angle: "Figma design coverage and UI completeness"
+    focus:
+      - "Every Figma node mapped to implementation part"
+      - "All component states covered (hover, focus, disabled, loading, error)"
+      - "Responsive considerations documented"
+      - "CSS values referenced (not approximated)"
+    checks_from_section_2: [figma_coverage, required_sections]
+    skip_if: "no design adapter or no figma_urls"
+
+  aggregation:
+    method: "Per core/consensus-review pattern"
+    consensus: "2+ agents flag same issue → confirmed"
+    conflicts: "agents disagree on severity → flag for review"
+    verdict: "Worst verdict from 3 agents wins (NEEDS_CHANGES beats APPROVED)"
+    output: "Merged plan-review.md with all 3 agent findings"
+```

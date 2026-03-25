@@ -198,7 +198,58 @@ loop:
 
 ---
 
-## 8. Standalone Mode
+## 8. Consensus Mode
+
+Activated when `complexity >= M` (STANDARD/FULL routes). 3 agents review the same diff from different angles.
+
+```yaml
+consensus_mode:
+  activation: "complexity >= M"
+  dispatch: "Use Skill: superpowers:dispatching-parallel-agents"
+
+  agent_1_bug_hunter:
+    name: "bug-hunter"
+    angle: "Logic correctness, edge cases, runtime errors"
+    focus:
+      - "Off-by-one errors, null checks, boundary conditions"
+      - "Race conditions in async code"
+      - "Error handling: swallowed errors, missing catch, uninformative messages"
+      - "Memory leaks: unsubscribed observables, dangling event listeners"
+      - "Type safety: any casts, unsafe assertions"
+    checks_from_section_3: [error_handling, memory_leaks]
+
+  agent_2_plan_compliance:
+    name: "plan-compliance-checker"
+    angle: "Does implementation match approved plan?"
+    focus:
+      - "Every plan part is implemented"
+      - "No undocumented deviations (check evaluate.md)"
+      - "Test coverage matches plan's test section"
+      - "File changes match plan's scope"
+      - "Component reuse: no reinvented wheels"
+    checks_from_section_3: [plan_compliance, test_coverage, component_reuse]
+
+  agent_3_security:
+    name: "security-reviewer"
+    angle: "Security vulnerabilities and best practices"
+    focus:
+      - "Run ALL core-security grep patterns (use grep -P for lookaheads)"
+      - "Run tech_stack_adapter.security_checks patterns"
+      - "Architecture review: auth, CSRF, XSS, injection"
+      - "Design implementation: Figma fidelity check (if design adapter active)"
+    checks_from_section_3: [security, architecture, design_implementation]
+
+  aggregation:
+    method: "Per core/consensus-review pattern"
+    consensus: "2+ agents flag same issue → confirmed"
+    conflicts: "agents disagree on severity → escalate to higher"
+    verdict: "Worst verdict wins (CHANGES_REQUESTED beats APPROVED)"
+    output: "Merged code-review.md with all 3 agent findings"
+```
+
+---
+
+## 9. Standalone Mode
 
 ```yaml
 standalone:

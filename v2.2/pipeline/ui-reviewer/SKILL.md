@@ -361,7 +361,70 @@ verdict:
 
 ---
 
-## 6. Standalone Mode
+## 6. Consensus Mode
+
+Activated when `complexity >= M`. Replaces the default parallel-by-test-group dispatch with 3 agents that review from different ANGLES (same scope, different focus).
+
+```yaml
+consensus_mode:
+  activation: "complexity >= M AND consensus requested by worker"
+  note: "This REPLACES the default test-group-parallel dispatch (Section 3). Not additive."
+  dispatch: "Use Skill: superpowers:dispatching-parallel-agents"
+
+  agent_1_functional:
+    name: "functional-tester"
+    angle: "Happy path + edge cases via browser"
+    focus:
+      - "Navigate to each page, execute CRUD flows"
+      - "Test form validation (empty, invalid, boundary)"
+      - "Test error states (network fail, 404, timeout)"
+      - "Verify data persistence (create → refresh → still there?)"
+    tools: [agent-browser, browser_click, browser_fill, browser_navigate]
+    output: ".tmp/ui-functional.md"
+    budget: "max 40 tool calls, 8 min"
+
+  agent_2_visual:
+    name: "visual-fidelity-checker"
+    angle: "Figma visual comparison per element"
+    focus:
+      - "Screenshot Figma vs browser at desktop/tablet/mobile"
+      - "Per-element CSS comparison (getComputedStyle vs Figma values)"
+      - "Color accuracy, spacing precision, typography match"
+      - "flex-direction verification (known problem area)"
+    tools: [get_design_context, get_screenshot, browser_take_screenshot, browser_evaluate]
+    output: ".tmp/ui-visual.md"
+    budget: "max 40 tool calls, 8 min"
+    skip_if: "no design adapter or no figma_urls"
+
+  agent_3_states:
+    name: "states-accessibility-checker"
+    angle: "Component states + responsive + accessibility"
+    focus:
+      - "Hover, focus-visible, disabled, loading, error states"
+      - "Responsive: 375, 768, 1024, 1440 — no overflow, no broken layouts"
+      - "Accessibility: contrast ratio, focus order, aria-labels, keyboard navigation"
+      - "Transitions and animations (smooth, no jank)"
+    tools: [browser_hover, browser_press_key, browser_resize, browser_take_screenshot]
+    output: ".tmp/ui-states.md"
+    budget: "max 40 tool calls, 8 min"
+
+  aggregation:
+    method: "Per core/consensus-review pattern"
+    consensus: "2+ agents flag same issue → confirmed"
+    conflicts: "agents disagree → flag"
+    scoring:
+      functional: "PASS count / total → 1-10"
+      visual: "matching elements / total → 1-10"
+      states: "implemented states / required → 1-10"
+      overall: "weighted average (functional 0.5, visual 0.3, states 0.2)"
+    verdict: "PASS (≥8.5) | PASS_WITH_ISSUES (7.0-8.4) | ISSUES_FOUND (<7.0)"
+    output: "ui-review.md (merged from 3 agents)"
+    cleanup: "rm .tmp/ui-*.md"
+```
+
+---
+
+## 7. Standalone Mode
 
 ```yaml
 standalone:

@@ -204,6 +204,7 @@ phases:
     model: sonnet
     mode: subagent
     skip_if: "complexity == S"
+    consensus: "complexity >= M → activate plan-reviewer consensus mode (3 agents: AC, Architecture, Design)"
     input: "handoff: planner_to_reviewer (core-orchestration contract)"
     output: "verdict: APPROVED|NEEDS_CHANGES|REJECTED"
     checkpoint: true
@@ -224,16 +225,19 @@ phases:
   - phase: "4+5"
     name: "review (parallel)"
     description: "Code review + UI review run in parallel (they are independent)"
+    consensus: "complexity >= M → activate consensus mode in BOTH reviewers (3 agents each)"
     parallel:
       - skill: "pipeline-code-reviewer"
         model: sonnet
         mode: "subagent_worktree"
+        consensus_agents: "Bug hunter + Plan compliance + Security (when M+)"
         input: "handoff from coder"
         output: "code review verdict"
       - skill: "pipeline-ui-reviewer"
         model: sonnet
         mode: subagent
         skip_if: "complexity == S OR no design adapter"
+        consensus_agents: "Functional + Visual fidelity + States/A11y (when M+)"
         input: "branch, figma_urls"
         output: "ui review report"
 
