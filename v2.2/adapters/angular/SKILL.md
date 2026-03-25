@@ -313,3 +313,49 @@ cherry_pick_fixes:
     error: "Parser error — template syntax broken after merge"
     fix: "Fix HTML nesting, check for unclosed tags"
 ```
+
+---
+
+## 9. API Discovery
+
+Implements the `tech-stack.api_discovery` contract. Called by worker Phase 0.7.
+
+```yaml
+api_discovery:
+  purpose: "Find API base URL and Swagger/OpenAPI spec URL for Angular projects"
+  returns: "{ base_url: string, swagger_url: string, auth_hint: string }"
+
+  chain:
+    1_proxy_conf:
+      action: "Read proxy.conf.json or proxy.conf.js"
+      glob: "proxy.conf.{json,js}"
+      extract: "/api target URL → base_url"
+      example: '{ "/api": { "target": "https://api.dev.project.com" } } → base_url = https://api.dev.project.com'
+
+    2_environment:
+      action: "Read environment.ts or environment.development.ts"
+      glob: "src/environments/environment*.ts"
+      extract: "apiUrl or API_URL field → base_url"
+      skip_if: "proxy.conf already found base_url"
+
+    3_derive_swagger:
+      action: "Derive swagger_url from base_url"
+      try_patterns:
+        - "{base_url}/swagger/v1/swagger.json"
+        - "{base_url}/swagger/swagger.json"
+        - "{base_url}/api-docs"
+      verify: "WebFetch each pattern → first 200 with JSON content-type wins"
+      timeout: "5 sec per attempt"
+
+    4_project_yaml:
+      action: "If chain 1-3 failed → read .claude/project.yaml → api.swagger_url"
+      condition: "fallback only"
+
+    5_ask_user:
+      action: "If all failed → ask user for swagger URL"
+      save: "Store in .claude/project.yaml api.swagger_url ONLY if field is absent"
+
+  auth_hint:
+    action: "If proxy.conf has headers or secure:false → extract auth pattern"
+    example: '"secure": false → auth_hint: "No SSL verification needed"'
+```

@@ -145,7 +145,7 @@ Each adapter type implements a known interface:
 ```yaml
 task-source:     fetch_task, parse_ac, get_complexity_hints, transition, format_mr_description
 ci-cd:           create_mr, get_pipeline, wait_for_stage, deploy, retry_job, create_tag
-tech-stack:      commands (lint/test/build), quality_checks, security_checks, patterns, module_lookup
+tech-stack:      commands (lint/test/build), quality_checks, security_checks, api_discovery, patterns, module_lookup
 design:          parse_urls, get_design, get_screenshot, compare_visual, extract_tokens
 ```
 
