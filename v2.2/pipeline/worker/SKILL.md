@@ -189,12 +189,54 @@ phases:
     checkpoint: true
     skip_if: "resuming from checkpoint (workspace already set up)"
 
+  - phase: 0.7
+    name: deep-analysis
+    model: opus
+    mode: inline
+    skip_if: "complexity == S"
+    action: "Deep task analysis: Figma screens + API discovery + functional map"
+    dispatch: |
+      Step 1: mkdir -p docs/plans/{task-key}/screenshots/ && mkdir -p docs/plans/{task-key}/.tmp/
+      Step 2: Launch Agent 1 + Agent 2 IN PARALLEL (dispatching-parallel-agents)
+        Agent 1 (Figma Explorer, opus):
+          - get_metadata(fileKey) → list all frames
+          - For each matching frame: get_design_context → extract components/CSS
+          - get_screenshot per frame → save to screenshots/
+          - Identify: screen types, states, flows, interactive components
+          - Output: .tmp/figma-screens.md
+          - End with: ## Verdict: SUCCESS | PARTIAL | FAILED
+        Agent 2 (API Discovery, sonnet):
+          - tech_stack_adapter.api_discovery() → find swagger_url
+          - WebFetch(swagger_url) → parse endpoints matching task entity
+          - Test endpoints: GET → WebFetch, POST/PUT/DELETE → OPTIONS only (safety)
+          - Classify: working / broken / missing / auth_required
+          - Output: .tmp/api-analysis.md
+          - End with: ## Verdict: SUCCESS | PARTIAL | FAILED
+      Step 3: Check verdicts (Iron Law #2)
+        Both FAILED → HALT, show error to user
+        One FAILED → WARN, continue with partial data
+      Step 4: Launch Agent 3 (Functional Mapper, opus) SEQUENTIALLY
+        Input: orchestrator passes paths to .tmp/figma-screens.md + .tmp/api-analysis.md
+        Maps: screen → action → endpoint → response → next screen
+        Maps: form fields → Swagger schema fields
+        Finds: gaps (Figma feature without endpoint, schema mismatches)
+        Output: .tmp/functional-map.md
+      Step 5: Merge .tmp/*.md → docs/plans/{task-key}/task-analysis.md
+      Step 6: Confirmation gate
+        Show task-analysis.md + screenshots to user
+        Options: y (proceed) | edit (max 3 corrections) | abort
+        If BROKEN/MISSING endpoints: offer create_backend_tasks (mcp createJiraIssue)
+        If user chooses continue_without_api: set api_strategy: mock in task-analysis.md
+      Step 7: Write checkpoint, cleanup .tmp/ (only after user confirms)
+    checkpoint: true
+    output: "task_analysis_path: docs/plans/{task-key}/task-analysis.md"
+
   - phase: 1
     name: planning
     skill: "pipeline-planner"
     model: opus
     mode: inline
-    input: "task, complexity, route, tech_stack_adapter, design_adapter"
+    input: "task, complexity, route, tech_stack_adapter, design_adapter, task_analysis_path"
     output: "plan file path"
     checkpoint: true
 
