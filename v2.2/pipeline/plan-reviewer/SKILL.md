@@ -165,53 +165,71 @@ loop:
 
 ---
 
-## 7. Consensus Mode
+## 7. Consensus Mode (3 sections x 3 agents = 9 total)
 
-Activated when `complexity >= M` (STANDARD/FULL routes). 3 agents review the same plan from different angles.
+Activated when `complexity >= M`. Full 3x3 consensus per core/consensus-review pattern.
+Sections run sequentially (Iron Law #5: max 7 parallel). 3 agents per section run in parallel.
 
 ```yaml
 consensus_mode:
   activation: "complexity >= M"
   model: opus
   model_rationale: "Plan review is analytical — catching subtle AC misinterpretation, architectural flaws, scope gaps. Opus outperforms sonnet on reasoning tasks. Cost justified: errors caught here save full Phase 3 rework."
-  dispatch: "Use Skill: superpowers:dispatching-parallel-agents"
+  dispatch: "Use Skill: superpowers:dispatching-parallel-agents per section"
+  sections: 3
+  agents_per_section: 3
+  sequential_sections: true
 
-  agent_1_ac_coverage:
-    name: "ac-coverage-reviewer"
-    angle: "AC coverage and completeness"
-    focus:
-      - "Every AC maps to implementation part (BLOCKER if missing)"
-      - "AC are correctly interpreted (not over/under-scoped)"
-      - "Edge cases from AC are addressed"
-      - "Test plan covers all AC scenarios"
-    checks_from_section_2: [ac_coverage, test_plan, scope_completeness]
+  section_1_ac_coverage:
+    name: "AC Coverage & Completeness"
+    agents:
+      - angle: "AC mapping — every AC maps to implementation part, nothing missing"
+        focus: [ac_coverage, scope_completeness]
+      - angle: "AC interpretation — AC correctly understood, not over/under-scoped, edge cases addressed"
+        focus: [ac_coverage, test_plan]
+      - angle: "Test coverage — test plan covers all AC scenarios, edge cases, error paths"
+        focus: [test_plan, risk_assessment]
 
-  agent_2_architecture:
-    name: "architecture-reviewer"
-    angle: "Architecture patterns and dependency structure"
-    focus:
-      - "tech_stack_adapter quality patterns followed"
-      - "Dependency order is correct (no circular deps)"
-      - "Module boundaries respected"
-      - "Component reuse (check ui-inventory)"
-      - "Risk assessment and mitigation"
-    checks_from_section_2: [architecture_alignment, dependency_order, risk_assessment, config_changes]
+  section_2_architecture:
+    name: "Architecture & Patterns"
+    agents:
+      - angle: "Project patterns — tech_stack_adapter quality checks, component patterns, module boundaries"
+        focus: [architecture_alignment, config_changes]
+      - angle: "Dependency structure — correct order, no circular deps, imports valid"
+        focus: [dependency_order, scope_completeness]
+      - angle: "Component reuse — ui-inventory checked, no reinvented components, proper abstractions"
+        focus: [architecture_alignment, risk_assessment]
 
-  agent_3_design:
-    name: "design-coverage-reviewer"
-    angle: "Figma design coverage and UI completeness"
-    focus:
-      - "Every Figma node mapped to implementation part"
-      - "All component states covered (hover, focus, disabled, loading, error)"
-      - "Responsive considerations documented"
-      - "CSS values referenced (not approximated)"
-    checks_from_section_2: [figma_coverage, required_sections]
+  section_3_design:
+    name: "Design & Figma Coverage"
     skip_if: "no design adapter or no figma_urls"
+    agents:
+      - angle: "Node coverage — every Figma node mapped to implementation part"
+        focus: [figma_coverage, required_sections]
+      - angle: "States coverage — all component states covered (hover, focus, disabled, loading, error, empty)"
+        focus: [figma_coverage]
+      - angle: "CSS accuracy — values referenced from Figma (not approximated), responsive documented"
+        focus: [figma_coverage, required_sections]
 
   aggregation:
-    method: "Per core/consensus-review pattern"
-    consensus: "2+ agents flag same issue → confirmed"
-    conflicts: "agents disagree on severity → flag for review"
-    verdict: "Worst verdict from 3 agents wins (NEEDS_CHANGES beats APPROVED)"
-    output: "Merged plan-review.md with all 3 agent findings"
+    per_section:
+      method: "Per core/consensus-review pattern"
+      consensus: "2+ agents in section flag same issue → confirmed"
+      conflicts: "agents disagree → flag for review"
+      score: "Average of 3 agent scores in section"
+    cross_section:
+      verdict: "Worst verdict across 3 sections wins"
+      output: "Merged plan-review.md with all 9 agent findings grouped by section"
+      format: |
+        ## Plan Review — {verdict}
+        ### Section 1: AC Coverage (score: {N}/10)
+        #### Consensus (2+ agents agree)
+        | # | Finding | Severity | Agents |
+        #### Unique Findings
+        | # | Finding | Severity | Agent |
+        ### Section 2: Architecture (score: {N}/10)
+        ...
+        ### Section 3: Design (score: {N}/10)
+        ...
+        ### Overall: {avg}/10 — {APPROVED|NEEDS_CHANGES|REJECTED}
 ```

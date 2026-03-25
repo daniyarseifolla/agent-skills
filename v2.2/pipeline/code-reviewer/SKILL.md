@@ -198,53 +198,56 @@ loop:
 
 ---
 
-## 8. Consensus Mode
+## 8. Consensus Mode (3 sections x 3 agents = 9 total)
 
-Activated when `complexity >= M` (STANDARD/FULL routes). 3 agents review the same diff from different angles.
+Activated when `complexity >= M`. Full 3x3 consensus. Sections sequential, agents parallel.
 
 ```yaml
 consensus_mode:
   activation: "complexity >= M"
-  dispatch: "Use Skill: superpowers:dispatching-parallel-agents"
+  dispatch: "Use Skill: superpowers:dispatching-parallel-agents per section"
+  sections: 3
+  agents_per_section: 3
+  sequential_sections: true
 
-  agent_1_bug_hunter:
-    name: "bug-hunter"
-    angle: "Logic correctness, edge cases, runtime errors"
-    focus:
-      - "Off-by-one errors, null checks, boundary conditions"
-      - "Race conditions in async code"
-      - "Error handling: swallowed errors, missing catch, uninformative messages"
-      - "Memory leaks: unsubscribed observables, dangling event listeners"
-      - "Type safety: any casts, unsafe assertions"
-    checks_from_section_3: [error_handling, memory_leaks]
+  section_1_correctness:
+    name: "Correctness & Logic"
+    agents:
+      - angle: "Bug hunter — logic errors, edge cases, off-by-one, null handling"
+        focus: [error_handling]
+      - angle: "Plan compliance — compare implementation vs plan, find deviations, check evaluate.md"
+        focus: [plan_compliance, test_coverage]
+      - angle: "Type safety — any casts, unsafe assertions, missing generics, race conditions"
+        focus: [error_handling, memory_leaks]
 
-  agent_2_plan_compliance:
-    name: "plan-compliance-checker"
-    angle: "Does implementation match approved plan?"
-    focus:
-      - "Every plan part is implemented"
-      - "No undocumented deviations (check evaluate.md)"
-      - "Test coverage matches plan's test section"
-      - "File changes match plan's scope"
-      - "Component reuse: no reinvented wheels"
-    checks_from_section_3: [plan_compliance, test_coverage, component_reuse]
+  section_2_architecture:
+    name: "Architecture & Patterns"
+    agents:
+      - angle: "Clean architecture — separation of concerns, dependency direction, SRP"
+        focus: [architecture]
+      - angle: "Project patterns — follows existing patterns in codebase, correct imports, module boundaries"
+        focus: [architecture, component_reuse]
+      - angle: "Security — core-security grep patterns (grep -P), tech_stack_adapter.security_checks"
+        focus: [security, design_implementation]
 
-  agent_3_security:
-    name: "security-reviewer"
-    angle: "Security vulnerabilities and best practices"
-    focus:
-      - "Run ALL core-security grep patterns (use grep -P for lookaheads)"
-      - "Run tech_stack_adapter.security_checks patterns"
-      - "Architecture review: auth, CSRF, XSS, injection"
-      - "Design implementation: Figma fidelity check (if design adapter active)"
-    checks_from_section_3: [security, architecture, design_implementation]
+  section_3_quality:
+    name: "Code Quality & UX"
+    agents:
+      - angle: "Readability — naming, complexity, magic numbers, dead code"
+        focus: [plan_compliance]
+      - angle: "Performance — N+1, unnecessary re-renders, memory leaks, subscription leaks"
+        focus: [memory_leaks]
+      - angle: "Component quality — reuse, states, accessibility, Figma fidelity"
+        focus: [component_reuse, design_implementation]
 
   aggregation:
-    method: "Per core/consensus-review pattern"
-    consensus: "2+ agents flag same issue → confirmed"
-    conflicts: "agents disagree on severity → escalate to higher"
-    verdict: "Worst verdict wins (CHANGES_REQUESTED beats APPROVED)"
-    output: "Merged code-review.md with all 3 agent findings"
+    per_section:
+      consensus: "2+ agents agree → confirmed"
+      conflicts: "disagree on severity → escalate to higher"
+      score: "Average of 3 agents"
+    cross_section:
+      verdict: "Worst verdict across 3 sections"
+      output: "code-review.md grouped by section with consensus/unique findings"
 ```
 
 ---
