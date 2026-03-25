@@ -106,30 +106,108 @@ steps:
       | Card image | 123:458 | w:290px h:100px radius:12px 12px 0 0 |
     WHY: "Without node-ids in the plan, coder will guess CSS values instead of extracting exact ones from Figma"
 
-  step_3_brainstorming:
+  step_3_consensus_research:
+    activation: "complexity >= M"
+    fallback_for_S: "Skip consensus, do direct Glob/Grep/Read inline"
+    MANDATORY: "Do NOT skip. Do NOT do inline research instead. Dispatch 3 agents."
+    action: "3 research agents in parallel — gather maximum information before planning"
+    dispatch: "Use Skill: superpowers:dispatching-parallel-agents"
+
+    agent_1_codebase:
+      name: "codebase-researcher"
+      model: opus
+      subagent_type: "general-purpose"
+      angle: "Find ALL existing components, services, patterns relevant to this task"
+      steps:
+        - "Read task-analysis.md → understand screens and flows"
+        - "Glob for components matching entity name (e.g., *news*, *post*, *dialog*)"
+        - "For each found component: Read .ts, .html, .scss — extract patterns"
+        - "Find the CLOSEST existing feature to copy (e.g., existing CRUD dialog)"
+        - "Read shared SCSS: variables, mixins, design tokens"
+        - "Read ui-inventory.md if exists"
+      output: "docs/plans/{task-key}/.tmp/research-codebase.md"
+      format: |
+        ## Codebase Research
+        ### Closest Existing Feature
+        {feature_name}: {files} — can be used as template
+        ### Relevant Components
+        | Component | Path | Reusable? | Notes |
+        ### SCSS Patterns
+        | Variable/Mixin | Value | Usage |
+        ### Verdict: SUCCESS | PARTIAL | FAILED
+
+    agent_2_dependencies:
+      name: "dependency-mapper"
+      model: sonnet
+      subagent_type: "general-purpose"
+      angle: "Map all dependencies: routing, imports, services, state management"
+      steps:
+        - "Read task-analysis.md → understand endpoints and data flow"
+        - "Find existing routing config → what routes exist, where to add new"
+        - "Find existing services → which API calls already exist"
+        - "Find state management → signals/store patterns for this entity"
+        - "Find module/import structure → where new components should be declared"
+      output: "docs/plans/{task-key}/.tmp/research-dependencies.md"
+      format: |
+        ## Dependency Map
+        ### Routing
+        Current routes: {list}. New route needed: {path}
+        ### Services
+        Existing: {list}. New needed: {list}
+        ### State Management
+        Pattern: {signals|ngrx|behaviorsubject}. Existing state for entity: {yes|no}
+        ### Module Structure
+        Target module: {path}. Import chain: {chain}
+        ### Verdict: SUCCESS | PARTIAL | FAILED
+
+    agent_3_ux_flow:
+      name: "ux-flow-analyst"
+      model: opus
+      subagent_type: "general-purpose"
+      angle: "Map Figma screens → concrete implementation steps with AC coverage"
+      steps:
+        - "Read task-analysis.md → screens, flows, gaps, API schemas"
+        - "For each user flow: screen → user action → component → API call → next screen"
+        - "For each AC: which screen(s) + which component(s) implement it"
+        - "For each form: Figma fields → Swagger schema fields → validation rules"
+        - "Identify: what can be done with existing code, what's new"
+      output: "docs/plans/{task-key}/.tmp/research-ux-flow.md"
+      format: |
+        ## UX Flow Analysis
+        ### Flow → Implementation Map
+        | # | Flow | Screen | Component | Endpoint | New/Existing |
+        ### AC → Component Map
+        | AC | Screen | Component | Endpoint | Status |
+        ### Form → Schema Map
+        | Field | Figma Type | Schema Type | Validation |
+        ### Verdict: SUCCESS | PARTIAL | FAILED
+
+    aggregation:
+      after: "All 3 agents complete"
+      check_verdicts: "Any FAILED → WARN, continue with partial data"
+      merge: "Read .tmp/research-*.md → combine into unified research context"
+      cleanup: "Keep .tmp/ until plan written (cleanup at step_7)"
+      output: "Merged research feeds directly into brainstorming + plan creation"
+
+  step_4_brainstorming:
     action: "Invoke Skill: brainstorming"
-    input: "task + component inventory + tech-stack patterns + design context"
+    input: "task + task-analysis.md + merged research from step_3 agents"
     output: "design decisions, approach options, selected approach"
     brainstorming_focus:
-      - "Which existing components can be reused? (MUST prefer existing over custom)"
-      - "What new components are needed?"
+      - "Which existing components can be reused? (from codebase-researcher)"
+      - "What new components are needed? (from ux-flow-analyst)"
       - "What is the minimal approach to satisfy all AC?"
-      - "What are the risks and edge cases?"
+      - "What are the risks and edge cases? (from dependency-mapper)"
 
-  step_4_codebase_research:
+  step_5_codebase_research_fallback:
+    note: "Only for S complexity (consensus skipped). M+ use step_3 agents."
+    skip_if: "complexity >= M (already done via consensus agents)"
     action: "Research existing code for patterns, dependencies, imports"
-    S_M:
-      method: "Direct Glob/Grep/Read"
-      scope: "focused on known modules"
-    L_XL:
-      method: "Dispatch pipeline-code-researcher (haiku) via Agent tool"
-      queries:
-        - "Find existing patterns for {feature_type}"
-        - "Trace imports in {affected_modules}"
-        - "Locate similar implementations"
+    method: "Direct Glob/Grep/Read"
+    scope: "focused on known modules"
     output: "relevant files, patterns, import graph"
 
-  step_5_plan_creation:
+  step_6_plan_creation:
     action: "Invoke Skill: superpowers:writing-plans"
     output_path: "docs/plans/{task-key}/plan.md"
     required_sections:
@@ -142,7 +220,7 @@ steps:
       - "Component states (for each UI component: which states to implement)"
       - config_changes: "Environment, routing, module config (if any)"
 
-  step_6_checklist:
+  step_7_checklist:
     action: "Generate checklist from plan parts"
     output_path: "docs/plans/{task-key}/checklist.md"
     format:
@@ -168,7 +246,7 @@ steps:
         - [ ] {single task description}
         - [ ] Build + lint passes
 
-  step_7_handoff:
+  step_8_handoff:
     action: "Form handoff per core-orchestration planner_to_reviewer contract"
     payload:
       artifact_path: "docs/plans/{task-key}/plan.md"
