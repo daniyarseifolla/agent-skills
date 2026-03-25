@@ -116,23 +116,15 @@ visual-qa, css-styling-expert, refactoring-ui, qa-test-planner, ui-ux-pro-max, a
 - `/figma` command + figma-audit facade (638 строк, 4 фазы consensus)
 - Consensus mode добавлен в Phase 2 (opus), Phase 4, Phase 5
 - Plan-reviewer → opus model
-- Deep Task Analysis spec утверждён (Phase 0.7: Figma + Swagger + Functional Map)
+- Phase 0.7 (Deep Task Analysis) реализован: worker + orchestration + adapter-angular + planner
 - 23 скилла + 16 команд, все в sync
 
 ## Что НЕ сделано (следующий этап)
 
-### Приоритет 1 — Реализация Phase 0.7 (Deep Task Analysis)
-Spec утверждён: `docs/superpowers/specs/2026-03-25-deep-task-analysis-design.md`
-Нужно:
-1. Расширить worker SKILL.md — добавить Phase 0.7
-2. Обновить core/orchestration — phase_sequence, checkpoint, recovery heuristic, handoff
-3. Добавить api_discovery в adapter-angular
-4. Обновить planner — skip step_2 когда task-analysis.md есть
-5. Использовать skill-creator для eval-тестов
-
-### Приоритет 2 — Валидация
-1. Тест `/worker ARGO-XXXXX` на реальной задаче end-to-end
+### Приоритет 1 — Валидация (всё реализовано, нужно тестировать)
+1. Тест `/worker ARGO-XXXXX` на реальной задаче end-to-end (с Phase 0.7)
 2. Тест `/figma` на реальном макете
+3. Skill-creator eval-тесты для trigger accuracy
 
 ### Приоритет 3 — Доработки из consensus review
 - Русские AC headings в Jira adapter (`Критерии приемки`)
