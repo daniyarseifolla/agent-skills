@@ -7,7 +7,8 @@
 **Repo:** ~/Desktop/pet/agent-skills/ — **canonical source of truth**
 **Install target:** ~/.claude/skills/ + ~/.claude/commands/ (NOT the source)
 **Версия:** v2.2 (активная), v1.0 (бэкап)
-**Последний коммит:** 142cc99 — last-mile migration + doc consistency
+**Последний коммит:** d622ecb — P1 doc cleanup, stale SKILLS_OVERVIEW removed
+**External review (Codex):** 8/10 internal system. P0 closed, P1 remaining.
 **Полный отчёт:** `v2.2/REPORT.md`
 **Consensus reviews:** `v2.2/CONSENSUS-REVIEW-v2.2.md` (round 1: 6.3), `v2.2/CONSENSUS-REVIEW-v2.2-round2.md` (round 2: 8.0)
 
@@ -66,17 +67,26 @@ S задачи: Phases 0.7, 2, 5 skip. Single agent на 4. ~0 consensus overhea
 ### P0 — Done (commit 3a4fe55)
 - Source of truth, checkpoint model, model/score drift, credentials isolation
 
-### P1 — Next
-- Worker as single orchestration owner (figma-audit currently bypasses core)
-- Normalize facades (thin delegation, no state machines)
-- Close adapter leakage (pipeline/facades → adapter contracts, not MCP directly)
-- Weaken author-specific assumptions (ARGO, community/*, branch names → project config)
+### Done (P0)
+- Checkpoint: completed_phases array + next_phase_map everywhere (worker, /continue, /progress, metrics, /cleanup)
+- Model drift fixed (orchestration Phase 2 = opus)
+- Score drift fixed (ui-reviewer = 1-10)
+- Credentials isolation (.credentials gitignored)
+- Root SKILLS_OVERVIEW.md cleaned (was v1.0 trash)
+- Install docs consolidated to v2.2/README.md
+- /code-review → 1-line redirect
 
-### P2 — Later
-- Onboarding ladder (install → preflight → scan → worker)
-- Preflight/doctor command (check Claude Code, MCP, glab, config)
-- Docs: README (entry) + ARCHITECTURE (internals) + OPERATIONS (recovery)
-- Evals: /worker, /figma, /attach, /continue, degraded modes, missing MCP
+### P1 — Next session
+- figma-audit → integrate with core (checkpoint, metrics, /continue)
+- Normalize facades (community-sync, figma-audit → thin delegation)
+- doctor/preflight command
+- Onboarding ladder (install → doctor → scan → worker)
+- Weaken author-specific assumptions (ARGO, community/* → project config)
+
+### P2 — When needed
+- Behavioral evals: /worker, /figma, /attach, /continue, degraded modes
+- Docs split: README (entry) + ARCHITECTURE (internals) + OPERATIONS (recovery)
+- Cost optimization: 6 of 9 plan-reviewer agents → sonnet (pattern-matching)
 
 ## Model Routing
 
