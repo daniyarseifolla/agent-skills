@@ -19,7 +19,7 @@ phase_sequence:
   - { id: 0.5, name: workspace-setup,  model: sonnet, mode: inline,            action: "worktree, CI disable, dev server, confirmation" }
   - { id: 0.7, name: deep-analysis,   model: opus,   mode: inline,            action: "Figma exploration + API discovery + functional map", skip_when: "complexity == S" }
   - { id: 1,   name: planner,          model: opus,   mode: inline,            action: "research codebase, produce plan" }
-  - { id: 2,   name: plan-reviewer,    model: sonnet, mode: subagent,          action: "validate plan against AC", skip_when: "complexity == S" }
+  - { id: 2,   name: plan-reviewer,    model: opus,   mode: subagent,          action: "validate plan against AC (consensus 3x3 opus for M+)", skip_when: "complexity == S" }
   - { id: 3,   name: coder,            model: sonnet, mode: inline,            action: "evaluate gate, then implement" }
   - { id: 4,   name: code-reviewer,    model: sonnet, mode: subagent_worktree, action: "architecture + security review (core-security + tech-stack security_checks)" }
   - { id: 5,   name: ui-reviewer,      model: sonnet, mode: subagent,          action: "functional + visual review", skip_when: "complexity == S OR no design adapter" }
@@ -178,7 +178,7 @@ Path: `docs/plans/{task-key}/checkpoint.yaml`. Overwritten after each phase.
 ```yaml
 checkpoint_schema:
   task_key: string
-  phase_completed: "0|0.5|0.7|1|2|3|4|5|6"
+  completed_phases: "number[] — e.g. [0, 0.5, 0.7, 1, 2]. Set semantics, append-only."
   phase_name: string
   iteration: { plan_review: "N/3", code_review: "N/3", evaluate_return: "N/2" }
   verdict: string
@@ -188,9 +188,23 @@ checkpoint_schema:
   ci_disabled: "boolean — whether CI was disabled during development"
   worktree_path: "string|null — path to worktree if used, null if working in main repo"
   app_url: "string|null — dev server URL for UI review, resolved in Phase 0.5"
-  credentials: "object|null — test credentials from task description"
+  credentials_path: "string|null — path to .credentials file (gitignored), NOT inline credentials"
   handoff_payload: object
   issues_history: object[]
+
+  DEPRECATED: "phase_completed (scalar) is replaced by completed_phases (array). Use max(completed_phases) for resume logic."
+
+next_phase_map:
+  note: "Lookup table for resume — replaces phase_completed + 1 arithmetic"
+  "0":   0.5
+  "0.5": 0.7    # or 1 if complexity == S (0.7 skipped)
+  "0.7": 1
+  "1":   2      # or 3 if complexity == S (2 skipped)
+  "2":   3
+  "3":   4
+  "4":   5      # or 6 if complexity == S or no design adapter (5 skipped)
+  "5":   6
+  "6":   null   # done
 
 checkpoint_rules:
   write_after: [phase_completion, review_iteration, re_route_decision]
@@ -208,7 +222,8 @@ Strategy: checkpoint-first, heuristic fallback.
 ```yaml
 recovery_from_checkpoint:
   - read: "docs/plans/{task-key}/checkpoint.yaml"
-  - resume_from: "phase_completed + 1"
+  - last_phase: "max(completed_phases)"
+  - resume_from: "next_phase_map[last_phase] — use lookup table, NOT arithmetic"
   - restore: [handoff_payload, iteration_counters]
 
 recovery_heuristic:

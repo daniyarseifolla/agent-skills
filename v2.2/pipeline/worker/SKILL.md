@@ -81,7 +81,13 @@ display_before_start:
     step_1_worktree: "If user chose worktree=y → Invoke Skill: superpowers:using-git-worktrees"
     step_2_branch: "If worktree=n → create branch feat/{task_key} in current repo"
     step_3_ci: "If user chose CI=y AND not in worktree → ci-cd adapter disable_ci(task_key)"
-    step_4_checkpoint: "Save checkpoint: phase_completed: 0, ci_disabled: bool, worktree_path: string|null, app_url: string|null, credentials: object|null"
+    step_4_checkpoint: "Save checkpoint: completed_phases: [0], ci_disabled: bool, worktree_path: string|null, app_url: string|null"
+    step_4b_credentials: |
+      If credentials found in task description:
+        Write to docs/plans/{task-key}/.credentials (YAML)
+        Add docs/plans/**/.credentials to .gitignore
+        Store credentials_path in checkpoint (NOT credentials object)
+      NEVER write passwords/tokens directly into checkpoint.yaml
 
 ---
 

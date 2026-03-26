@@ -338,7 +338,7 @@ output:
     {findings or "No duplicates found"}
 
     ### Verdict
-    {verdict} — Score: {score}/100
+    {verdict} — Score: {score}/10
     Breakdown: functional={functional_pct}%, visual={visual_pct}%, states={states_pct}%
     {blockers if any}
 
@@ -354,7 +354,7 @@ verdict:
     ISSUES_FOUND: "overall < 70% OR any MAJOR functional failure"
   output_fields:
     verdict: "PASS | PASS_WITH_ISSUES | ISSUES_FOUND"
-    score: "0-100"
+    score: "1-10 (aligned with consensus-review standard)"
     breakdown: "{ functional_pct, visual_pct, states_pct }"
     blockers: "list of MAJOR issues"
 ```

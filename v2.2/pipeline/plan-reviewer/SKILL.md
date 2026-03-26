@@ -1,6 +1,6 @@
 ---
 name: pipeline-plan-reviewer
-description: "Plan review phase: validates plan against AC, architecture patterns, and completeness. Runs as sonnet subagent for objectivity. Called by pipeline/worker Phase 2."
+description: "Plan review phase: validates plan against AC, architecture patterns, and completeness. Runs as opus subagent (consensus 3x3 for M+). Called by pipeline/worker Phase 2."
 model: opus
 ---
 
