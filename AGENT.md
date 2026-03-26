@@ -7,7 +7,7 @@
 **Repo:** ~/Desktop/pet/agent-skills/ — **canonical source of truth**
 **Install target:** ~/.claude/skills/ + ~/.claude/commands/ (NOT the source)
 **Версия:** v2.2 (активная), v1.0 (бэкап)
-**Последний коммит:** 3a4fe55 — P0 fixes (checkpoint, model, score, credentials)
+**Последний коммит:** 142cc99 — last-mile migration + doc consistency
 **Полный отчёт:** `v2.2/REPORT.md`
 **Consensus reviews:** `v2.2/CONSENSUS-REVIEW-v2.2.md` (round 1: 6.3), `v2.2/CONSENSUS-REVIEW-v2.2-round2.md` (round 2: 8.0)
 
