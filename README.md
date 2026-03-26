@@ -115,8 +115,11 @@ Skills are installed globally in `~/.claude/skills/`, commands in `~/.claude/com
 # From this repo — sync all skills to global
 cd ~/Desktop/pet/agent-skills
 
+# Ensure directories exist
+mkdir -p ~/.claude/skills ~/.claude/commands ~/.claude/scripts
+
 # Skills
-for dir in v2.2/core/*/; do cp "$dir/SKILL.md" ~/.claude/skills/$(basename $dir)/SKILL.md; done
+for dir in v2.2/core/*/; do mkdir -p ~/.claude/skills/$(basename $dir) && cp "$dir/SKILL.md" ~/.claude/skills/$(basename $dir)/SKILL.md; done
 for dir in v2.2/pipeline/*/; do
   name=$(basename $dir)
   [ "$name" = "figma-coding-rules" ] && target=$name || target="pipeline-$name"

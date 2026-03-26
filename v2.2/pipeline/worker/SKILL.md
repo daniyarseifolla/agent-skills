@@ -324,7 +324,7 @@ phases:
       - deploy: "ASK user → if yes, ci-cd adapter deploy()"
       - transition: "IF deployed: transition task to 'Ready for Test' via task-source adapter"
       - metrics: "Load core-metrics, collect and store"
-      - checkpoint: "phase_completed: 6"
+      - checkpoint: "completed_phases: [...existing, 6]"
 ```
 
 ---

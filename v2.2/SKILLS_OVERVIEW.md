@@ -1,5 +1,7 @@
 # Agent Skills v2.2 — Overview
 
+> **Source of truth:** This repository is canonical. `~/.claude/skills/` is the install target, not the source. All edits in `v2.2/`, then sync to global.
+
 ## Architecture
 
 ```
