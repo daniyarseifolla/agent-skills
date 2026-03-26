@@ -13,7 +13,8 @@ Task key: $ARGUMENTS
 Display:
 ```
 Task: {task_key}
-Phase: {phase_completed}/{total} — {phase_name}
+Completed: {completed_phases} (last: {max(completed_phases)})
+Next: {next_phase_map[last]} — {phase_name}
 Complexity: {complexity} → Route: {route}
 Iterations: plan_review {N}/3, code_review {N}/3
 CI: {disabled/enabled}
@@ -21,4 +22,4 @@ Worktree: {path or "main repo"}
 Last update: {timestamp}
 ```
 
-If phase < 6 → suggest: "Resume with /continue {task_key}"
+If 6 not in completed_phases → suggest: "Resume with /continue {task_key}"

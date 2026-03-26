@@ -34,7 +34,7 @@ metrics:
   lines_removed: number
   duration:
     total_minutes: "number — total pipeline duration"
-    per_phase: "object — { planning: N, implementation: N, code_review: N, ui_review: N }"
+    per_phase: "object — { deep_analysis: N, planning: N, plan_review: N, implementation: N, code_review: N, ui_review: N }"
   outcome: "success | failed | stopped_by_user | loop_exceeded"
   stopped_at_phase: "number | null — which phase stopped (if not completed)"
   stopped_reason: "string | null — why stopped"
@@ -86,6 +86,7 @@ phase_ids:
     # Worker phase → Metrics phase ID
     "0":     0   # task-analysis → 0
     "0.5":   1   # workspace-setup → 1
+    "0.7":   1.5 # deep-analysis → 1.5 (Phase 0.7)
     "1":     2   # planner → 2
     "2":     3   # plan-review → 3
     "3":     4   # coder (implementation) → 4
@@ -110,7 +111,7 @@ collection_sources:
       - iteration.code_review
       - re_routed
       - re_route_detail
-      - phases_completed: phase_completed
+      - phases_completed: "length(completed_phases)"
 
   - source: "docs/plans/{task-key}/evaluate.md"
     fields:

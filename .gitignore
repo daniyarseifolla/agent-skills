@@ -1,1 +1,3 @@
 .DS_Store
+docs/plans/**/.credentials
+docs/figma-audit/**/.credentials

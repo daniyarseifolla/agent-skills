@@ -33,8 +33,9 @@ startup:
 
   step_4_recovery:
     action: "Check docs/plans/{task-key}/checkpoint.yaml"
-    found: "Resume from checkpoint.phase_completed + 1"
+    found: "last = max(checkpoint.completed_phases). Resume from next_phase_map[last]."
     not_found: "Start from Phase 0"
+    note: "Use next_phase_map from core-orchestration, NOT arithmetic. Handles 0→0.5→0.7→1 correctly."
 
   step_5_task:
     action: "Fetch task via task-source adapter"
@@ -306,8 +307,8 @@ phases:
 
     checkpoint_rules:
       on_CHANGES_REQUESTED: "Write completed_phases: [...existing, 4] (code-review done), iteration.code_review += 1. Do NOT add 5 (ui-review discarded)."
-      on_APPROVED: "Write completed_phases: [...existing, 5, 6] (both done). Proceed to Phase 7."
-      on_APPROVED_plus_ISSUES_FOUND: "Write completed_phases: [...existing, 5, 6]. Log ISSUES_FOUND findings. Proceed."
+      on_APPROVED: "Write completed_phases: [...existing, 4, 5]. Proceed to Phase 6. Do NOT add 6 yet — Phase 6 is completion, it writes its own checkpoint."
+      on_APPROVED_plus_ISSUES_FOUND: "Write completed_phases: [...existing, 4, 5]. Log ISSUES_FOUND findings. Proceed to Phase 6."
 
     checkpoint: true
     loop: "max 3 with coder (per iron_laws)"
