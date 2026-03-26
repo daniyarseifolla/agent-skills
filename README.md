@@ -109,28 +109,7 @@ facades/         — entry points (jira-worker, deploy, sync, figma-audit, scans
 
 ## Installation
 
-Skills are installed globally in `~/.claude/skills/`, commands in `~/.claude/commands/`.
-
-```bash
-# From this repo — sync all skills to global
-cd ~/Desktop/pet/agent-skills
-
-# Ensure directories exist
-mkdir -p ~/.claude/skills ~/.claude/commands ~/.claude/scripts
-
-# Skills
-for dir in v2.2/core/*/; do mkdir -p ~/.claude/skills/$(basename $dir) && cp "$dir/SKILL.md" ~/.claude/skills/$(basename $dir)/SKILL.md; done
-for dir in v2.2/pipeline/*/; do
-  name=$(basename $dir)
-  [ "$name" = "figma-coding-rules" ] && target=$name || target="pipeline-$name"
-  cp "$dir/SKILL.md" ~/.claude/skills/$target/SKILL.md
-done
-for dir in v2.2/adapters/*/; do cp "$dir/SKILL.md" ~/.claude/skills/adapter-$(basename $dir)/SKILL.md; done
-for dir in v2.2/facades/*/; do cp "$dir/SKILL.md" ~/.claude/skills/$(basename $dir)/SKILL.md; done
-
-# Commands
-cp v2.2/commands/*.md ~/.claude/commands/
-```
+See [v2.2/README.md](v2.2/README.md) for install instructions. Source of truth: this repo → `~/.claude/skills/`.
 
 ## Project Configuration
 
