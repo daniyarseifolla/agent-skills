@@ -1,7 +1,7 @@
 # Agent Skills v2.2 — Report
 
-**Date:** 2026-03-25
-**Commit:** 84fcad5
+**Date:** 2026-03-26
+**Commit:** 3a4fe55
 
 ## Overview
 
@@ -176,20 +176,47 @@ design:       parse_urls, get_design, get_screenshot, compare_visual, extract_to
 | Atlassian | adapter-jira, Phase 0.7 (create backend tasks) | HALT if missing (for Jira tasks) |
 | Playwright / Chrome DevTools | ui-reviewer, figma-audit | Fallback to non-browser mode |
 
-## Files Changed This Session
+## Consensus Review Scores
 
-23 commits since fe478c6:
-- 10 consensus review fixes (P1-P10)
-- 6 figma-audit facade creation
-- 3 consensus mode in worker pipeline
-- 4 Phase 0.7 implementation
-- Hook fix + AGENT.md updates
+| Round | Date | Score | Key Changes |
+|-------|------|-------|-------------|
+| 1 | 2026-03-24 | 6.3/10 | Initial review, found 3 BLOCKER + 7 MAJOR |
+| 2 | 2026-03-26 | 8.0/10 | After P1-P10 fixes, consensus 3x3, Phase 0.7, figma-audit |
 
-## Known Issues (not fixed)
+## Codex External Review
 
-- Russian AC headings in Jira adapter
+**Architecture:** 7.2/10 — layered system, good contracts, modular by convention not enforcement
+**Operational reliability:** 6.5/10 — good protocol layer, state/checkpoint model was drifting (fixed in P0)
+**Product/UX/adoptability:** 6.5/10 — powerful internally, heavy cognitive load for new team
+
+## P0 Fixes Applied (commit 3a4fe55)
+
+1. Source of truth: repo canonical, ~/.claude/skills/ is install target
+2. Checkpoint: `completed_phases` array + `next_phase_map` (replaced scalar arithmetic)
+3. Model drift: orchestration Phase 2 → opus (was sonnet)
+4. Score drift: ui-reviewer → 1-10 (was 0-100)
+5. Credentials: `.credentials` file (gitignored), not inline in checkpoint
+
+## Known Issues (remaining)
+
+### From consensus review
+- Russian AC headings in Jira adapter (`Критерии приемки`)
 - `grep -P` for lookahead patterns in core-security
 - Atomic checkpoint write (tmp → rename)
 - `/attach` is 162 lines in command file (should be facade)
 - `/code-review` is duplicate of `/cr`
 - No eval tests for trigger accuracy
+- Phase 0.7 / Phase 1 research overlap (planner Agent 3 re-does Figma work)
+- Jira adapter: zero error handling
+- figma-audit bypasses core (no checkpoint, no metrics, no /continue)
+- Missing Do-NOT guards in plan-reviewer + code-reviewer consensus sections
+- Missing subagent_type: general-purpose in reviewer consensus dispatches
+
+### From Codex review (P1/P2)
+- figma-audit should integrate with core (checkpoint, metrics)
+- Facades should be thin delegation only (community-sync, figma-audit have state machines)
+- Author-specific assumptions (ARGO, community/*, branch names) should be in project config
+- No preflight/doctor command
+- No onboarding ladder
+- Aggressive triggers on expensive workflows need more explicit intent
+- No behavior evals (only trigger evals exist)
