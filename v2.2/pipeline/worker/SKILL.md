@@ -85,6 +85,7 @@ display_before_start:
   after_confirm:
     step_1_worktree: "If user chose worktree=y → Invoke Skill: superpowers:using-git-worktrees"
     step_2_branch: "If worktree=n → create branch feat/{task_key} in current repo"
+    step_2b_push: "Push branch to remote immediately: git push -u origin feat/{task_key}. Establishes remote tracking."
     step_3_ci: "If user chose CI=y AND not in worktree → ci-cd adapter disable_ci(task_key)"
     step_4_checkpoint: "Save checkpoint: completed_phases: [0], ci_disabled: bool, worktree_path: string|null, app_url: string|null"
     step_4b_credentials: |
@@ -387,6 +388,14 @@ dispatch:
   after_phase:
     - validate: "output handoff payload"
     - write_checkpoint: "docs/plans/{task-key}/checkpoint.yaml"
+    - push_checkpoint: |
+        After phases that produce commits or artifacts, push to remote:
+          Phase 0.5: git push -u origin feat/{task_key} (establish tracking)
+          Phase 3 (coder): git push (implementation commits)
+          Phase 4+5 (after fix loop): git push (review fix commits)
+          Phase 6 (completion): git push (final state)
+        Phases 0, 0.7, 1, 2: no push needed (no commits, only plan/analysis artifacts)
+        Rule: NEVER lose work to a crashed session. If commits exist locally, push them.
     - log: "Completed Phase {N}: {name}"
     - message: |
         Phase {N} ({phase_name}) complete.
