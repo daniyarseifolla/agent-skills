@@ -33,9 +33,13 @@ startup:
 
   step_4_recovery:
     action: "Check docs/plans/{task-key}/checkpoint.yaml"
-    found: "last = max(checkpoint.completed_phases). Resume from next_phase_map[last]."
+    found:
+      primary: "Use checkpoint.resume_phase if present and non-null"
+      fallback: "next_phase_map[max(completed_phases)] — for old checkpoints without resume_phase"
+      terminal_check: "If checkpoint.terminal_status is set → show status, ask user before resuming"
+      invalidated_check: "If checkpoint.invalidated_phases is non-empty → those phases must re-run"
     not_found: "Start from Phase 0"
-    note: "Use next_phase_map from core-orchestration, NOT arithmetic. Handles 0→0.5→0.7→1 correctly."
+    note: "Prefer resume_phase (explicit) over max()+lookup (inferred). Both use next_phase_map as source of truth."
 
   step_5_task:
     action: "Fetch task via task-source adapter"
@@ -195,6 +199,13 @@ phases:
       - ci: "Ask user: disable CI? (default y if .gitlab-ci.yml exists) → if yes, adapter disable_ci()"
     checkpoint: true
     skip_if: "resuming from checkpoint (workspace already set up)"
+    on_resume_skip: |
+      Even when Phase 0.5 is skipped during resume, verify workspace state:
+        - worktree_path: if set, verify directory exists (cd into it)
+        - credentials_path: if set, verify file exists. If missing → WARN, ask user to provide credentials
+        - app_url: if set, verify server responds (curl). If unreachable → WARN, ask user to start dev server
+        - ci_disabled: restore flag (no verification needed, used at Phase 6)
+      This prevents silent failures when workspace state drifted between sessions.
 
   - phase: 0.7
     name: deep-analysis
@@ -267,6 +278,9 @@ phases:
       max: 3
       with: "pipeline-planner"
       counter: "checkpoint.iteration.plan_review"
+      on_NEEDS_CHANGES:
+        invalidated_phases: [2]
+        resume_phase: 1
 
   - phase: 3
     name: implementation
@@ -276,6 +290,15 @@ phases:
     input: "handoff: reviewer_to_coder, plan_path, tech_stack_adapter"
     output: "branch, parts_implemented, deviations"
     checkpoint: true
+    evaluate_gate:
+      on_RETURN:
+        checkpoint_write:
+          invalidated_phases: [3]
+          resume_phase: 2
+          iteration.evaluate_return: "+= 1"
+          handoff_payload: "coder_evaluate_return contract (plan_issues, blocked_parts)"
+        action: "Loop back to Phase 2 (plan-review) — not Phase 1 (planner)"
+        note: "See core-orchestration invalidation_rules.evaluate_return"
 
   - phase: "4+5"
     name: "review (parallel)"
@@ -306,9 +329,22 @@ phases:
       - "  → proceed to Phase 6"
 
     checkpoint_rules:
-      on_CHANGES_REQUESTED: "Write completed_phases: [...existing, 4] (code-review done), iteration.code_review += 1. Do NOT add 5 (ui-review discarded)."
-      on_APPROVED: "Write completed_phases: [...existing, 4, 5]. Proceed to Phase 6. Do NOT add 6 yet — Phase 6 is completion, it writes its own checkpoint."
-      on_APPROVED_plus_ISSUES_FOUND: "Write completed_phases: [...existing, 4, 5]. Log ISSUES_FOUND findings. Proceed to Phase 6."
+      on_CHANGES_REQUESTED: |
+        completed_phases: [...existing] (do NOT add 4 or 5 — both results are stale)
+        invalidated_phases: [4, 5]
+        resume_phase: 3
+        iteration.code_review += 1
+        Note: Phase 4 verdict itself is an artifact of the rejected code — not a valid completed phase.
+      on_APPROVED: |
+        completed_phases: [...existing, 4, 5]
+        invalidated_phases: [] (clear)
+        resume_phase: 6
+        Proceed to Phase 6. Do NOT add 6 yet — Phase 6 is completion, it writes its own checkpoint.
+      on_APPROVED_plus_ISSUES_FOUND: |
+        completed_phases: [...existing, 4, 5]
+        invalidated_phases: [] (clear)
+        resume_phase: 6
+        Log ISSUES_FOUND findings. Proceed to Phase 6.
 
     checkpoint: true
     loop: "max 3 with coder (per iron_laws)"
@@ -323,8 +359,9 @@ phases:
       - mr: "ASK user → if yes, ci-cd adapter create_mr()"
       - deploy: "ASK user → if yes, ci-cd adapter deploy()"
       - transition: "IF deployed: transition task to 'Ready for Test' via task-source adapter"
-      - metrics: "Load core-metrics, collect and store"
-      - checkpoint: "completed_phases: [...existing, 6]"
+      - checkpoint: "completed_phases: [...existing, 6], terminal_status: success, resume_phase: null"
+      - metrics: "Load core-metrics, collect and store (success collection — reads from checkpoint written above)"
+      - ordering: "checkpoint BEFORE metrics — metrics reads phases_completed and terminal_status from checkpoint"
 ```
 
 ---
@@ -336,6 +373,14 @@ dispatch:
   before_phase:
     - validate: "handoff payload against core-orchestration contract"
     - check_skip: "evaluate skip_if condition"
+    - check_invalidation: |
+        If this phase is in checkpoint.invalidated_phases:
+          → Remove from invalidated_phases (it's about to re-run)
+          → Log: "Phase {N} re-running (was invalidated by loop-back)"
+        If ANY phase in invalidated_phases has lower ID than current phase:
+          → HALT: "Cannot proceed to Phase {N} — Phase {invalidated} must re-run first"
+          → Set resume_phase to min(invalidated_phases)
+          → This prevents skipping to completion with stale review state
     - check_loop: "guard against loop_limits (core-orchestration)"
     - log: "Starting Phase {N}: {name}"
 
@@ -351,7 +396,11 @@ dispatch:
   on_loop:
     - increment: "checkpoint.iteration.{loop_type}"
     - check_limit: "core-orchestration loop_limits"
-    - on_exceeded: "STOP, show iteration summary, request user intervention"
+    - on_exceeded: |
+        1. Write checkpoint: terminal_status = "loop_exceeded", resume_phase = loop target, handoff = preserve
+        2. Write terminal metrics (reads from checkpoint written in step 1)
+        3. STOP, show iteration summary, request user intervention
+      ordering: "checkpoint → metrics → display → STOP"
 ```
 
 ---
@@ -408,7 +457,14 @@ errors:
 
   phase_failed:
     level: ERROR
-    action: "Save checkpoint, show error, ask user"
+    action: |
+      1. Write checkpoint FIRST:
+         - terminal_status: "failed"
+         - resume_phase: failed phase (to retry)
+         - handoff_payload: preserve last known
+      2. Write terminal metrics (reads from checkpoint written in step 1)
+      3. Show error, ask user
+    ordering: "checkpoint → metrics → display (always this order)"
 
   handoff_validation_failed:
     level: ERROR
@@ -417,8 +473,28 @@ errors:
 
   loop_exceeded:
     level: STOP
-    action: "STOP, show iteration summary (from core-orchestration)"
+    action: |
+      1. Write checkpoint FIRST:
+         - terminal_status: "loop_exceeded"
+         - resume_phase: current loop target phase (for potential manual re-run)
+         - completed_phases: current state (preserve)
+         - handoff_payload: last known payload (preserve for repair)
+      2. Write terminal metrics (reads from checkpoint written in step 1)
+      3. STOP, show iteration summary (from core-orchestration)
+    ordering: "checkpoint → metrics → display → STOP (always this order)"
     do_not: "Auto-proceed or auto-approve"
+
+  user_stop:
+    level: STOP
+    trigger: "User says 'stop', 'отмена', 'abort', rejects confirmation gate, or /continue is declined"
+    action: |
+      1. Write checkpoint FIRST:
+         - terminal_status: "stopped_by_user"
+         - resume_phase: current phase (to retry later)
+         - handoff_payload: preserve last known
+      2. Write terminal metrics (reads from checkpoint written in step 1)
+      3. Display: "Pipeline stopped by user at Phase {N}. Resume with /continue {task_key}"
+    ordering: "checkpoint → metrics → display → STOP"
 
   git_conflicts:
     level: ERROR

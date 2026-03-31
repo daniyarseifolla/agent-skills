@@ -13,8 +13,10 @@ Task key: $ARGUMENTS
 Display:
 ```
 Task: {task_key}
-Completed: {completed_phases} (last: {max(completed_phases)})
-Next: {next_phase_map[last]} — {phase_name}
+Status: {terminal_status or "running"}
+Completed: {completed_phases}
+Invalidated: {invalidated_phases or "none"}
+Next: {resume_phase} — {metrics_mapping[worker_to_metrics[resume_phase]]}
 Complexity: {complexity} → Route: {route}
 Iterations: plan_review {N}/3, code_review {N}/3
 CI: {disabled/enabled}
@@ -22,4 +24,5 @@ Worktree: {path or "main repo"}
 Last update: {timestamp}
 ```
 
-If 6 not in completed_phases → suggest: "Resume with /continue {task_key}"
+If terminal_status is null and resume_phase is not null → suggest: "Resume with /continue {task_key}"
+If terminal_status is set → show: "Pipeline ended: {terminal_status}. Re-run with /continue {task_key}"

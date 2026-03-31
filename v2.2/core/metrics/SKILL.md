@@ -50,7 +50,7 @@ validation:
     task_key: "regex: [A-Z]+-\\d+"
     complexity: "enum: S|M|L|XL"
     route: "enum: MINIMAL|STANDARD|FULL"
-    phases_completed: "integer 0-7"
+    phases_completed: "integer — count of completed worker phases. Range: 0-9 (FULL route has 9 phases: 0, 0.5, 0.7, 1, 2, 3, 4, 5, 6)"
     iterations.plan_review: "integer 0-3"
     iterations.code_review: "integer 0-3"
     iterations.evaluate_return: "integer 0-2"
@@ -70,36 +70,68 @@ validation:
 
 ```yaml
 phase_ids:
-  source: "core/orchestration phase_id_normalization.metrics_mapping"
+  source: "core/orchestration phase_id_normalization"
   mapping:
     0: task-analysis
     1: workspace-setup
-    2: planning
-    3: plan-review
-    4: implementation
-    5: code-review
-    6: ui-review
-    7: completion
-  storage_type: "integer 0-7"
+    2: deep-analysis
+    3: planning
+    4: plan-review
+    5: implementation
+    6: code-review
+    7: ui-review
+    8: completion
+  storage_type: "integer 0-8"
 
   normalization_table:
-    # Worker phase → Metrics phase ID
+    # Worker phase → Metrics phase ID (clean integers, no fractions)
     "0":     0   # task-analysis → 0
     "0.5":   1   # workspace-setup → 1
-    "0.7":   1.5 # deep-analysis → 1.5 (Phase 0.7)
-    "1":     2   # planner → 2
-    "2":     3   # plan-review → 3
-    "3":     4   # coder (implementation) → 4
-    "4":     5   # code-review → 5
-    "5":     6   # ui-review → 6
-    "6":     7   # completion → 7
+    "0.7":   2   # deep-analysis → 2
+    "1":     3   # planning → 3
+    "2":     4   # plan-review → 4
+    "3":     5   # implementation → 5
+    "4":     6   # code-review → 6
+    "5":     7   # ui-review → 7
+    "6":     8   # completion → 8
 ```
 
 ---
 
 ## 2. Collection
 
-Worker collects at Phase 6 (Completion).
+Worker collects metrics at two points: Phase 8 (Completion) for success, and on terminal events for non-success outcomes.
+
+### 2a. Terminal Collection (non-success)
+
+```yaml
+terminal_collection:
+  trigger: "checkpoint.terminal_status in [failed, stopped_by_user, loop_exceeded]"
+  when: "AFTER checkpoint is written with terminal_status — before showing error to user"
+  ordering: "Worker writes checkpoint FIRST (with terminal_status, resume_phase, handoff), THEN calls metrics collection. Metrics reads from the just-written checkpoint."
+  fields:
+    always_available:
+      - task_key: "from checkpoint"
+      - complexity: "from checkpoint"
+      - route: "from checkpoint"
+      - phases_completed: "length(checkpoint.completed_phases) — count, not phase ID"
+      - outcome: "terminal_status value"
+      - stopped_at_phase: "current phase when stopped"
+      - stopped_reason: "error message, loop limit text, or 'user requested stop'"
+      - timestamp: "now()"
+      - iterations: "from checkpoint.iteration"
+    best_effort:
+      - files_changed: "git diff --stat (may be 0 if stopped before coding)"
+      - lines_added: "git diff --stat"
+      - lines_removed: "git diff --stat"
+      - issues_found: "from last review handoff, if any"
+      - duration: "from checkpoint timestamps, partial"
+  storage: "Same path: docs/plans/{task-key}/metrics.yaml"
+  note: "Partial metrics are better than no metrics. Always write what you have."
+```
+
+### 2b. Success Collection (Phase 8)
+
 
 ```yaml
 collection_sources:
@@ -185,7 +217,7 @@ error_handling:
   storage_failure:
     primary_file: "WARN, retry once. If still fails → dump metrics to stdout"
     mcp_memory: "WARN only — MCP memory is optional, skip on failure"
-  rule: "Never crash Phase 7 (completion) over metrics. Metrics are best-effort."
+  rule: "Never crash completion phase over metrics. Metrics are best-effort."
 ```
 
 ---

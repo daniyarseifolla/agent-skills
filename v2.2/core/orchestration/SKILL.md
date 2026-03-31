@@ -28,26 +28,28 @@ phase_sequence:
 # Phase 4+5 run in PARALLEL when both are active (Iron Law #1)
 
 phase_id_normalization:
-  note: "Worker uses fractional/compound IDs. All storage and metrics use this canonical integer mapping."
-  mapping:
+  note: "Worker uses fractional IDs (0, 0.5, 0.7, 1-6). Metrics use clean integer 0-8."
+  worker_to_metrics:
     "0":     0    # task-analysis
-    "0.5":   0.5  # workspace-setup (stored as 0.5 in checkpoint, normalized to 1 for metrics)
-    "0.7":   0.7  # deep-analysis
-    "1":     1    # planner
-    "2":     2    # plan-reviewer
-    "3":     3    # coder
-    "4":     4    # code-reviewer (worker dispatches as part of "4+5" parallel block)
-    "5":     5    # ui-reviewer  (worker dispatches as part of "4+5" parallel block)
-    "6":     6    # completion
+    "0.5":   1    # workspace-setup
+    "0.7":   2    # deep-analysis
+    "1":     3    # planning
+    "2":     4    # plan-review
+    "3":     5    # implementation
+    "4":     6    # code-review
+    "5":     7    # ui-review
+    "6":     8    # completion
   metrics_mapping:
     0: task-analysis
     1: workspace-setup
-    2: planning
-    3: plan-review
-    4: implementation
-    5: code-review
-    6: ui-review
-    7: completion
+    2: deep-analysis
+    3: planning
+    4: plan-review
+    5: implementation
+    6: code-review
+    7: ui-review
+    8: completion
+  storage_type: "integer 0-8"
 ```
 
 ---
@@ -179,6 +181,9 @@ Path: `docs/plans/{task-key}/checkpoint.yaml`. Overwritten after each phase.
 checkpoint_schema:
   task_key: string
   completed_phases: "number[] — e.g. [0, 0.5, 0.7, 1, 2]. Set semantics, append-only."
+  resume_phase: "number|null — explicit next phase to execute. Written on every checkpoint. Primary source for recovery."
+  invalidated_phases: "number[] — phases whose results are no longer valid (e.g. [4, 5] after CHANGES_REQUESTED loop-back). Cleared when those phases re-complete."
+  terminal_status: "running|success|failed|stopped_by_user|loop_exceeded|null — set on pipeline exit. null while running."
   phase_name: string
   iteration: { plan_review: "N/3", code_review: "N/3", evaluate_return: "N/2" }
   verdict: string
@@ -192,7 +197,7 @@ checkpoint_schema:
   handoff_payload: object
   issues_history: object[]
 
-  DEPRECATED: "phase_completed (scalar) is replaced by completed_phases (array). Use max(completed_phases) for resume logic."
+  DEPRECATED: "phase_completed (scalar) is replaced by completed_phases (array). max(completed_phases) is fallback only — prefer resume_phase."
 
 next_phase_map:
   note: "Lookup table for resume — replaces phase_completed + 1 arithmetic"
@@ -207,10 +212,37 @@ next_phase_map:
   "6":   null   # done
 
 checkpoint_rules:
-  write_after: [phase_completion, review_iteration, re_route_decision]
+  write_after: [phase_completion, review_iteration, re_route_decision, terminal_event]
   format: YAML
   location: "docs/plans/{task-key}/checkpoint.yaml"
   overwrite: true
+  on_every_write:
+    - "Set resume_phase to the next phase that should execute (from next_phase_map or loop target)"
+    - "Set invalidated_phases if loop-back occurred (see invalidation_rules)"
+    - "Set terminal_status on pipeline exit (success, failed, stopped_by_user, loop_exceeded)"
+    - "Clear invalidated_phases entries when those phases re-complete successfully"
+
+invalidation_rules:
+  code_review_loop:
+    trigger: "Phase 4 verdict == CHANGES_REQUESTED"
+    invalidated_phases: [4, 5]
+    resume_phase: 3
+    reason: "Both review results are artifacts of the rejected code. Phase 4 itself is an assessment of code that will change — its findings are stale after rework."
+    clear_when: "Phase 4 and 5 re-complete after coder fix"
+
+  plan_review_loop:
+    trigger: "Phase 2 verdict == NEEDS_CHANGES"
+    invalidated_phases: [2]
+    resume_phase: 1
+    reason: "Plan-review result references a plan that will be revised"
+    clear_when: "Phase 2 re-completes after planner revision"
+
+  evaluate_return:
+    trigger: "Phase 3 evaluate gate verdict == RETURN"
+    invalidated_phases: [3]
+    resume_phase: 2
+    reason: "Coder determined plan is not implementable — return to plan-review"
+    clear_when: "Phase 3 re-completes after plan revision"
 ```
 
 ---
@@ -222,24 +254,31 @@ Strategy: checkpoint-first, heuristic fallback.
 ```yaml
 recovery_from_checkpoint:
   - read: "docs/plans/{task-key}/checkpoint.yaml"
-  - last_phase: "max(completed_phases)"
-  - resume_from: "next_phase_map[last_phase] — use lookup table, NOT arithmetic"
-  - restore: [handoff_payload, iteration_counters]
+  - resume_from: |
+      PRIMARY:  checkpoint.resume_phase (if present and non-null)
+      FALLBACK: next_phase_map[max(completed_phases)] (backward compat for old checkpoints)
+  - enforce_invalidation: |
+      If invalidated_phases is non-empty:
+        → resume_phase MUST be <= min(invalidated_phases)
+        → If resume_phase > min(invalidated_phases): override resume_phase = min(invalidated_phases)
+        → Worker before_phase guard blocks any phase > min(invalidated_phases) until cleared
+        → This is an invariant, not a suggestion
+  - check_terminal: "If terminal_status is set (success|failed|stopped_by_user|loop_exceeded) → do NOT auto-resume. Show status, ask user."
+  - restore: [handoff_payload, iteration_counters, worktree_path, credentials_path, app_url, ci_disabled]
 
 recovery_heuristic:
   # Artifact presence -> resume point (when no checkpoint exists)
-  - { task_analysis: yes, plan: no, evaluate: "-", code: "-", tests: "-", resume: "Phase 1 — planning (with task-analysis.md context)" }
-  - { plan: no,  evaluate: "-", code: "-", tests: "-", resume: "Phase 1 — start planning" }
-  - { plan: yes, evaluate: no,  code: no,  tests: "-", resume: "Phase 3 — evaluate gate" }
-  - { plan: yes, evaluate: yes, code: no,  tests: "-", resume: "Phase 3 — start coding" }
-  - { plan: yes, evaluate: yes, code: yes, tests: no,  resume: "Phase 3 — fix tests" }
-  - { plan: yes, evaluate: yes, code: yes, tests: yes, resume: "Phase 4 — code review" }
+  # Uses worker phase IDs (fractional). Heuristic creates checkpoint with resume_phase set.
+  - { task_analysis: yes, plan: no, evaluate: "-", code: "-", resume: "Phase 1 (worker 1) — planning (with task-analysis.md)" }
+  - { plan: no,  evaluate: "-", code: "-", resume: "Phase 1 (worker 1) — start planning" }
+  - { plan: yes, evaluate: no,  code: no,  resume: "Phase 3 (worker 3) — evaluate gate" }
+  - { plan: yes, evaluate: yes, code: no,  resume: "Phase 3 (worker 3) — start coding" }
+  - { plan: yes, evaluate: "-", code: yes, resume: "Phase 4 (worker 4) — code review" }
 
 artifact_paths:
   plan: "docs/plans/{task-key}/plan.md"
   evaluate: "docs/plans/{task-key}/evaluate.md"
   code: "git diff --name-only main..HEAD | wc -l > 0"
-  tests: "run project test command, check exit code"
 ```
 
 ---
@@ -333,8 +372,8 @@ confirmation_gates:
 
 gate_rules:
   never_auto_approve: true
-  on_timeout: "halt pipeline, preserve checkpoint"
-  on_rejection: "halt pipeline, preserve checkpoint, await instructions"
+  on_timeout: "Write checkpoint with terminal_status: stopped_by_user, resume_phase: current phase. Write terminal metrics. Halt."
+  on_rejection: "Write checkpoint with terminal_status: stopped_by_user, resume_phase: current phase. Write terminal metrics. Halt, await instructions."
 ```
 
 ---

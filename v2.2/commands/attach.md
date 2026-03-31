@@ -55,6 +55,9 @@ Detects what's done, creates checkpoint, runs missing phases.
    # docs/plans/{task-key}/checkpoint.yaml
    task_key: "{task-key}"
    completed_phases: [{detected_phases}]  # e.g., [0, 1, 3] not just "3"
+   resume_phase: "{next phase to run}"     # explicit — derived from classification table
+   invalidated_phases: []                  # clean start for attach
+   terminal_status: null                   # pipeline is running
    phase_name: "{detected state}"
    attached_at: "{timestamp}"
    attached_from: "existing task — not started with /worker"
@@ -107,7 +110,7 @@ Skills are NOT agent types — they are loaded via `Skill("skill-name")`.
   1. Use the Skill tool to load "pipeline-plan-reviewer"
   2. Follow the loaded skill instructions to review the plan
   3. Save output to docs/plans/{task-key}/plan-review.md
-  4. Write checkpoint: `{ task_key, completed_phases: [...existing, 2], phase_name: "plan-review", attached_at: timestamp }`
+  4. Write checkpoint: `{ ..., completed_phases: [...existing, 2], resume_phase: 3, phase_name: "plan-review" }`
   5. If verdict is blocking (NEEDS_CHANGES, CHANGES_REQUESTED):
      Show findings to user. Ask: "Fix issues and re-run? (y/n)"
      Do NOT silently proceed to next phase.
@@ -116,8 +119,9 @@ Skills are NOT agent types — they are loaded via `Skill("skill-name")`.
   1. Use the Skill tool to load "pipeline-code-reviewer"
   2. Follow the loaded skill instructions (standalone mode: detect branch, find plan, run review)
   3. Save output to docs/plans/{task-key}/code-review.md
-  4. Write checkpoint: `{ task_key, completed_phases: [...existing, 4], phase_name: "code-review", attached_at: timestamp }`
-  5. If verdict is blocking (NEEDS_CHANGES, CHANGES_REQUESTED):
+  4. Write checkpoint: `{ ..., completed_phases: [...existing, 4], resume_phase: 5, phase_name: "code-review" }`
+  5. If verdict is blocking (CHANGES_REQUESTED):
+     Set `invalidated_phases: [4, 5]`, `resume_phase: 3`
      Show findings to user. Ask: "Fix issues and re-run? (y/n)"
      Do NOT silently proceed to next phase.
 
@@ -125,7 +129,7 @@ Skills are NOT agent types — they are loaded via `Skill("skill-name")`.
   1. Use the Skill tool to load "pipeline-ui-reviewer"
   2. Follow the loaded skill instructions (standalone mode)
   3. Save output to docs/plans/{task-key}/ui-review.md
-  4. Write checkpoint: `{ task_key, completed_phases: [...existing, 5], phase_name: "ui-review", attached_at: timestamp }`
+  4. Write checkpoint: `{ ..., completed_phases: [...existing, 5], resume_phase: 6, phase_name: "ui-review" }`
   5. If verdict is blocking (NEEDS_CHANGES, CHANGES_REQUESTED):
      Show findings to user. Ask: "Fix issues and re-run? (y/n)"
      Do NOT silently proceed to next phase.
@@ -134,7 +138,7 @@ Skills are NOT agent types — they are loaded via `Skill("skill-name")`.
   1. Use the Skill tool to load "pipeline-coder"
   2. Execute ONLY section 8b (Figma Self-Verify) — do NOT implement new code
   3. Save output to docs/plans/{task-key}/figma-verify.md
-  4. Write checkpoint: `{ task_key, completed_phases: [...existing, 5], phase_name: "figma-verify", attached_at: timestamp }`
+  4. Write checkpoint: `{ ..., completed_phases: [...existing, 5], resume_phase: 6, phase_name: "figma-verify" }`
   5. If verdict is blocking (NEEDS_CHANGES, CHANGES_REQUESTED):
      Show findings to user. Ask: "Fix issues and re-run? (y/n)"
      Do NOT silently proceed to next phase.
@@ -148,6 +152,9 @@ Create checkpoint at current state:
 ```yaml
 task_key: "ARGO-XXXXX"
 completed_phases: [{all completed phase numbers}]  # e.g., [0, 1, 2, 3, 4, 5] — SET, not watermark
+resume_phase: 6                                    # next phase to execute
+invalidated_phases: []                             # cleared after all reviews pass
+terminal_status: null                              # still running
 phase_name: "{name}"
 attached_at: "{timestamp}"
 attached_from: "existing task — not started with /worker"
