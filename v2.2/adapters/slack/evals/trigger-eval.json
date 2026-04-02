@@ -1,0 +1,50 @@
+[
+  {
+    "query": "напиши в qa канал что ARGO-10738 задеплоена на тест",
+    "should_trigger": true
+  },
+  {
+    "query": "уведоми qa-team что задача выкатилась на прод",
+    "should_trigger": true
+  },
+  {
+    "query": "отправь в слак что ARGO-10500 на тесте",
+    "should_trigger": true
+  },
+  {
+    "query": "notify QA that ARGO-10700 is deployed to test",
+    "should_trigger": true
+  },
+  {
+    "query": "скинь в #qa что задеплоили ARGO-11000 на прод",
+    "should_trigger": true
+  },
+  {
+    "query": "после деплоя отметь qa-team в слаке",
+    "should_trigger": true
+  },
+  {
+    "query": "задеплой community/alex на тест",
+    "should_trigger": false
+  },
+  {
+    "query": "ARGO-10738 — возьми тикет в работу",
+    "should_trigger": false
+  },
+  {
+    "query": "напиши unit тест для ProfileService",
+    "should_trigger": false
+  },
+  {
+    "query": "обновить ветки — раскатай коммит на все community ветки",
+    "should_trigger": false
+  },
+  {
+    "query": "проверь статус пайплайна для feat/ARGO-10700",
+    "should_trigger": false
+  },
+  {
+    "query": "напиши сообщение в slack канал general с итогами спринта",
+    "should_trigger": false
+  }
+]

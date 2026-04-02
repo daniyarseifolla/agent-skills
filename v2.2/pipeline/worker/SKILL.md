@@ -25,6 +25,7 @@ startup:
       ci-cd: "adapter-{config.ci-cd}"
       tech-stack: "adapter-{config.tech-stack}"
       design: "adapter-{config.design}"
+      notification: "adapter-{config.notification}"
     on_missing: "WARN, continue without that adapter type"
 
   step_3_core:
@@ -360,6 +361,7 @@ phases:
       - mr: "ASK user → if yes, ci-cd adapter create_mr()"
       - deploy: "ASK user → if yes, ci-cd adapter deploy()"
       - transition: "IF deployed: transition task to 'Ready for Test' via task-source adapter"
+      - notify: "IF deployed AND notification adapter loaded → notification adapter notify_deploy(task_key, environment)"
       - checkpoint: "completed_phases: [...existing, 6], terminal_status: success, resume_phase: null"
       - metrics: "Load core-metrics, collect and store (success collection — reads from checkpoint written above)"
       - ordering: "checkpoint BEFORE metrics — metrics reads phases_completed and terminal_status from checkpoint"

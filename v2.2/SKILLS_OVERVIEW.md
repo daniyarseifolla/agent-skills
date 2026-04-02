@@ -20,7 +20,8 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
                             └── code-researcher (haiku)       ├── jira    (task-source)
                                                               ├── gitlab  (ci-cd)
                                                               ├── angular (tech-stack)
-                                                              └── figma   (design)
+                                                              ├── figma   (design)
+                                                              └── slack   (notification)
 ```
 
 ## Skill Catalog
@@ -55,6 +56,7 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 | adapters/gitlab | 304 | ci-cd | create_mr, pipeline, deploy, cherry_pick, CI disable/restore |
 | adapters/angular | 361 | tech-stack | commands, quality_checks, security_checks, api_discovery, patterns, module_lookup |
 | adapters/figma | 224 | design | get_design, get_screenshot, compare_visual, extract_tokens |
+| adapters/slack | 43 | notification | notify_deploy |
 
 ### Facades (user-facing entry points)
 
@@ -139,6 +141,7 @@ task-source:     fetch_task, parse_ac, get_complexity_hints, transition, format_
 ci-cd:           create_mr, get_pipeline, wait_for_stage, deploy, retry_job, create_tag
 tech-stack:      commands (lint/test/build), quality_checks, security_checks, api_discovery, patterns, module_lookup
 design:          parse_urls, get_design, get_screenshot, compare_visual, extract_tokens
+notification:    notify_deploy
 ```
 
 ## Project Configuration
@@ -150,6 +153,10 @@ task-source: jira
 ci-cd: gitlab
 tech-stack: angular
 design: figma
+notification: slack          # optional — QA deploy notifications
+slack:
+  channel: "#qa"             # default: #qa
+  mention: "@qa-team"        # default: @qa-team
 api:
   swagger_url: "https://api.dev.project.com/swagger/v1/swagger.json"
   base_url: "https://api.dev.project.com"
