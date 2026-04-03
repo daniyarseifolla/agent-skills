@@ -26,7 +26,13 @@ steps:
       status: "fields.status.name"
       figma_urls: "parse_urls(fields.description)"
       credentials: "parse_credentials(fields.description)"
-  - return: "structured task object: title, description, acceptance_criteria, priority, assignee, status, figma_urls, credentials"
+      attachments: "fields.attachment (id, filename, mimeType, size)"
+  - auto_fetch_images: |
+      IF attachments contain mimeType image/* →
+        call fetch_attachments(key)
+        analyze each image with Read tool
+        store results as visual_context field
+  - return: "structured task object: title, description, acceptance_criteria, priority, assignee, status, figma_urls, credentials, attachments, visual_context"
 
   extended_parsing:
     subtasks: "Extract subtask list if present"
@@ -38,7 +44,24 @@ steps:
 
 ---
 
-## 2. parse_ac(description)
+## 2. fetch_attachments(key)
+
+```yaml
+steps:
+  - run: "jira-attachments {key}"
+  - output_dir: "/tmp/jira-attachments/{key}/"
+  - for_each_image: "Read with Read tool to analyze screenshots/mockups"
+  - return: "list of file paths + visual analysis summary"
+
+note: |
+  Script at ~/.local/bin/jira-attachments downloads all attachments via Jira REST API.
+  Uses curl -L (Jira returns 303 redirect to api.media.atlassian.com).
+  Auth via $ATLASSIAN_EMAIL:$ATLASSIAN_API_TOKEN from ~/.zshrc.
+```
+
+---
+
+## 3. parse_ac(description)
 
 ```yaml
 heading_patterns:
@@ -58,7 +81,7 @@ extract_rules:
 
 ---
 
-## 3. get_complexity_hints(task)
+## 4. get_complexity_hints(task)
 
 ```yaml
 output:
@@ -94,7 +117,7 @@ detect_modules:
 
 ---
 
-## 4. transition(key, status)
+## 5. transition(key, status)
 
 ```yaml
 steps:
@@ -118,7 +141,7 @@ steps:
 
 ---
 
-## 5. format_mr_description(task, plan_summary, changes)
+## 6. format_mr_description(task, plan_summary, changes)
 
 ```yaml
 template: |
@@ -143,7 +166,7 @@ template: |
 
 ---
 
-## 6. parse_task_key(user_input)
+## 7. parse_task_key(user_input)
 
 ```yaml
 regex: "([A-Z]{2,10})-\\d+"
@@ -156,7 +179,7 @@ extract: "first match from input"
 
 ---
 
-## 7. add_comment(key, body)
+## 8. add_comment(key, body)
 
 ```yaml
 steps:
@@ -168,7 +191,7 @@ steps:
 
 ---
 
-## 8. search(jql)
+## 9. search(jql)
 
 ```yaml
 steps:
