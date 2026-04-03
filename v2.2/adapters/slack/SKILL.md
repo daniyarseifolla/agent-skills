@@ -15,23 +15,35 @@ Implements the `notification` adapter contract. Loaded when `project.yaml` has `
 ```yaml
 trigger: "Called by worker Phase 6 after successful deploy"
 
-config:
-  channel: "project.yaml → slack.channel (default: #qa)"
-  mention: "project.yaml → slack.mention (default: @qa-team)"
+defaults:
+  channel_id: "C08DDSMHZMJ"          # #qa
+  mention: "<!subteam^S08G7CUMM0E>"  # @qa-team user group
 
 steps:
-  - resolve_channel: "slack_search_channels({channel}) → get channel ID"
+  - resolve_channel: |
+      IF config overrides defaults (non-default channel/mention):
+        slack_search_channels({channel_name}) → resolve channel ID
+      ELSE:
+        use defaults.channel_id (C08DDSMHZMJ)
   - send_message:
       tool: slack_send_message
-      channel: "{resolved_channel_id}"
+      channel_id: "{resolved_channel_id}"
       message: "{mention} {task_key} задеплоена на {environment}"
 
 examples:
   - input: "notify_deploy('ARGO-12345', 'test')"
-    message: "@qa-team ARGO-12345 задеплоена на test"
+    call: |
+      slack_send_message(
+        channel_id: "C08DDSMHZMJ",
+        message: "<!subteam^S08G7CUMM0E> ARGO-12345 задеплоена на test"
+      )
 
   - input: "notify_deploy('ARGO-12345', 'prod')"
-    message: "@qa-team ARGO-12345 задеплоена на prod"
+    call: |
+      slack_send_message(
+        channel_id: "C08DDSMHZMJ",
+        message: "<!subteam^S08G7CUMM0E> ARGO-12345 задеплоена на prod"
+      )
 ```
 
 ---
@@ -42,6 +54,24 @@ examples:
 # .claude/project.yaml
 notification: slack
 slack:
-  channel: "#qa"          # default: #qa
-  mention: "@qa-team"     # default: @qa-team
+  channel_id: "C08DDSMHZMJ"           # #qa (default)
+  mention: "<!subteam^S08G7CUMM0E>"   # @qa-team (default)
+```
+
+---
+
+## Slack User Group Reference
+
+```yaml
+qa_team:
+  channel: "#qa"
+  channel_id: "C08DDSMHZMJ"
+  user_group_id: "S08G7CUMM0E"       # subteam ID
+  mention_syntax: "<!subteam^S08G7CUMM0E>"
+
+note: |
+  User groups use <!subteam^ID> syntax, NOT @group-name.
+  Group IDs (S...) are found by searching messages where the group was mentioned:
+    slack_search_public_and_private(query: "<!subteam")
+  NOT via slack_search_users (that only finds individual users).
 ```
