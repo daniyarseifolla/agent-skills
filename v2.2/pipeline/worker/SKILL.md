@@ -257,12 +257,22 @@ phases:
     checkpoint: true
     output: "task_analysis_path: docs/plans/{task-key}/task-analysis.md"
 
+  - phase: 0.8
+    name: impact-analysis
+    skill: "pipeline-impact-analyzer"
+    model: sonnet
+    mode: inline
+    action: "Scan consumers, siblings, shared code → impact-report.md"
+    input: "task, task_analysis_path, complexity, tech_stack_adapter"
+    output: "impact_report_path: docs/plans/{task-key}/impact-report.md"
+    checkpoint: true
+
   - phase: 1
     name: planning
     skill: "pipeline-planner"
     model: opus
     mode: inline
-    input: "task, complexity, route, tech_stack_adapter, design_adapter, task_analysis_path"
+    input: "task, complexity, route, tech_stack_adapter, design_adapter, task_analysis_path, impact_report_path"
     output: "plan file path"
     checkpoint: true
 
@@ -316,7 +326,7 @@ phases:
       - skill: "pipeline-ui-reviewer"
         model: sonnet
         mode: subagent
-        skip_if: "complexity == S OR no design adapter"
+        skip_if: "no design adapter"
         consensus_agents: "Functional + Visual fidelity + States/A11y (when M+)"
         input: "branch, figma_urls"
         output: "ui review report"
