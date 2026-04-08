@@ -28,6 +28,7 @@ input:
   design_adapter: "loaded adapter for Figma (optional, null if none)"
   ui_inventory_path: ".claude/ui-inventory.md (if exists)"
   task_analysis_path: "docs/plans/{task-key}/task-analysis.md (from Phase 0.7, null for S complexity)"
+  impact_report_path: "docs/plans/{task-key}/impact-report.md (from Phase 0.8)"
 ```
 
 ---
@@ -86,6 +87,24 @@ steps:
         - "Glob: **/variables.scss"
       output: "Inline component list for brainstorming input"
     purpose: "Avoid reinventing existing components"
+
+  step_1b_impact:
+    action: "Read impact-report.md from Phase 0.8"
+    mandatory: true
+    input: "impact_report_path"
+    use_for:
+      must_fix: "Each must-fix item becomes a separate Implementation Part in the plan"
+      must_verify: "Each must-verify item is added to the Test Plan section"
+      risk_areas: "Noted in plan's risk/known-issues section"
+    example: |
+      If impact report says:
+        Must-Fix: postImagesChange missing disableGoOut()
+        Must-Fix: postFilesChange missing disableGoOut()
+      Then plan gets:
+        Part N: Fix sibling defects from impact report
+        - Files: edit-post.component.ts
+        - Fix postImagesChange: add this.outgoResolverService.disableGoOut()
+        - Fix postFilesChange: add this.outgoResolverService.disableGoOut()
 
   step_2_design_context:
     skip_if: "no design_adapter or no figma_urls OR (task_analysis_path exists AND task-analysis.md contains '## Figma Screens')"
@@ -218,6 +237,7 @@ steps:
       - ac_mapping: "AC -> implementation part(s)"
       - test_plan: "What to test, how"
       - "Component states (for each UI component: which states to implement)"
+      - impact_items: "Must-fix and must-verify items from impact-report.md"
       - config_changes: "Environment, routing, module config (if any)"
 
   step_7_checklist:
@@ -300,6 +320,12 @@ plan_template:
 
     ## Test Plan
     {test scenarios, coverage targets}
+
+    ## Impact-Driven Items
+    | # | Type | File | Description | Plan Part |
+    |---|------|------|-------------|-----------|
+    | 1 | must-fix | {file} | {description} | Part {N} |
+    | 2 | must-verify | {file} | {description} | Test Plan |
 
     ## Config Changes
     {routing, modules, environment — if any}
