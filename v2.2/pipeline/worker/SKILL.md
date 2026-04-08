@@ -368,10 +368,69 @@ phases:
     actions:
       - commit: "If uncommitted changes exist (from review fixes), commit them. If all parts already committed in Phase 3, skip."
       - restore_ci: "IF checkpoint.ci_disabled == true → ci-cd adapter restore_ci(task_key)"
-      - mr: "ASK user → if yes, ci-cd adapter create_mr()"
-      - deploy: "ASK user → if yes, ci-cd adapter deploy()"
-      - transition: "IF deployed: transition task to 'Ready for Test' via task-source adapter"
-      - notify: "IF deployed AND notification adapter loaded → notification adapter notify_deploy(task_key, environment)"
+      - auto_generate:
+          mr_title: "{task.key}: {task.title}"
+          mr_description: "task_source_adapter.format_mr_description(task, plan_summary, git_diff_summary)"
+          target_branch: "project.yaml → project.branches.main (fallback: develop)"
+          deploy_environment: "test"
+          git_diff_summary: "git log {target_branch}..HEAD --oneline → bullet list of commit messages"
+      - confirmation:
+          prompt: |
+            Завершаю задачу {task_key}: {title}
+
+            MR: feat/{task_key} → {target_branch}
+              Title: {mr_title}
+              Description: [auto-generated, {N} lines]
+
+            После merge → deploy на {environment} → notify #qa
+
+            Proceed? (y / только MR / отмена)
+          options:
+            "y": "Full cycle"
+            "только MR": "Create MR only"
+            "отмена": "Do nothing"
+          on_cancel: "Write checkpoint: terminal_status: stopped_by_user, resume_phase: 6. STOP."
+      - completion_flow:
+          description: "Executed when user confirms 'y' or 'только MR'"
+          steps:
+            1_push: "git push"
+            2_create_mr: |
+              ci-cd adapter create_mr(branch, mr_title, mr_description, target_branch)
+              Output: mr_url, mr_iid
+            3_stop_if_mr_only: "If user chose 'только MR' → skip to checkpoint"
+            4_wait_mr_pipeline: |
+              ci-cd adapter wait_for_stage(pipeline, 'build')
+              Timeout: 15min
+            5_merge: "glab mr merge {mr_iid} --auto-merge"
+            6_wait_merge: |
+              Poll MR state until state == 'merged'
+              Poll interval: 30s, timeout: 10min
+            7_find_target_pipeline: |
+              ci-cd adapter get_pipeline(target_branch)
+              Note: post-merge pipeline on target branch
+            8_wait_build: |
+              ci-cd adapter wait_for_stage(target_pipeline, 'build')
+              Timeout: 15min
+            9_deploy: "ci-cd adapter deploy(target_branch, environment)"
+            10_wait_deploy: "Poll deploy job until success. Timeout: 10min"
+            11_transition: |
+              task_source_adapter.transition(task_key, 'Ready for Test')
+              skip_if: no task_source adapter
+            12_notify: |
+              notification_adapter.notify_deploy(task_key, environment)
+              skip_if: no notification adapter
+            13_report: |
+              Display:
+                Готово:
+                - MR: {mr_url}
+                - Deploy: {environment} success
+                - Jira: Ready for Test
+                - Slack: notified #qa
+      - completion_errors:
+          pipeline_fail: "Show job log tail. Ask: retry / abort. On abort: write checkpoint, MR stays open."
+          merge_conflict: "Show conflicted files. STOP. User resolves manually, then /continue."
+          deploy_fail: "Show deploy log. Offer: retry / rollback / abort."
+          mr_pipeline_timeout: "Show pipeline URL. Ask: keep waiting / abort."
       - checkpoint: "completed_phases: [...existing, 6], terminal_status: success, resume_phase: null"
       - metrics: "Load core-metrics, collect and store (success collection — reads from checkpoint written above)"
       - ordering: "checkpoint BEFORE metrics — metrics reads phases_completed and terminal_status from checkpoint"
