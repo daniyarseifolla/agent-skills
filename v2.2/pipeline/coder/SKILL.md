@@ -81,9 +81,16 @@ implement:
 
   for_each_part:
     step_0: "RESEARCH existing patterns — find the closest existing component in the project and study its approach"
-    step_1: "If part has UI/CSS → run Figma Extract (figma-coding-rules section 1) for EVERY element in this part"
-    step_2: "Implement code changes per plan using extracted values + existing pattern as template"
-    step_3: "If part has UI/CSS → run Figma Self-Verify (figma-coding-rules section 2) — compare EVERY CSS property against Figma"
+    step_0b: |
+      If part has UI → COPY FIGMA STRUCTURE before anything else (figma-coding-rules STRUCTURE_COPY_RULE):
+      - Figma layer hierarchy → HTML template structure (preserve nesting)
+      - Figma text content → literal strings (only dynamic where plan says so)
+      - Figma components → project shared components from ui-inventory.md
+      - Figma icons → source from Figma export (NEVER hand-draw SVG)
+      This step creates the HTML skeleton. CSS comes AFTER.
+    step_1: "If part has UI/CSS → run Figma CSS Extract (figma-coding-rules section 1) to get exact CSS values for the skeleton from step_0b"
+    step_2: "Implement code: combine HTML skeleton (step_0b) + CSS values (step_1) + existing pattern (step_0)"
+    step_3: "If part has UI/CSS → run Figma Self-Verify (figma-coding-rules section 2) — verify BOTH structure AND CSS properties against Figma"
     step_4: "Run tech_stack_adapter lint command"
     step_5: "Run tech_stack_adapter test command"
     step_6: "If verify/lint/test fail → fix → retry"
@@ -117,9 +124,11 @@ implement:
       4. NEVER keep trial-and-error fixing after 3 attempts — you're making it worse
 
     CRITICAL: |
-      Steps 0, 1 and 3 are MANDATORY for any part that touches CSS/SCSS/HTML templates.
-      Step 0 (research) prevents trial-and-error. Step 3 (verify) catches remaining mismatches.
-      The loop is: research → extract → write → verify → fix → next component.
+      Steps 0, 0b, 1 and 3 are MANDATORY for any part that touches CSS/SCSS/HTML templates.
+      Step 0 (research) prevents trial-and-error. Step 0b (structure copy) prevents interpretation.
+      Step 1 (CSS extract) gets exact values. Step 3 (verify) catches remaining mismatches.
+      The loop is: research → copy structure → extract CSS → write → verify → fix → next component.
+      KEY PRINCIPLE: Figma = source of truth. COPY the design, don't interpret it.
       NEVER move to the next part until ALL elements in current part pass Figma verification.
 
   rules:

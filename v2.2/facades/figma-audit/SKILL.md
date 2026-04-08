@@ -93,7 +93,7 @@ node_map:
     name: "structure-mapper"
     model: sonnet
     delay: "15 seconds before launch"
-    budget: "max 30 tool calls"
+    budget: "max 60 tool calls"
     prompt: |
       You are the Structure Mapper agent for a Figma audit (Phase 1).
 
@@ -126,13 +126,13 @@ node_map:
       Write full output (table + unmapped list) to:
       docs/figma-audit/{audit_id}/.tmp/node-map-structure.md
 
-      Budget: max 30 tool calls. Stop when complete.
+      Budget: max 60 tool calls. Stop when complete.
 
   agent_2_visual:
     name: "visual-matcher"
     model: sonnet
     skip_when: "audit-only mode (has_app_url = false) — skip entirely, write empty file"
-    budget: "max 30 tool calls"
+    budget: "max 60 tool calls"
     prompt: |
       You are the Visual Matcher agent for a Figma audit (Phase 1).
 
@@ -177,12 +177,12 @@ node_map:
       Write output to:
       docs/figma-audit/{audit_id}/.tmp/node-map-visual.md
 
-      Budget: max 30 tool calls.
+      Budget: max 60 tool calls.
 
   agent_3_code:
     name: "code-scanner"
     model: sonnet
-    budget: "max 30 tool calls"
+    budget: "max 60 tool calls"
     prompt: |
       You are the Code Scanner agent for a Figma audit (Phase 1).
 
@@ -216,7 +216,7 @@ node_map:
       Write output to:
       docs/figma-audit/{audit_id}/.tmp/node-map-code.md
 
-      Budget: max 30 tool calls.
+      Budget: max 60 tool calls.
 
   aggregation:
     trigger: "After all 3 agents complete (or agent_2 skipped in audit-only)"
@@ -284,7 +284,7 @@ comparison:
   agent_1_visual:
     name: "visual-comparator"
     model: sonnet
-    budget: "max 40 tool calls, 8 min"
+    budget: "max 80 tool calls, 15 min"
     prompt: |
       You are the Visual Comparator for Figma audit Phase 2.
 
@@ -314,24 +314,39 @@ comparison:
 
       Overall score: average of all frame scores.
       Write to: docs/figma-audit/{audit_id}/.tmp/comparison-visual.md
-      Budget: max 40 tool calls.
+      Budget: max 80 tool calls.
 
   agent_2_property:
-    name: "property-auditor"
+    name: "property-and-structure-auditor"
     model: sonnet
-    budget: "max 40 tool calls, 8 min"
+    budget: "max 100 tool calls, 15 min"
     prompt: |
-      You are the Property Auditor for Figma audit Phase 2.
+      You are the Property & Structure Auditor for Figma audit Phase 2.
 
       Inputs:
       - figma-node-map.md at: docs/figma-audit/{audit_id}/figma-node-map.md
       - App URL: {app_url}
       - Output path: docs/figma-audit/{audit_id}/.tmp/comparison-properties.md
 
-      Steps:
-      1. Read figma-node-map.md → list of MAPPED components with CSS selectors
-      2. browser_navigate(app_url)
-      3. For each mapped component:
+      PART A — STRUCTURAL COMPARISON (check BEFORE CSS properties):
+      1. Read figma-node-map.md → list of MAPPED components
+      2. For each mapped component, call get_design_context to get Figma layer tree
+      3. browser_navigate(app_url) → browser_evaluate to get DOM tree for the component
+      4. Compare STRUCTURE:
+         a. Element count: Figma has N child layers → DOM should have N child elements
+         b. Nesting depth: Figma nesting → DOM nesting should match
+         c. Text content: Extract ALL text from Figma text nodes → compare with DOM textContent
+            - Figma says "Start Free Trial" but DOM has "Subscribe" → MISMATCH (wrong text)
+            - Figma says "$9.99" but DOM has "{{ price }}" → OK if data-driven (but flag if static in Figma)
+         d. Component reuse: Is the DOM element a shared project component (app-button, mat-card)
+            or a generic div/span styled to look like one? Flag custom implementations of standard UI.
+         e. Icon source: Does the DOM contain inline SVG path data that looks hand-drawn?
+            (hand-drawn SVGs have irregular paths, lack Figma export comments/metadata)
+            Flag: "Icon appears hand-drawn — verify it came from Figma export"
+      5. Classify each structural check: OK | MISMATCH | SUSPICIOUS
+
+      PART B — CSS PROPERTY COMPARISON:
+      6. For each mapped component:
          a. Get Figma CSS values from node map (or call get_design_context if needed)
          b. browser_evaluate: `window.getComputedStyle(document.querySelector('{selector}'))`
          c. Compare property-by-property:
@@ -348,19 +363,28 @@ comparison:
             - font-size: ±0px
             - border-radius: ±1px (subpixel rendering)
          e. Classify each property: OK | MISMATCH | MISSING
-      4. Score: (OK_count / total_properties) * 10
+      7. Score: ((structure_OK + css_OK) / (structure_total + css_total)) * 10
 
       Output format:
+      ## Structural Comparison
+      | Component | Check | Figma | Browser | Status |
+      |-----------|-------|-------|---------|--------|
+      | CardHeader | text content | "Start Free Trial" | "Start Free Trial" | OK |
+      | CardHeader | child count | 3 | 3 | OK |
+      | PriceTag | component reuse | Button | custom div.btn | MISMATCH |
+      | Icon | icon source | Figma export | hand-drawn SVG | MISMATCH |
+
+      ## CSS Property Comparison
       | Component | Property | Figma | Browser | Status |
       |-----------|----------|-------|---------|--------|
 
       Write to: docs/figma-audit/{audit_id}/.tmp/comparison-properties.md
-      Budget: max 40 tool calls.
+      Budget: max 100 tool calls.
 
   agent_3_ux:
     name: "ux-reviewer"
     model: sonnet
-    budget: "max 40 tool calls, 8 min"
+    budget: "max 80 tool calls, 15 min"
     prompt: |
       You are the UX/Interaction Reviewer for Figma audit Phase 2.
 
@@ -389,7 +413,7 @@ comparison:
          Overall score: average of 3 categories.
 
       Write to: docs/figma-audit/{audit_id}/.tmp/comparison-ux.md
-      Budget: max 40 tool calls.
+      Budget: max 80 tool calls.
 
   aggregation:
     trigger: "After all 3 agents complete"
@@ -406,14 +430,19 @@ comparison:
           PASS_WITH_ISSUES: "score 7.0–8.4 — minor deviations"
           ISSUES_FOUND: "score <7.0 — significant mismatches"
     property_diff_serialization:
-      action: "Parse comparison-properties.md → structured YAML for Phase 3 subagents"
+      action: "Parse comparison-properties.md → structured YAML for Phase 3 subagents (includes BOTH structural and CSS mismatches)"
       format: |
         components:
           - selector: "app-card .header"
-            mismatches:
+            structural_mismatches:
+              - { check: text_content, figma: "Start Free Trial", browser: "Subscribe" }
+              - { check: component_reuse, figma: "Button component", browser: "custom div.btn" }
+            css_mismatches:
               - { property: font-size, figma: 16px, browser: 14px }
-            ok_count: 12
-            mismatch_count: 1
+            structural_ok: 3
+            structural_mismatch: 2
+            css_ok: 12
+            css_mismatch: 1
       output: "docs/figma-audit/{audit_id}/property-diff.yaml"
     output: "docs/figma-audit/{audit_id}/figma-comparison.md"
     cleanup: "Bash: rm -rf docs/figma-audit/{audit_id}/.tmp/ — ONLY after figma-comparison.md and property-diff.yaml are written"
@@ -542,19 +571,19 @@ verification:
       name: "visual-comparator"
       model: sonnet
       prompt: "Same as Phase 2 agent_1_visual — compare updated browser screenshots vs Figma"
-      budget: "max 40 tool calls, 8 min"
+      budget: "max 80 tool calls, 15 min"
 
     agent_2_property:
-      name: "property-auditor"
+      name: "property-and-structure-auditor"
       model: sonnet
-      prompt: "Same as Phase 2 agent_2_property — re-evaluate computed CSS properties after fixes"
-      budget: "max 40 tool calls, 8 min"
+      prompt: "Same as Phase 2 agent_2_property — re-evaluate structure AND computed CSS properties after fixes"
+      budget: "max 100 tool calls, 15 min"
 
     agent_3_ux:
       name: "ux-reviewer"
       model: sonnet
       prompt: "Same as Phase 2 agent_3_ux — re-check states, responsive, accessibility after fixes"
-      budget: "max 40 tool calls, 8 min"
+      budget: "max 80 tool calls, 15 min"
 
   additional_output:
     before_score: "Phase 2 overall average score"

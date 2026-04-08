@@ -251,17 +251,17 @@ parallel_agents:
 ```yaml
 budgets:
   per_qa_agent:
-    max_tool_calls: 40
-    timeout_minutes: 8
+    max_tool_calls: 80
+    timeout_minutes: 15
     on_timeout: "Stop agent, collect partial results, mark as INCOMPLETE"
 
   planning_skills:
-    brainstorming: "max 3 minutes"
-    qa_test_planner: "max 5 minutes"
-    ui_ux_pro_max: "max 5 minutes"
+    brainstorming: "max 5 minutes"
+    qa_test_planner: "max 10 minutes"
+    ui_ux_pro_max: "max 10 minutes"
 
   total_phase:
-    max_minutes: 30
+    max_minutes: 60
     on_exceeded: "Stop remaining agents, aggregate what exists, report partial results"
 
   on_agent_failure:
@@ -385,7 +385,7 @@ consensus_mode:
       - angle: "Data persistence — create → refresh → verify, edit → verify, delete → verify gone"
         tools: [agent-browser, browser_navigate, browser_evaluate]
     output: ".tmp/ui-functional.md"
-    budget_per_agent: "max 40 tool calls, 8 min"
+    budget_per_agent: "max 80 tool calls, 15 min"
 
   section_2_visual:
     name: "Visual Fidelity"
@@ -398,7 +398,7 @@ consensus_mode:
       - angle: "Responsive — screenshot at 375, 768, 1024, 1440. Overflow, broken layouts, hidden content"
         tools: [browser_resize, browser_take_screenshot]
     output: ".tmp/ui-visual.md"
-    budget_per_agent: "max 40 tool calls, 8 min"
+    budget_per_agent: "max 80 tool calls, 15 min"
 
   section_3_states:
     name: "States & Accessibility"
@@ -410,7 +410,7 @@ consensus_mode:
       - angle: "Transitions & micro-interactions — animations smooth (no jank), timing appropriate, no flash"
         tools: [browser_hover, browser_click, browser_take_screenshot]
     output: ".tmp/ui-states.md"
-    budget_per_agent: "max 40 tool calls, 8 min"
+    budget_per_agent: "max 80 tool calls, 15 min"
 
   aggregation:
     per_section:

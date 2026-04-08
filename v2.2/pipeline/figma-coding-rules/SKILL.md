@@ -26,6 +26,40 @@ figma_implementation:
     3. Write CSS using these exact values (mapped to project variables where possible)
     4. NEVER guess or approximate values — always extract from Figma
 
+  STRUCTURE_COPY_RULE: |
+    BEFORE extracting CSS values, COPY THE STRUCTURE from Figma.
+    Figma design = source of truth. Copy literally, adapt minimally.
+
+    Step 1 — Layer hierarchy → HTML structure:
+    - Figma Frame/Group → div/section (preserve nesting depth)
+    - Figma Text node → span/p/h1-h6 (match text hierarchy from Figma)
+    - Figma Component instance → USE the project's existing shared component (check ui-inventory.md)
+    - Figma Icon node → img/svg sourced from Figma export (NEVER hand-draw)
+    - Preserve nesting: Figma's layer tree = your HTML tree
+    - Do NOT flatten nested containers that exist in Figma
+    - Do NOT add extra wrapper elements not present in Figma
+    - Do NOT merge separate Figma layers into one HTML element
+
+    Step 2 — Text content → literal strings:
+    - Copy ALL text from Figma EXACTLY as written: button labels, headings, descriptions, placeholders
+    - Hardcode as literal strings in the template
+    - ONLY replace with dynamic binding ({{ variable }}) where the PLAN explicitly marks a field as "dynamic"
+    - Example: Figma says "Start Free Trial" → template has "Start Free Trial" (literal)
+    - Example: Plan says "price is dynamic" → template has {{ price }} instead of Figma's "$9.99"
+    - When in doubt, keep literal — dynamic can be added later, wrong dynamic is a bug
+
+    Step 3 — Component reuse → project shared components:
+    - Button in Figma → project's shared button component (not a custom <div> styled as button)
+    - Card in Figma → project's shared card component
+    - Input in Figma → project's shared input component
+    - Read ui-inventory.md BEFORE writing ANY component
+    - If shared component covers ≥80% of the need → USE IT, adapt via inputs/props
+    - If no shared component exists → build new one following closest project pattern
+
+    Common mistake: agent "interprets" the design instead of copying it.
+    The result: wrong text, wrong icons, wrong structure, custom styles instead of shared components.
+    Rule: COPY first (structure + text + components), THEN extract CSS for styling.
+
   LAYOUT_RULE: |
     NEVER guess flex-direction, justify-content, align-items, gap, padding for ANY container.
     For EVERY container/wrapper element, call get_design_context and read:
@@ -43,11 +77,12 @@ figma_implementation:
   workflow_per_element:
     step_1: "Read plan → get Figma node-id for the element"
     step_2: "Call get_design_context(fileKey, nodeId) → extract code hints + screenshot"
-    step_3: "Extract exact CSS properties from code hints"
-    step_4: "Map hex colors to project SCSS variables (e.g., #FF5722 → $color-accent)"
-    step_5: "Map spacing to project tokens (e.g., 16px → $spacing-md)"
-    step_6: "Write CSS/SCSS using extracted + mapped values"
-    step_7: "If code hints are insufficient, call get_screenshot and measure visually"
+    step_3: "COPY STRUCTURE first (STRUCTURE_COPY_RULE): layer hierarchy → HTML, text → literal strings, check ui-inventory for reusable components"
+    step_4: "Extract exact CSS properties from code hints"
+    step_5: "Map hex colors to project SCSS variables (e.g., #FF5722 → $color-accent)"
+    step_6: "Map spacing to project tokens (e.g., 16px → $spacing-md)"
+    step_7: "Write HTML template (from step 3) + CSS/SCSS (from steps 4-6)"
+    step_8: "If code hints are insufficient, call get_screenshot and measure visually"
 
   extraction_checklist:
     layout: "display, flex-direction, justify-content, align-items, gap"
@@ -76,9 +111,11 @@ figma_implementation:
 ```yaml
 figma_self_verify:
   CRITICAL: |
-    After implementing CSS for EACH component, IMMEDIATELY verify every property
+    After implementing EACH component, IMMEDIATELY verify BOTH structure AND CSS properties
     against Figma BEFORE moving to the next component.
-    This step catches the #1 problem: agents writing approximate CSS instead of exact values.
+    This step catches TWO problems:
+    1. Agents writing approximate CSS instead of exact values
+    2. Agents inventing HTML structure / text content instead of copying from Figma
 
   when: "After writing CSS/SCSS for any UI component"
   trigger: "Runs inside for_each_part step_3"
@@ -93,18 +130,40 @@ figma_self_verify:
         action: "Read the SCSS/CSS you just wrote for this element"
         how: "Read the .scss/.css file, find the selector for this element"
 
-      step_3_compare:
-        action: "Compare EVERY property from section 1 extraction_checklist"
+      step_3_structural_verify:
+        action: "Verify STRUCTURE matches Figma BEFORE checking CSS properties"
+        checks:
+          - "HTML nesting matches Figma layer hierarchy (same depth, same grouping)"
+          - "Text content is literal from Figma (not dynamic unless plan says so)"
+          - "Element count per container matches Figma child count"
+          - "Shared project components are used where applicable (not custom divs)"
+          - "Icons are from Figma export (not hand-drawn SVG path data)"
+        format_per_check: "Structure: {check} → MATCH/MISMATCH"
+        on_mismatch: "Fix structure FIRST, then proceed to CSS verification"
+
+      step_4_compare:
+        action: "Compare EVERY CSS property from section 1 extraction_checklist"
         format_per_property: "Property: Figma says {X} → code has {Y} → MATCH/MISMATCH"
 
-      step_4_fix_mismatches:
+      step_5_fix_mismatches:
         action: "For each MISMATCH → fix immediately"
         rule: "Use Figma value, not your approximation"
 
-      step_5_log_verification:
+      step_6_log_verification:
         action: "Write verification result to docs/plans/{task-key}/figma-verify.md"
         format: |
           ## {component_name}
+
+          ### Structure
+          | Check | Figma | Code | Match |
+          |-------|-------|------|-------|
+          | nesting depth | 3 levels | 3 levels | YES |
+          | text content | "Start Free Trial" | "Start Free Trial" | YES |
+          | child count (container) | 4 children | 4 children | YES |
+          | shared component used | Button | custom div | FIXED → app-button |
+          | icon source | Figma export | hand-drawn SVG | FIXED → Figma asset |
+
+          ### CSS Properties
           | Property | Figma | Code | Match |
           |----------|-------|------|-------|
           | font-size | 16px | 16px | YES |

@@ -94,7 +94,7 @@ output:
 ```yaml
 constraints:
   read_only: "NEVER modify files"
-  budget: "Max 10 tool calls per invocation"
+  budget: "Max 30 tool calls per invocation"
   output_size: "<=2000 tokens"
   scope: "Stay within requested scope — do not explore unrelated areas"
   no_decisions: "Report findings only — do not recommend approaches"

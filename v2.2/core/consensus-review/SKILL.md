@@ -172,9 +172,9 @@ plan_review_sections:
 
 ```yaml
 budget:
-  per_agent: "max 30 tool calls, max 5 minutes"
-  per_section: "wait for all agents, then aggregate (max 7 minutes)"
-  total: "3 sections × 7 min = max 21 minutes for full consensus review"
+  per_agent: "max 80 tool calls, max 15 minutes"
+  per_section: "wait for all agents, then aggregate (max 20 minutes)"
+  total: "3 sections × 20 min = max 60 minutes for full consensus review"
 
   cost_consideration: |
     9 agents is expensive. Use consensus review for:
