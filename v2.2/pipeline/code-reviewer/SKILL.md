@@ -22,7 +22,9 @@ input:
     deviations_from_plan: string[]
     risks_mitigated: string[]
   plan_path: "docs/plans/{task-key}/plan.md"
+  impact_report_path: "docs/plans/{task-key}/impact-report.md"
   tech_stack_adapter: "for quality checks and lint/test commands"
+  complexity: "S|M|L|XL"
   # Auto-loaded: core-security
 ```
 
@@ -97,6 +99,19 @@ review:
     method: "Every new .ts file should have .spec.ts (per tech_stack_adapter conventions)"
     severity: MAJOR
     exceptions: ["models", "interfaces", "types", "constants", "index files"]
+
+  impact_verification:
+    description: "All items from impact-report.md addressed"
+    method: |
+      Read impact-report.md:
+      - For each must-fix: verify the fix is present in the diff (git diff)
+      - For each must-verify: verify the consumer still works (read code, check no breaking change to interface)
+      - For each risk area: verify shared code interface unchanged OR consumers updated
+    severity:
+      must_fix_not_addressed: BLOCKER
+      must_verify_not_checked: MAJOR
+      risk_area_unacknowledged: MINOR
+    skip_if: "impact-report.md contains 'No Impact Found'"
 ```
 
 ---
@@ -248,6 +263,21 @@ consensus_mode:
     cross_section:
       verdict: "Worst verdict across 3 sections"
       output: "code-review.md grouped by section with consensus/unique findings"
+```
+
+---
+
+## 8b. S-Complexity Mode
+
+When `complexity == S`. Single-agent review, no consensus.
+
+```yaml
+s_complexity_mode:
+  activation: "complexity == S"
+  dispatch: "Inline — single agent, no subagent dispatch"
+  review_areas: "All areas from Section 3 (same checklist, same severity rules)"
+  consensus: "None — single pass"
+  note: "Same rigor, less parallelism. Every review area still applies."
 ```
 
 ---
