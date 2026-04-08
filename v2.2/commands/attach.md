@@ -42,7 +42,7 @@ Detects what's done, creates checkpoint, runs missing phases.
    | Analysis? | Plan? | Code changes? | Tests pass? | Reviews exist? | State |
    |-----------|-------|--------------|-------------|---------------|-------|
    | No | No | No | — | — | Nothing done → Phase 0.7 (deep analysis) |
-   | Yes | No | No | — | — | Analyzed, not planned → Phase 1 |
+   | Yes | No | No | — | — | Analyzed, not planned → Phase 0.8 (impact analysis) |
    | No | No | Yes | — | — | Coded without plan → Phase 0.7 + retro-plan |
    | No | Yes | No | — | — | Planned without analysis → Phase 3 (analysis skipped) |
    | Yes | Yes | No | — | — | Planned, not coded → Phase 3 |

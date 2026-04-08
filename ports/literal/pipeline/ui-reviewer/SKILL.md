@@ -20,6 +20,8 @@ input:
   design_adapter: "for Figma screenshots and comparison"
   tech_stack_adapter: "for serve command"
   ui_inventory_path: ".claude/ui-inventory.md (optional)"
+  impact_report_path: "docs/plans/{task-key}/impact-report.md (optional)"
+  complexity: "S|M|L|XL"
 
   credentials:
     source: "Extracted from task description by task-source adapter (credentials field)"
@@ -72,6 +74,18 @@ test_planning:
       - Max 7 agents (avoid OOM)
 
     test_plan_format: "See templates/test-plan-template.md"
+
+  step_2b_impact_regression:
+    action: "Add regression tests from impact-report.md"
+    when: "impact_report_path exists and contains must-verify items"
+    method: |
+      Read must-verify items from impact-report.md.
+      For each item that has a UI route/page:
+        - Add test case: navigate to the page, verify basic functionality still works
+        - Take screenshot for evidence
+      Add these as a 'Regression' test group in the test plan.
+    group_name: "Impact Regression"
+    note: "These test existing functionality that depends on changed code"
 ```
 
 ---
@@ -105,7 +119,7 @@ parallel_agents:
     skill: "agent-browser"
     parallel: true
     max_agents: 7
-    note: "Per Iron Law #5 from literal-core-orchestration"
+    note: "Per Iron Law #5 from core-orchestration"
     on_unavailable_agent_browser: |
       WARN: Skill agent-browser unavailable.
       Required for: functional UI testing via browser automation.
@@ -427,6 +441,23 @@ consensus_mode:
     verdict: "PASS (≥8.5) | PASS_WITH_ISSUES (7.0-8.4) | ISSUES_FOUND (<7.0)"
     output: "ui-review.md (merged from 3 agents)"
     cleanup: "rm .tmp/ui-*.md"
+```
+
+---
+
+## 6b. S-Complexity Mode
+
+When `complexity == S`. Functional testing only, no consensus.
+
+```yaml
+s_complexity_mode:
+  activation: "complexity == S"
+  dispatch: "Single agent — functional testing only"
+  skip: "Per-element Figma comparison (visual fidelity section)"
+  keep: "Functional testing, impact regression, missing states audit"
+  consensus: "None — single pass"
+  budget: "max 80 tool calls, 15 min"
+  note: "Lighter than M+ but still catches functional regressions and broken states"
 ```
 
 ---

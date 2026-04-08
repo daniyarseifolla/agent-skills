@@ -281,8 +281,8 @@ recovery_from_checkpoint:
 recovery_heuristic:
   # Artifact presence -> resume point (when no checkpoint exists)
   # Uses worker phase IDs (fractional). Heuristic creates checkpoint with resume_phase set.
-  - { task_analysis: yes, plan: no, evaluate: "-", code: "-", resume: "Phase 1 (worker 1) — planning (with task-analysis.md)" }
-  - { plan: no,  evaluate: "-", code: "-", resume: "Phase 1 (worker 1) — start planning" }
+  - { task_analysis: yes, plan: no, evaluate: "-", code: "-", resume: "Phase 0.8 (worker 0.8) — impact analysis (with task-analysis.md)" }
+  - { plan: no,  evaluate: "-", code: "-", resume: "Phase 0.8 (worker 0.8) — impact analysis then planning" }
   - { plan: yes, evaluate: no,  code: no,  resume: "Phase 3 (worker 3) — evaluate gate" }
   - { plan: yes, evaluate: yes, code: no,  resume: "Phase 3 (worker 3) — start coding" }
   - { plan: yes, evaluate: "-", code: yes, resume: "Phase 4 (worker 4) — code review" }

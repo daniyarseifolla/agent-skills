@@ -57,8 +57,8 @@ Task key: $ARGUMENTS
    - Use core-orchestration recovery_heuristic table:
      | Analysis? | Plan? | Evaluate? | Code? | Resume from |
      |-----------|-------|-----------|-------|-------------|
-     | Yes       | No    | —         | —     | Phase 1 — planning (with task-analysis.md) |
-     | No        | No    | —         | —     | Phase 1 — start planning |
+     | Yes       | No    | —         | —     | Phase 0.8 — impact analysis (with task-analysis.md) |
+     | No        | No    | —         | —     | Phase 0.8 — impact analysis then planning |
      | —         | Yes   | No        | No    | Phase 3 — evaluate gate |
      | —         | Yes   | Yes       | No    | Phase 3 — start coding |
      | —         | Yes   | —         | Yes   | Phase 4 — code review |

@@ -18,38 +18,41 @@ phase_sequence:
   - { id: 0,   name: task-analysis,    model: sonnet, mode: inline,            action: "classify complexity, select route" }
   - { id: 0.5, name: workspace-setup,  model: sonnet, mode: inline,            action: "worktree, CI disable, dev server, confirmation" }
   - { id: 0.7, name: deep-analysis,   model: opus,   mode: inline,            action: "Figma exploration + API discovery + functional map", skip_when: "complexity == S" }
+  - { id: 0.8, name: impact-analysis, model: sonnet, mode: inline,            action: "consumers, siblings, shared code → impact-report.md" }
   - { id: 1,   name: planner,          model: opus,   mode: inline,            action: "research codebase, produce plan" }
   - { id: 2,   name: plan-reviewer,    model: opus,   mode: subagent,          action: "validate plan against AC (consensus 3x3 opus for M+)", skip_when: "complexity == S" }
   - { id: 3,   name: coder,            model: sonnet, mode: inline,            action: "evaluate gate, then implement" }
-  - { id: 4,   name: code-reviewer,    model: sonnet, mode: subagent_worktree, action: "architecture + security review (literal-core-security + tech-stack security_checks)" }
-  - { id: 5,   name: ui-reviewer,      model: sonnet, mode: subagent,          action: "functional + visual review", skip_when: "complexity == S OR no design adapter" }
+  - { id: 4,   name: code-reviewer,    model: sonnet, mode: subagent_worktree, action: "architecture + security review (core-security + tech-stack security_checks)" }
+  - { id: 5,   name: ui-reviewer,      model: sonnet, mode: subagent,          action: "functional + visual review", skip_when: "no design adapter" }
   - { id: 6,   name: completion,        model: sonnet, mode: inline,            action: "commit, collect metrics, store lessons" }
 
 # Phase 4+5 run in PARALLEL when both are active (Iron Law #1)
 
 phase_id_normalization:
-  note: "Worker uses fractional IDs (0, 0.5, 0.7, 1-6). Metrics use clean integer 0-8."
+  note: "Worker uses fractional IDs (0, 0.5, 0.7, 0.8, 1-6). Metrics use clean integer 0-9."
   worker_to_metrics:
     "0":     0    # task-analysis
     "0.5":   1    # workspace-setup
     "0.7":   2    # deep-analysis
-    "1":     3    # planning
-    "2":     4    # plan-review
-    "3":     5    # implementation
-    "4":     6    # code-review
-    "5":     7    # ui-review
-    "6":     8    # completion
+    "0.8":   3    # impact-analysis
+    "1":     4    # planning
+    "2":     5    # plan-review
+    "3":     6    # implementation
+    "4":     7    # code-review
+    "5":     8    # ui-review
+    "6":     9    # completion
   metrics_mapping:
     0: task-analysis
     1: workspace-setup
     2: deep-analysis
-    3: planning
-    4: plan-review
-    5: implementation
-    6: code-review
-    7: ui-review
-    8: completion
-  storage_type: "integer 0-8"
+    3: impact-analysis
+    4: planning
+    5: plan-review
+    6: implementation
+    7: code-review
+    8: ui-review
+    9: completion
+  storage_type: "integer 0-9"
 ```
 
 ---
@@ -58,15 +61,15 @@ phase_id_normalization:
 
 ```yaml
 complexity_matrix:
-  S:  { ac: "1-2", modules: 1,    plan_review: skip,     ui_review: skip,              code_researcher: false, seq_thinking: false,       route: MINIMAL }
+  S:  { ac: "1-2", modules: 1,    plan_review: skip,     ui_review: if_design_adapter, code_researcher: false, seq_thinking: false,       route: MINIMAL }
   M:  { ac: "3-4", modules: 2,    plan_review: standard, ui_review: if_design_adapter, code_researcher: false, seq_thinking: optional,    route: STANDARD }
   L:  { ac: "5-6", modules: "3+", plan_review: standard, ui_review: true,              code_researcher: true,  seq_thinking: recommended, route: FULL }
   XL: { ac: "7+",  modules: "4+", plan_review: standard, ui_review: true,              code_researcher: true,  seq_thinking: required,    route: FULL }
 
 route_definitions:
-  MINIMAL:  { phases: [0, 0.5, 1, 3, 4, 6],              note: "skip deep-analysis, plan-review, ui-review" }
-  STANDARD: { phases: [0, 0.5, 0.7, 1, 2, 3, 4, 5, 6],   note: "all phases, ui-review conditional on design adapter" }
-  FULL:     { phases: [0, 0.5, 0.7, 1, 2, 3, 4, 5, 6],   note: "all phases, all tools enabled" }
+  MINIMAL:  { phases: [0, 0.5, 0.8, 1, 3, 4, 5, 6],          note: "skip deep-analysis, plan-review. Phase 5 conditional on design adapter." }
+  STANDARD: { phases: [0, 0.5, 0.7, 0.8, 1, 2, 3, 4, 5, 6],   note: "all phases, ui-review conditional on design adapter" }
+  FULL:     { phases: [0, 0.5, 0.7, 0.8, 1, 2, 3, 4, 5, 6],   note: "all phases, all tools enabled" }
 ```
 
 ---
@@ -118,10 +121,18 @@ handoff_contracts:
 
   worker_to_planner:
     task: "task_schema — typed object from task-source adapter"
-    required: [task, complexity, route, figma_urls, ui_inventory_path, task_analysis_path]
+    required: [task, complexity, route, figma_urls, ui_inventory_path, task_analysis_path, impact_report_path]
     optional: [tech_stack_adapter, design_adapter]
     task_analysis_path: "string|null — path to task-analysis.md from Phase 0.7. Null for S complexity."
+    impact_report_path: "string — path to impact-report.md from Phase 0.8."
     note: "Worker passes full task object (see task_schema above) + classification results to planner"
+
+  impact_analyzer_to_planner:
+    impact_report_path: string
+    must_fix_count: number
+    must_verify_count: number
+    required: [impact_report_path]
+    note: "Phase 0.8 output. Planner reads impact-report.md to include must-fix items as plan Parts."
 
   worker_to_ui_reviewer:
     required: [branch, figma_urls, app_url, credentials]
@@ -202,12 +213,13 @@ checkpoint_schema:
 next_phase_map:
   note: "Lookup table for resume — replaces phase_completed + 1 arithmetic"
   "0":   0.5
-  "0.5": 0.7    # or 1 if complexity == S (0.7 skipped)
-  "0.7": 1
+  "0.5": 0.7    # or 0.8 if complexity == S (0.7 skipped)
+  "0.7": 0.8
+  "0.8": 1
   "1":   2      # or 3 if complexity == S (2 skipped)
   "2":   3
   "3":   4
-  "4":   5      # or 6 if complexity == S or no design adapter (5 skipped)
+  "4":   5      # or 6 if no design adapter (5 skipped)
   "5":   6
   "6":   null   # done
 
@@ -269,8 +281,8 @@ recovery_from_checkpoint:
 recovery_heuristic:
   # Artifact presence -> resume point (when no checkpoint exists)
   # Uses worker phase IDs (fractional). Heuristic creates checkpoint with resume_phase set.
-  - { task_analysis: yes, plan: no, evaluate: "-", code: "-", resume: "Phase 1 (worker 1) — planning (with task-analysis.md)" }
-  - { plan: no,  evaluate: "-", code: "-", resume: "Phase 1 (worker 1) — start planning" }
+  - { task_analysis: yes, plan: no, evaluate: "-", code: "-", resume: "Phase 0.8 (worker 0.8) — impact analysis (with task-analysis.md)" }
+  - { plan: no,  evaluate: "-", code: "-", resume: "Phase 0.8 (worker 0.8) — impact analysis then planning" }
   - { plan: yes, evaluate: no,  code: no,  resume: "Phase 3 (worker 3) — evaluate gate" }
   - { plan: yes, evaluate: yes, code: no,  resume: "Phase 3 (worker 3) — start coding" }
   - { plan: yes, evaluate: "-", code: yes, resume: "Phase 4 (worker 4) — code review" }

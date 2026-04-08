@@ -29,7 +29,7 @@ startup:
     on_missing: "WARN, continue without that adapter type"
 
   step_3_core:
-    action: "Load literal-core-orchestration"
+    action: "Load core-orchestration"
     provides: [phase_sequence, handoff_contracts, checkpoint_schema, loop_limits]
 
   step_4_recovery:
@@ -53,7 +53,7 @@ startup:
     output: "S|M|L|XL"
 
   step_7_route:
-    action: "Select route from literal-core-orchestration complexity_matrix"
+    action: "Select route from core-orchestration complexity_matrix"
     S: MINIMAL
     M: STANDARD
     L_XL: FULL
@@ -180,7 +180,7 @@ branch_naming:
 
 ## 2. Pipeline Execution
 
-Phases from literal-core-orchestration. Worker dispatches each, validates handoffs, writes checkpoints.
+Phases from core-orchestration. Worker dispatches each, validates handoffs, writes checkpoints.
 
 ```yaml
 phases:
@@ -257,28 +257,38 @@ phases:
     checkpoint: true
     output: "task_analysis_path: docs/plans/{task-key}/task-analysis.md"
 
+  - phase: 0.8
+    name: impact-analysis
+    skill: "pipeline-impact-analyzer"
+    model: sonnet
+    mode: inline
+    action: "Scan consumers, siblings, shared code → impact-report.md"
+    input: "task, task_analysis_path, complexity, tech_stack_adapter"
+    output: "impact_report_path: docs/plans/{task-key}/impact-report.md"
+    checkpoint: true
+
   - phase: 1
     name: planning
-    skill: "literal-pipeline-planner"
+    skill: "pipeline-planner"
     model: opus
     mode: inline
-    input: "task, complexity, route, tech_stack_adapter, design_adapter, task_analysis_path"
+    input: "task, complexity, route, tech_stack_adapter, design_adapter, task_analysis_path, impact_report_path"
     output: "plan file path"
     checkpoint: true
 
   - phase: 2
     name: plan-review
-    skill: "literal-pipeline-plan-reviewer"
+    skill: "pipeline-plan-reviewer"
     model: opus
     mode: subagent
     skip_if: "complexity == S"
     consensus: "complexity >= M → MANDATORY: dispatch 3 opus subagents (AC, Architecture, Design). Do NOT do inline review. Do NOT skip consensus."
-    input: "handoff: planner_to_reviewer (literal-core-orchestration contract)"
+    input: "handoff: planner_to_reviewer (core-orchestration contract)"
     output: "verdict: APPROVED|NEEDS_CHANGES|REJECTED"
     checkpoint: true
     loop:
       max: 3
-      with: "literal-pipeline-planner"
+      with: "pipeline-planner"
       counter: "checkpoint.iteration.plan_review"
       on_NEEDS_CHANGES:
         invalidated_phases: [2]
@@ -286,7 +296,7 @@ phases:
 
   - phase: 3
     name: implementation
-    skill: "literal-pipeline-coder"
+    skill: "pipeline-coder"
     model: sonnet
     mode: inline
     input: "handoff: reviewer_to_coder, plan_path, tech_stack_adapter"
@@ -300,23 +310,23 @@ phases:
           iteration.evaluate_return: "+= 1"
           handoff_payload: "coder_evaluate_return contract (plan_issues, blocked_parts)"
         action: "Loop back to Phase 2 (plan-review) — not Phase 1 (planner)"
-        note: "See literal-core-orchestration invalidation_rules.evaluate_return"
+        note: "See core-orchestration invalidation_rules.evaluate_return"
 
   - phase: "4+5"
     name: "review (parallel)"
     description: "Code review + UI review run in parallel (they are independent)"
     consensus: "complexity >= M → MANDATORY: dispatch 3 subagents per reviewer. Do NOT do inline review. Do NOT run Phase 4+5 sequentially — PARALLEL."
     parallel:
-      - skill: "literal-pipeline-code-reviewer"
+      - skill: "pipeline-code-reviewer"
         model: sonnet
         mode: "subagent_worktree"
         consensus_agents: "Bug hunter + Plan compliance + Security (when M+)"
         input: "handoff from coder"
         output: "code review verdict"
-      - skill: "literal-pipeline-ui-reviewer"
+      - skill: "pipeline-ui-reviewer"
         model: sonnet
         mode: subagent
-        skip_if: "complexity == S OR no design adapter"
+        skip_if: "no design adapter"
         consensus_agents: "Functional + Visual fidelity + States/A11y (when M+)"
         input: "branch, figma_urls"
         output: "ui review report"
@@ -358,12 +368,71 @@ phases:
     actions:
       - commit: "If uncommitted changes exist (from review fixes), commit them. If all parts already committed in Phase 3, skip."
       - restore_ci: "IF checkpoint.ci_disabled == true → ci-cd adapter restore_ci(task_key)"
-      - mr: "ASK user → if yes, ci-cd adapter create_mr()"
-      - deploy: "ASK user → if yes, ci-cd adapter deploy()"
-      - transition: "IF deployed: transition task to 'Ready for Test' via task-source adapter"
-      - notify: "IF deployed AND notification adapter loaded → notification adapter notify_deploy(task_key, environment)"
+      - auto_generate:
+          mr_title: "{task.key}: {task.title}"
+          mr_description: "task_source_adapter.format_mr_description(task, plan_summary, git_diff_summary)"
+          target_branch: "project.yaml → project.branches.main (fallback: develop)"
+          deploy_environment: "test"
+          git_diff_summary: "git log {target_branch}..HEAD --oneline → bullet list of commit messages"
+      - confirmation:
+          prompt: |
+            Завершаю задачу {task_key}: {title}
+
+            MR: feat/{task_key} → {target_branch}
+              Title: {mr_title}
+              Description: [auto-generated, {N} lines]
+
+            После merge → deploy на {environment} → notify #qa
+
+            Proceed? (y / только MR / отмена)
+          options:
+            "y": "Full cycle"
+            "только MR": "Create MR only"
+            "отмена": "Do nothing"
+          on_cancel: "Write checkpoint: terminal_status: stopped_by_user, resume_phase: 6. STOP."
+      - completion_flow:
+          description: "Executed when user confirms 'y' or 'только MR'"
+          steps:
+            1_push: "git push"
+            2_create_mr: |
+              ci-cd adapter create_mr(branch, mr_title, mr_description, target_branch)
+              Output: mr_url, mr_iid
+            3_stop_if_mr_only: "If user chose 'только MR' → skip to checkpoint"
+            4_wait_mr_pipeline: |
+              ci-cd adapter wait_for_stage(pipeline, 'build')
+              Timeout: 15min
+            5_merge: "glab mr merge {mr_iid} --auto-merge"
+            6_wait_merge: |
+              Poll MR state until state == 'merged'
+              Poll interval: 30s, timeout: 10min
+            7_find_target_pipeline: |
+              ci-cd adapter get_pipeline(target_branch)
+              Note: post-merge pipeline on target branch
+            8_wait_build: |
+              ci-cd adapter wait_for_stage(target_pipeline, 'build')
+              Timeout: 15min
+            9_deploy: "ci-cd adapter deploy(target_branch, environment)"
+            10_wait_deploy: "Poll deploy job until success. Timeout: 10min"
+            11_transition: |
+              task_source_adapter.transition(task_key, 'Ready for Test')
+              skip_if: no task_source adapter
+            12_notify: |
+              notification_adapter.notify_deploy(task_key, environment)
+              skip_if: no notification adapter
+            13_report: |
+              Display:
+                Готово:
+                - MR: {mr_url}
+                - Deploy: {environment} success
+                - Jira: Ready for Test
+                - Slack: notified #qa
+      - completion_errors:
+          pipeline_fail: "Show job log tail. Ask: retry / abort. On abort: write checkpoint, MR stays open."
+          merge_conflict: "Show conflicted files. STOP. User resolves manually, then /continue."
+          deploy_fail: "Show deploy log. Offer: retry / rollback / abort."
+          mr_pipeline_timeout: "Show pipeline URL. Ask: keep waiting / abort."
       - checkpoint: "completed_phases: [...existing, 6], terminal_status: success, resume_phase: null"
-      - metrics: "Load literal-core-metrics, collect and store (success collection — reads from checkpoint written above)"
+      - metrics: "Load core-metrics, collect and store (success collection — reads from checkpoint written above)"
       - ordering: "checkpoint BEFORE metrics — metrics reads phases_completed and terminal_status from checkpoint"
 ```
 
@@ -374,7 +443,7 @@ phases:
 ```yaml
 dispatch:
   before_phase:
-    - validate: "handoff payload against literal-core-orchestration contract"
+    - validate: "handoff payload against core-orchestration contract"
     - check_skip: "evaluate skip_if condition"
     - check_invalidation: |
         If this phase is in checkpoint.invalidated_phases:
@@ -384,7 +453,7 @@ dispatch:
           → HALT: "Cannot proceed to Phase {N} — Phase {invalidated} must re-run first"
           → Set resume_phase to min(invalidated_phases)
           → This prevents skipping to completion with stale review state
-    - check_loop: "guard against loop_limits (literal-core-orchestration)"
+    - check_loop: "guard against loop_limits (core-orchestration)"
     - log: "Starting Phase {N}: {name}"
 
   after_phase:
@@ -406,7 +475,7 @@ dispatch:
 
   on_loop:
     - increment: "checkpoint.iteration.{loop_type}"
-    - check_limit: "literal-core-orchestration loop_limits"
+    - check_limit: "core-orchestration loop_limits"
     - on_exceeded: |
         1. Write checkpoint: terminal_status = "loop_exceeded", resume_phase = loop target, handoff = preserve
         2. Write terminal metrics (reads from checkpoint written in step 1)
@@ -491,7 +560,7 @@ errors:
          - completed_phases: current state (preserve)
          - handoff_payload: last known payload (preserve for repair)
       2. Write terminal metrics (reads from checkpoint written in step 1)
-      3. STOP, show iteration summary (from literal-core-orchestration)
+      3. STOP, show iteration summary (from core-orchestration)
     ordering: "checkpoint → metrics → display → STOP (always this order)"
     do_not: "Auto-proceed or auto-approve"
 
@@ -554,7 +623,7 @@ confirmation: "Always ask before deleting"
 
 ## 6. Re-routing
 
-From literal-core-orchestration. Worker applies mid-pipeline.
+From core-orchestration. Worker applies mid-pipeline.
 
 ```yaml
 re_routing:

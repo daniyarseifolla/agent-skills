@@ -26,6 +26,7 @@ Reusable development pipeline skills for Claude Code. Automates the full cycle: 
 Phase 0   — Fetch task from Jira, classify complexity (S/M/L/XL)
 Phase 0.5 — Create branch, optional worktree, disable CI
 Phase 0.7 — Deep analysis: explore ALL Figma screens, test Swagger endpoints, build functional map
+Phase 0.8 — Impact analysis: scan consumers, siblings, shared code → impact-report.md
 Phase 1   — Plan implementation (opus model)
 Phase 2   — Review plan with 3 consensus agents (AC, architecture, design coverage)
 Phase 3   — Implement code with Figma self-verify and commit gate
@@ -44,7 +45,7 @@ facades/         — entry points (jira-worker, deploy, sync, figma-audit, scans
       adapters/  — swappable (jira, gitlab, angular, figma)
 ```
 
-23 skills | 16 commands | 5,863 lines
+24 skills | 16 commands
 
 ## Skills
 
@@ -60,6 +61,7 @@ facades/         — entry points (jira-worker, deploy, sync, figma-audit, scans
 | Skill | Model | Purpose |
 |-------|-------|---------|
 | worker | — | Orchestrates all phases |
+| impact-analyzer | sonnet | Impact analysis: consumers, siblings, shared code |
 | planner | opus | Research codebase, create plan |
 | plan-reviewer | opus | Validate plan (3x consensus for M+) |
 | coder | sonnet | Implement with Figma self-verify |

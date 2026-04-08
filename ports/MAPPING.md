@@ -21,6 +21,7 @@
 | `v2.2/pipeline/planner/SKILL.md` | `pipeline-planner` | `ports/literal/pipeline/planner/SKILL.md` | `literal-pipeline-planner` |
 | `v2.2/pipeline/ui-reviewer/SKILL.md` | `pipeline-ui-reviewer` | `ports/literal/pipeline/ui-reviewer/SKILL.md` | `literal-pipeline-ui-reviewer` |
 | `v2.2/pipeline/worker/SKILL.md` | `pipeline-worker` | `ports/literal/pipeline/worker/SKILL.md` | `literal-pipeline-worker` |
+| `v2.2/pipeline/impact-analyzer/SKILL.md` | `pipeline-impact-analyzer` | `ports/literal/pipeline/impact-analyzer/SKILL.md` | `literal-pipeline-impact-analyzer` |
 
 ## Adapters
 
@@ -47,7 +48,7 @@
 ## Totals
 
 - Core: 4
-- Pipeline: 8
+- Pipeline: 9
 - Adapters: 5
 - Facades: 7
-- Total: 24 skills
+- Total: 25 skills

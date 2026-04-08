@@ -15,7 +15,7 @@
 ## Архитектура
 
 ```
-User → Command → Facade → Worker → [Phase 0 → 0.5 → 0.7 → 1 → 2 → 3 → 4+5 → 6]
+User → Command → Facade → Worker → [Phase 0 → 0.5 → 0.7 → 0.8 → 1 → 2 → 3 → 4+5 → 6]
                                       ↓         ↓         ↓        ↓       ↓
                                     Adapters   Core    Consensus  Subagents  MCP
 ```
@@ -23,11 +23,11 @@ User → Command → Facade → Worker → [Phase 0 → 0.5 → 0.7 → 1 → 2 
 | Layer | Count | Скиллы |
 |-------|-------|--------|
 | core (4) | orchestration, security, metrics, consensus-review |
-| pipeline (8) | worker, planner, coder, figma-coding-rules, plan-reviewer, code-reviewer, ui-reviewer, code-researcher |
+| pipeline (9) | worker, impact-analyzer, planner, coder, figma-coding-rules, plan-reviewer, code-reviewer, ui-reviewer, code-researcher |
 | adapters (4) | jira, gitlab, angular, figma |
 | facades (7) | jira-worker, deploy, community-sync, scan-ui-inventory, scan-practices, scan-qa-playbook, figma-audit |
 
-23 skills + 16 commands + 1 hook
+24 skills + 16 commands + 1 hook
 
 ## Основные команды
 
@@ -44,15 +44,16 @@ User → Command → Facade → Worker → [Phase 0 → 0.5 → 0.7 → 1 → 2 
 Phase 0   → classify (S/M/L/XL)
 Phase 0.5 → workspace (branch, worktree, CI)
 Phase 0.7 → deep analysis (3 agents: Figma + API + Functional) + confirmation gate
+Phase 0.8 → impact analysis (consumers, siblings, shared code → impact-report.md)
 Phase 1   → planner (opus) + consensus research (3 agents: Codebase + Deps + UX Flow)
 Phase 2   → plan review (3x3 opus = 9 agents)
 Phase 3   → coder (sonnet) + subagents per part + commit gate
 Phase 4   → code review (3x3 sonnet = 9 agents)  } parallel
 Phase 5   → UI review (3x3 sonnet = 9 agents)     }
-Phase 6   → MR + deploy + metrics
+Phase 6   → auto-completion (MR → merge → deploy → notify → metrics)
 ```
 
-S задачи: Phases 0.7, 2, 5 skip. Single agent на 4. ~0 consensus overhead.
+S задачи: Phases 0.7, 2 skip. Phase 5 skip if no design adapter. Single agent на 4. ~0 consensus overhead.
 
 ## Ключевые решения (P0 фиксы)
 

@@ -12,7 +12,7 @@ Phase 4. Architecture + security + quality review. Runs in worktree for isolatio
 
 ## 1. Input
 
-Per literal-core-orchestration coder_to_reviewer contract.
+Per core-orchestration coder_to_reviewer contract.
 
 ```yaml
 input:
@@ -22,8 +22,10 @@ input:
     deviations_from_plan: string[]
     risks_mitigated: string[]
   plan_path: "docs/plans/{task-key}/plan.md"
+  impact_report_path: "docs/plans/{task-key}/impact-report.md"
   tech_stack_adapter: "for quality checks and lint/test commands"
-  # Auto-loaded: literal-core-security
+  complexity: "S|M|L|XL"
+  # Auto-loaded: core-security
 ```
 
 ---
@@ -63,8 +65,8 @@ review:
 
   security:
     description: "No security vulnerabilities introduced"
-    method: "Load literal-core-security, run all grep patterns against changed files"
-    severity: "Per literal-core-security classification (BLOCKER or MAJOR)"
+    method: "Load core-security, run all grep patterns against changed files"
+    severity: "Per core-security classification (BLOCKER or MAJOR)"
 
   component_reuse:
     description: "No reinvented components"
@@ -97,6 +99,19 @@ review:
     method: "Every new .ts file should have .spec.ts (per tech_stack_adapter conventions)"
     severity: MAJOR
     exceptions: ["models", "interfaces", "types", "constants", "index files"]
+
+  impact_verification:
+    description: "All items from impact-report.md addressed"
+    method: |
+      Read impact-report.md:
+      - For each must-fix: verify the fix is present in the diff (git diff)
+      - For each must-verify: verify the consumer still works (read code, check no breaking change to interface)
+      - For each risk area: verify shared code interface unchanged OR consumers updated
+    severity:
+      must_fix_not_addressed: BLOCKER
+      must_verify_not_checked: MAJOR
+      risk_area_unacknowledged: MINOR
+    skip_if: "impact-report.md contains 'No Impact Found'"
 ```
 
 ---
@@ -113,7 +128,7 @@ severity:
 auto_escalation:
   - condition: "5+ MINOR in same file"
     action: "Escalate to MAJOR for that file"
-  - condition: "Any literal-core-security finding"
+  - condition: "Any core-security finding"
     action: "Always BLOCKER regardless of pattern severity"
 
 decision:
@@ -167,7 +182,7 @@ When code-reviewer returns CHANGES_REQUESTED, worker should triage:
 
 ## 6. Handoff
 
-Per literal-core-orchestration reviewer_to_completion contract.
+Per core-orchestration reviewer_to_completion contract.
 
 ```yaml
 handoff:
@@ -176,7 +191,7 @@ handoff:
     comments: "non-blocking notes (MINOR/NIT)"
     issues: "blocking findings (if CHANGES_REQUESTED)"
     iteration: "N/3"
-  validation: "All required fields per literal-core-orchestration contract"
+  validation: "All required fields per core-orchestration contract"
 ```
 
 ---
@@ -186,7 +201,7 @@ handoff:
 ```yaml
 loop:
   max: 3
-  guard: "literal-core-orchestration loop_limits"
+  guard: "core-orchestration loop_limits"
   per_iteration:
     - "Receive updated code from coder"
     - "Re-run pre-checks"
@@ -227,7 +242,7 @@ consensus_mode:
         focus: [architecture]
       - angle: "Project patterns — follows existing patterns in codebase, correct imports, module boundaries"
         focus: [architecture, component_reuse]
-      - angle: "Security — literal-core-security grep patterns (grep -P), tech_stack_adapter.security_checks"
+      - angle: "Security — core-security grep patterns (grep -P), tech_stack_adapter.security_checks"
         focus: [security, design_implementation]
 
   section_3_quality:
@@ -252,6 +267,21 @@ consensus_mode:
 
 ---
 
+## 8b. S-Complexity Mode
+
+When `complexity == S`. Single-agent review, no consensus.
+
+```yaml
+s_complexity_mode:
+  activation: "complexity == S"
+  dispatch: "Inline — single agent, no subagent dispatch"
+  review_areas: "All areas from Section 3 (same checklist, same severity rules)"
+  consensus: "None — single pass"
+  note: "Same rigor, less parallelism. Every review area still applies."
+```
+
+---
+
 ## 9. Standalone Mode
 
 ```yaml
@@ -272,7 +302,7 @@ standalone:
     step_3_plan_found: "Run full review including plan compliance"
     step_3_no_plan: "Run review without plan compliance (diff-only mode)"
     step_4: "Load tech_stack_adapter from project.yaml or autodetect"
-    step_5: "Load literal-core-security"
+    step_5: "Load core-security"
     step_6: "Execute review areas (section 3), skip plan_compliance if no plan"
     step_7: "Output code-review.md"
     output_path:

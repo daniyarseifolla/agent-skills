@@ -5,7 +5,7 @@
 ## Architecture
 
 ```
-User → Command → Facade → Worker → [Phase 0 → 0.5 → 0.7 → 1 → 2 → 3 → 4+5 → 6]
+User → Command → Facade → Worker → [Phase 0 → 0.5 → 0.7 → 0.8 → 1 → 2 → 3 → 4+5 → 6]
                                       ↓         ↓         ↓        ↓       ↓
                                     Adapters   Core    Consensus  Subagents  MCP
 
@@ -30,7 +30,7 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 
 | Skill | Lines | Purpose |
 |-------|-------|---------|
-| core/orchestration | 415 | Phases (0-6 + 0.5, 0.7), handoffs, checkpoints, recovery, loops, routing, consensus activation |
+| core/orchestration | 415 | Phases (0-6 + 0.5, 0.7, 0.8), handoffs, checkpoints, recovery, loops, routing, consensus activation |
 | core/security | 151 | Universal OWASP checks. Framework-specific checks in tech-stack adapters (Section 7) |
 | core/consensus-review | 211 | Multi-agent review pattern: 3 agents × different angles → aggregate |
 | core/metrics | 212 | Pipeline metrics schema, phase ID normalization, collection, storage |
@@ -40,6 +40,7 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 | Skill | Lines | Model | Mode | Consensus (M+) | Purpose |
 |-------|-------|-------|------|-----------------|---------|
 | pipeline/worker | 469 | — | inline | — | Orchestrator: phases, checkpoints, dispatch, Phase 0.7 |
+| pipeline/impact-analyzer | ~200 | sonnet | inline | — | Impact analysis: consumers, siblings, shared code |
 | pipeline/planner | 283 | opus | inline | — | Research codebase, create plan (reads task-analysis.md) |
 | pipeline/plan-reviewer | 217 | opus | subagent | 3× opus: AC + Architecture + Design | Validate plan |
 | pipeline/coder | 281 | sonnet | inline | — | Evaluate gate + implement + commit gate |
@@ -98,11 +99,12 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 | 0 | Task analysis | sonnet | — | — |
 | 0.5 | Workspace setup | sonnet | — | Resume |
 | 0.7 | Deep analysis | opus+sonnet | Yes (Figma + API + Functional) | S complexity |
+| 0.8 | Impact analysis | sonnet | — | — |
 | 1 | Planning | opus | — | — |
 | 2 | Plan review | opus | Yes (AC + Architecture + Design) | S complexity |
 | 3 | Implementation | sonnet | — | — |
 | 4 | Code review | sonnet | Yes (Bugs + Compliance + Security) | — |
-| 5 | UI review | sonnet | Yes (Functional + Visual + States) | S complexity, no design |
+| 5 | UI review | sonnet | Yes (Functional + Visual + States) | No design adapter |
 | 6 | Completion | sonnet | — | — |
 
 ### Phase 0.7: Deep Task Analysis
@@ -117,6 +119,21 @@ output: "docs/plans/{task-key}/task-analysis.md"
 confirmation_gate: "Show user → y/edit/abort. Offer to create Jira tasks for missing endpoints."
 ```
 
+### Phase 0.8: Impact Analysis
+
+```yaml
+analysis_types:
+  consumers:  "Who imports/uses the files we're changing"
+  siblings:   "Same bug pattern in neighboring components"
+  shared_code: "Shared utilities/services → all consumers"
+
+dispatch:
+  S:   "Single agent, inline"
+  M+:  "3 agents in parallel (consumer-scanner, sibling-scanner, shared-code-scanner)"
+
+output: "docs/plans/{task-key}/impact-report.md"
+```
+
 ## Model Routing
 
 | Model | Skills | Purpose | Cost |
@@ -129,7 +146,7 @@ confirmation_gate: "Show user → y/edit/abort. Offer to create Jira tasks for m
 
 | Level | AC | Deep Analysis | Plan Review | UI Review | Code Review | Consensus |
 |-------|----|--------------|-------------|-----------|-------------|-----------|
-| S | 1-2 | skip | skip | skip | 1 agent | No |
+| S | 1-2 | skip | skip | if design adapter | 1 agent | No |
 | M | 3-4 | 3 agents | 3× opus | if design: 3× sonnet | 3× sonnet | Yes |
 | L | 5-6 | 3 agents | 3× opus | 3× sonnet | 3× sonnet | Yes |
 | XL | 7+ | 3 agents | 3× opus | 3× sonnet | 3× sonnet | Yes |
@@ -191,7 +208,7 @@ Fallback: autodetect from package.json, .gitlab-ci.yml, task URL, proxy.conf.jso
 | writing-plans | pipeline/planner |
 | executing-plans | pipeline/coder (S, <3 parts) |
 | subagent-driven-development | pipeline/coder (M+, 3+ parts) |
-| dispatching-parallel-agents | pipeline/ui-reviewer, facades/community-sync, Phase 0.7, figma-audit |
+| dispatching-parallel-agents | pipeline/ui-reviewer, pipeline/impact-analyzer, facades/community-sync, Phase 0.7, figma-audit |
 | figma:implement-design | pipeline/coder via figma-coding-rules |
 
 ## Output Files
@@ -199,6 +216,7 @@ Fallback: autodetect from package.json, .gitlab-ci.yml, task URL, proxy.conf.jso
 ```
 docs/plans/{task-key}/
 ├── task-analysis.md       ← Phase 0.7 (Figma screens + API + flows)
+├── impact-report.md       ← Phase 0.8 (consumers, siblings, shared code)
 ├── screenshots/           ← Phase 0.7 (Figma screenshots)
 ├── plan.md                ← Phase 1
 ├── evaluate.md            ← Phase 3
