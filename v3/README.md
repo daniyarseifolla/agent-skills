@@ -1,4 +1,4 @@
-# Agent Skills v2.2
+# Agent Skills v3
 
 Reusable development pipeline skills for Claude Code with swappable adapters.
 
@@ -11,27 +11,27 @@ cd ~/Desktop/pet/agent-skills
 mkdir -p ~/.claude/skills ~/.claude/commands ~/.claude/scripts
 
 # Skills → global
-for dir in v2.2/core/*/; do mkdir -p ~/.claude/skills/$(basename $dir) && cp "$dir/SKILL.md" ~/.claude/skills/$(basename $dir)/SKILL.md; done
-for dir in v2.2/pipeline/*/; do
+for dir in v3/core/*/; do mkdir -p ~/.claude/skills/$(basename $dir) && cp "$dir/SKILL.md" ~/.claude/skills/$(basename $dir)/SKILL.md; done
+for dir in v3/pipeline/*/; do
   name=$(basename $dir)
   [ "$name" = "figma-coding-rules" ] && target=$name || target="pipeline-$name"
   mkdir -p ~/.claude/skills/$target && cp "$dir/SKILL.md" ~/.claude/skills/$target/SKILL.md
 done
-for dir in v2.2/adapters/*/; do mkdir -p ~/.claude/skills/adapter-$(basename $dir) && cp "$dir/SKILL.md" ~/.claude/skills/adapter-$(basename $dir)/SKILL.md; done
-for dir in v2.2/facades/*/; do mkdir -p ~/.claude/skills/$(basename $dir) && cp "$dir/SKILL.md" ~/.claude/skills/$(basename $dir)/SKILL.md; done
+for dir in v3/adapters/*/; do mkdir -p ~/.claude/skills/adapter-$(basename $dir) && cp "$dir/SKILL.md" ~/.claude/skills/adapter-$(basename $dir)/SKILL.md; done
+for dir in v3/facades/*/; do mkdir -p ~/.claude/skills/$(basename $dir) && cp "$dir/SKILL.md" ~/.claude/skills/$(basename $dir)/SKILL.md; done
 
 # Commands → global
-cp v2.2/commands/*.md ~/.claude/commands/
+cp v3/commands/*.md ~/.claude/commands/
 
 # Hook
-cp v2.2/scripts/figma-verify-reminder.sh ~/.claude/scripts/
+cp v3/scripts/figma-verify-reminder.sh ~/.claude/scripts/
 ```
 
 ## Configure
 
 ```yaml
 # .claude/project.yaml
-version: "2.2"
+version: "3"
 task-source: jira
 ci-cd: gitlab
 tech-stack: angular
@@ -53,6 +53,6 @@ Or skip — worker autodetects from project files.
 
 ## Source of Truth
 
-**This repository is canonical.** `~/.claude/skills/` is the install target, not the source. All edits should be made in `v2.2/` and synced to global.
+**This repository is canonical.** `~/.claude/skills/` is the install target, not the source. All edits should be made in `v3/` and synced to global.
 
 See [SKILLS_OVERVIEW.md](SKILLS_OVERVIEW.md) for full architecture and catalog.

@@ -1,4 +1,4 @@
-# Agent Skills v2.2 — Context Transfer
+# Agent Skills v3 — Context Transfer
 
 Этот файл передаёт контекст между сессиями Claude Code. Прочитай его ПЕРЕД любой работой со скиллами.
 
@@ -6,11 +6,9 @@
 
 **Repo:** ~/Desktop/pet/agent-skills/ — **canonical source of truth**
 **Install target:** ~/.claude/skills/ + ~/.claude/commands/ (NOT the source)
-**Версия:** v2.2 (активная), v1.0 (бэкап)
-**Последний коммит:** d622ecb — P1 doc cleanup, stale SKILLS_OVERVIEW removed
-**External review (Codex):** 8/10 internal system. P0 closed, P1 remaining.
-**Полный отчёт:** `v2.2/REPORT.md`
-**Consensus reviews:** `v2.2/CONSENSUS-REVIEW-v2.2.md` (round 1: 6.3), `v2.2/CONSENSUS-REVIEW-v2.2-round2.md` (round 2: 8.0)
+**Версия:** v3 (активная), v1 (архив)
+**Полный отчёт:** `v3/REPORT.md`
+**Consensus reviews:** `v3/CONSENSUS-REVIEW-v2.2.md` (round 1: 6.3), `v3/CONSENSUS-REVIEW-v2.2-round2.md` (round 2: 8.0)
 
 ## Архитектура
 

@@ -4,12 +4,10 @@ Reusable development pipeline skills for Claude Code with swappable adapters.
 
 ## Versions
 
-- **v2.2/** — active version (CI disable/restore, worktree safety, workspace setup prompts)
-- **v2.1/** — previous (visual-qa, css-styling-expert, Figma-first enforcement)
-- **v2.0/** — archived (initial project-agnostic architecture)
-- **v1.0/** — backup of original skills (Jira/Angular/GitLab specific, 8 monolithic skills)
+- **v3/** — active version
+- **v1/** — archived (original Jira/Angular/GitLab-specific skills)
 
-See [v2.2/SKILLS_OVERVIEW.md](v2.2/SKILLS_OVERVIEW.md) for full architecture and catalog.
+See [v3/SKILLS_OVERVIEW.md](v3/SKILLS_OVERVIEW.md) for full architecture and catalog.
 
 ## Quick Reference
 
@@ -17,6 +15,7 @@ See [v2.2/SKILLS_OVERVIEW.md](v2.2/SKILLS_OVERVIEW.md) for full architecture and
 |---------|--------|----------|
 | ARGO-XXX, "сделай задачу" | jira-worker | worker → planner → review → coder → review → deploy |
 | "deploy", "задеплой" | deploy | gitlab adapter direct |
+| `/ship`, "закоммить и задеплой" | ship | commit → push → deploy [+prod] [+mr] [+slack] |
 | "sync branches" | community-sync | gitlab adapter + parallel cherry-pick |
 | "scan UI" | scan-ui-inventory | standalone scan |
 

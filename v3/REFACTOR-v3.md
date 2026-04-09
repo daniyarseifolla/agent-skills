@@ -1,6 +1,6 @@
-# v2.2 Refactor Plan v3
+# v3 Refactor Plan
 
-Consolidated refactor backlog for `v2.2/`.
+Consolidated refactor backlog for `v3/`.
 
 Source inputs:
 - legacy backlog from former `REFACTOR.md`

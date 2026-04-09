@@ -2,108 +2,74 @@
 
 Reusable development pipeline skills for Claude Code. Automates the full cycle: task analysis, planning, implementation, review, and deployment.
 
+## Structure
+
+```
+v3/              — active version
+  adapters/      — swappable integrations (jira, gitlab, angular, figma)
+  commands/      — slash commands
+  core/          — protocols (orchestration, security, metrics, consensus)
+  facades/       — entry points (jira-worker, deploy, sync, figma-audit, scans)
+  pipeline/      — phases (worker, planner, coder, reviewers)
+v1/              — archived (original Jira/Angular/GitLab-specific skills)
+docs/            — specs and plans
+ports/           — cross-agent portability (Codex, Literal)
+research/        — analysis and research notes
+```
+
 ## Quick Start
 
 ```bash
 # Full task pipeline (Jira + Figma + Angular + GitLab)
 /worker ARGO-12345
 
-# Figma audit: compare implementation vs design, fix mismatches
+# Figma audit: compare implementation vs design
 /figma https://figma.com/design/XXX/YYY?node-id=123:456 http://localhost:4200
 
 # Deploy
 /deploy test
 
+# Commit + push + deploy
+/ship
+
 # Sync commit to community branches
 /sync
 ```
 
-## What It Does
+## How It Works
 
 `/worker ARGO-12345` runs a multi-phase pipeline:
 
 ```
-Phase 0   — Fetch task from Jira, classify complexity (S/M/L/XL)
-Phase 0.5 — Create branch, optional worktree, disable CI
-Phase 0.7 — Deep analysis: explore ALL Figma screens, test Swagger endpoints, build functional map
-Phase 0.8 — Impact analysis: scan consumers, siblings, shared code → impact-report.md
-Phase 1   — Plan implementation (opus model)
-Phase 2   — Review plan with 3 consensus agents (AC, architecture, design coverage)
-Phase 3   — Implement code with Figma self-verify and commit gate
-Phase 4+5 — Code review + UI review in parallel (3 consensus agents each)
-Phase 6   — Create MR, deploy, collect metrics
+Phase 0     Fetch task from Jira, classify complexity (S/M/L/XL)
+Phase 0.5   Create branch, optional worktree, disable CI
+Phase 0.7   Deep analysis: Figma screens, Swagger endpoints, functional map
+Phase 0.8   Impact analysis: consumers, siblings, shared code
+Phase 1     Plan implementation (opus model)
+Phase 2     Review plan with consensus agents
+Phase 3     Implement code with Figma self-verify
+Phase 4+5   Code review + UI review in parallel
+Phase 6     Create MR, deploy, collect metrics
 ```
 
-For simple tasks (S complexity), heavy phases are skipped automatically.
-
-## Architecture
-
-```
-facades/         — entry points (jira-worker, deploy, sync, figma-audit, scans)
-  pipeline/      — phases (worker, planner, coder, reviewers)
-    core/        — protocols (orchestration, security, metrics, consensus)
-      adapters/  — swappable (jira, gitlab, angular, figma)
-```
-
-24 skills | 16 commands
-
-## Skills
-
-### Core (invisible, auto-loaded)
-| Skill | Purpose |
-|-------|---------|
-| orchestration | Phases, handoffs, checkpoints, recovery, routing |
-| security | OWASP checks (universal). Framework-specific in adapters |
-| consensus-review | Multi-agent review pattern: 3 agents, different angles |
-| metrics | Pipeline metrics collection |
-
-### Pipeline
-| Skill | Model | Purpose |
-|-------|-------|---------|
-| worker | — | Orchestrates all phases |
-| impact-analyzer | sonnet | Impact analysis: consumers, siblings, shared code |
-| planner | opus | Research codebase, create plan |
-| plan-reviewer | opus | Validate plan (3x consensus for M+) |
-| coder | sonnet | Implement with Figma self-verify |
-| figma-coding-rules | — | CSS extraction, verification, UI rules |
-| code-reviewer | sonnet | Review diff (3x consensus for M+) |
-| ui-reviewer | sonnet | Browser testing + visual comparison (3x consensus for M+) |
-| code-researcher | haiku | Cheap read-only search for L/XL |
-
-### Adapters
-| Skill | Type | Stack |
-|-------|------|-------|
-| jira | task-source | Atlassian Jira |
-| gitlab | ci-cd | GitLab CI/CD |
-| angular | tech-stack | Angular/Nx |
-| figma | design | Figma MCP |
-
-### Facades
-| Skill | Trigger |
-|-------|---------|
-| jira-worker | `/worker`, ARGO-XXX |
-| figma-audit | `/figma`, "проверь верстку" |
-| deploy | `/deploy` |
-| community-sync | `/sync` |
-| scan-ui-inventory | `/scan-ui` |
-| scan-practices | `/scan-practices` |
-| scan-qa-playbook | `/scan-qa` |
+Simple tasks (S complexity) skip heavy phases automatically.
 
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
 | `/worker ARGO-XXX` | Full pipeline |
-| `/figma URL [app-url]` | Figma audit + fix/build |
-| `/plan ARGO-XXX` | Plan only (no code) |
+| `/plan ARGO-XXX` | Plan only |
 | `/cr` | Code review current branch |
-| `/ui-review [app-url]` | UI review |
-| `/verify-figma [url]` | CSS property comparison |
+| `/ui-review [url]` | UI review |
+| `/figma URL [app-url]` | Figma audit + fix |
+| `/verify-figma [url]` | CSS comparison |
 | `/deploy test\|prod` | Deploy |
+| `/ship` | Commit + push + deploy |
 | `/sync [hash]` | Sync community branches |
 | `/attach [ARGO-XXX]` | Attach to existing task |
 | `/continue ARGO-XXX` | Resume from checkpoint |
-| `/progress [ARGO-XXX]` | Show pipeline state |
+| `/progress` | Show pipeline state |
 | `/cleanup ARGO-XXX` | Remove artifacts |
 | `/scan-ui` | Scan UI components |
 | `/scan-qa` | Generate QA playbook |
@@ -111,22 +77,7 @@ facades/         — entry points (jira-worker, deploy, sync, figma-audit, scans
 
 ## Installation
 
-See [v2.2/README.md](v2.2/README.md) for install instructions. Source of truth: this repo → `~/.claude/skills/`.
-
-## Project Configuration
-
-```yaml
-# .claude/project.yaml
-version: "2.2"
-task-source: jira
-ci-cd: gitlab
-tech-stack: angular
-design: figma
-api:
-  swagger_url: "https://api.dev.project.com/swagger/v1/swagger.json"
-```
-
-Fallback: autodetect from `package.json`, `.gitlab-ci.yml`, task URL, `proxy.conf.json`.
+See [v3/README.md](v3/README.md) for install instructions. Source: this repo → `~/.claude/skills/`.
 
 ## Requirements
 
@@ -135,11 +86,3 @@ Fallback: autodetect from `package.json`, `.gitlab-ci.yml`, task URL, `proxy.con
 - Atlassian MCP (for Jira tasks)
 - Playwright or Chrome DevTools MCP (for UI review)
 - `glab` CLI (for GitLab operations)
-
-## Documentation
-
-- `AGENT.md` — context transfer between sessions
-- `v2.2/REPORT.md` — full system report
-- `v2.2/SKILLS_OVERVIEW.md` — architecture and catalog
-- `v2.2/CONSENSUS-REVIEW-v2.2.md` — 9-agent review results
-- `docs/superpowers/specs/` — design specs

@@ -1,6 +1,6 @@
-# Agent Skills v2.2 — Overview
+# Agent Skills v3 — Overview
 
-> **Source of truth:** This repository is canonical. `~/.claude/skills/` is the install target, not the source. All edits in `v2.2/`, then sync to global.
+> **Source of truth:** This repository is canonical. `~/.claude/skills/` is the install target, not the source. All edits in `v3/`, then sync to global.
 
 ## Architecture
 
@@ -69,9 +69,10 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 | facades/scan-practices | 149 | `/scan-practices`, "скан практик" |
 | facades/scan-ui-inventory | 132 | `/scan-ui`, "скан UI", "обнови инвентарь" |
 | facades/jira-worker | 45 | `/worker`, ARGO-XXX, "сделай задачу", "возьми тикет" |
+| facades/ship | 150 | `/ship`, "закоммить и задеплой", "ship it" |
 | facades/deploy | 34 | `/deploy`, "задеплой", "deploy to test/prod" |
 
-### Commands (16 slash commands)
+### Commands (17 slash commands)
 
 | Command | Lines | Purpose |
 |---------|-------|---------|
@@ -82,6 +83,7 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 | /code-review | 15 | Alias for /cr |
 | /ui-review | 13 | UI review |
 | /verify-figma | 53 | Figma CSS verification |
+| /ship | 14 | Commit + push + deploy [+prod] [+mr] [+slack] |
 | /deploy | 14 | Deploy to environment |
 | /sync | 11 | Sync community branches |
 | /attach | 162 | Attach to existing task |
