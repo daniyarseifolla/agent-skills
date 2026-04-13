@@ -63,9 +63,12 @@ template_fields:
 
 rules:
   - NEVER include branch name
+  - NEVER include MR/merge request link
+  - NEVER include pipeline link or pipeline status
   - NEVER include verification steps (those go to Jira comment)
   - Summary MUST be in Russian
   - Keep message compact — no extra blank lines
+  - Message contains ONLY: mention, task_key, environment, summary, task_url, env_url — NOTHING ELSE
 
 steps:
   - resolve_env: "Read $SLACK_QA_CHANNEL_ID, $SLACK_QA_MENTION, $JIRA_BASE_URL from env"
