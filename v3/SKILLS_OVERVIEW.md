@@ -57,7 +57,7 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 | adapters/gitlab | 304 | ci-cd | create_mr, pipeline, deploy, cherry_pick, CI disable/restore |
 | adapters/angular | 361 | tech-stack | commands, quality_checks, security_checks, api_discovery, patterns, module_lookup |
 | adapters/figma | 224 | design | get_design, get_screenshot, compare_visual, extract_tokens |
-| adapters/slack | 43 | notification | notify_deploy |
+| adapters/slack | 131 | notification | notify_deploy (env-based config, template with summary) |
 
 ### Facades (user-facing entry points)
 
@@ -173,9 +173,8 @@ ci-cd: gitlab
 tech-stack: angular
 design: figma
 notification: slack          # optional — QA deploy notifications
-slack:
-  channel: "#qa"             # default: #qa
-  mention: "@qa-team"        # default: @qa-team
+# Slack config lives in env vars (~/.zshrc), NOT in repo:
+#   JIRA_BASE_URL, SLACK_QA_CHANNEL_ID, SLACK_QA_MENTION
 api:
   swagger_url: "https://api.dev.project.com/swagger/v1/swagger.json"
   base_url: "https://api.dev.project.com"

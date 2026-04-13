@@ -24,6 +24,14 @@
     "should_trigger": true
   },
   {
+    "query": "отметь Сергея в qa канале после деплоя",
+    "should_trigger": true
+  },
+  {
+    "query": "напиши в qa канал, отметь @Sergey",
+    "should_trigger": true
+  },
+  {
     "query": "задеплой community/alex на тест",
     "should_trigger": false
   },
