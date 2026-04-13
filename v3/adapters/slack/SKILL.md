@@ -77,30 +77,30 @@ steps:
       message: "{filled_template}"
 
 examples:
-  - input: "notify_deploy('ARGO-10850', 'test')"
-    env: "JIRA_BASE_URL=https://team.atlassian.net, SLACK_QA_CHANNEL_ID=C08DDSMHZMJ"
+  - input: "notify_deploy('PROJ-850', 'test')"
+    env: "JIRA_BASE_URL=$JIRA_BASE_URL, SLACK_QA_CHANNEL_ID=$SLACK_QA_CHANNEL_ID"
     message: |
-      <!subteam^S08G7CUMM0E>
-      *ARGO-10850* задеплоен на test
+      {$SLACK_QA_MENTION}
+      *PROJ-850* задеплоен на test
       Исправлен захардкоженный год в футере мобильной страницы.
-      Задача: https://team.atlassian.net/browse/ARGO-10850
-      Тест: https://app.example.dev
+      Задача: $JIRA_BASE_URL/browse/PROJ-850
+      Тест: {env_url from deploy config}
 
-  - input: "notify_deploy('ARGO-10824', 'test', mention: 'Sergey')"
+  - input: "notify_deploy('PROJ-824', 'test', mention: 'Sergey')"
     message: |
-      <@U0SERGEY_ID>
-      *ARGO-10824* задеплоен на test
+      <@RESOLVED_USER_ID>
+      *PROJ-824* задеплоен на test
       Исправлен лейбл на странице Links — было "All Links", стало "Links".
-      Задача: https://team.atlassian.net/browse/ARGO-10824
-      Тест: https://app.example.dev
+      Задача: $JIRA_BASE_URL/browse/PROJ-824
+      Тест: {env_url from deploy config}
 
-  - input: "notify_deploy('ARGO-11000', 'prod')"
+  - input: "notify_deploy('PROJ-1000', 'prod')"
     message: |
-      <!subteam^S08G7CUMM0E>
-      *ARGO-11000* задеплоен на prod
+      {$SLACK_QA_MENTION}
+      *PROJ-1000* задеплоен на prod
       Добавлена валидация email при регистрации.
-      Задача: https://team.atlassian.net/browse/ARGO-11000
-      Прод: https://app.example.com
+      Задача: $JIRA_BASE_URL/browse/PROJ-1000
+      Прод: {env_url from deploy config}
 ```
 
 ---
