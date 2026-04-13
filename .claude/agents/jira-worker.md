@@ -37,7 +37,7 @@ fi
 | App path | `apps/passport/src/app` | `apps/web/src/app` |
 | GitLab path | `argo-media%2F...%2Fot4-passport-frontend` | `argo-media%2F...%2Fcommunity` |
 
-Call `mcp__plugin_atlassian_atlassian__getJiraIssue` with `cloudId: "argomedia.atlassian.net"`.
+Call `mcp__plugin_atlassian_atlassian__getJiraIssue`. Resolve cloudId via `getAccessibleAtlassianResources` or from `$JIRA_BASE_URL`.
 
 Extract: summary, description, acceptance criteria, subtasks, status, assignee. Look for Figma URLs. Build AC checklist.
 

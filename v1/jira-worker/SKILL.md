@@ -75,7 +75,7 @@ Extract Jira issue key:
 ## Step 1 — Detect Project & Fetch Task
 
 1. **Detect project** using detection script
-2. Call `mcp__plugin_atlassian_atlassian__getJiraIssue` with `cloudId: "argomedia.atlassian.net"`
+2. Call `mcp__plugin_atlassian_atlassian__getJiraIssue`. Resolve cloudId via `getAccessibleAtlassianResources` or from `$JIRA_BASE_URL`
 3. Extract: summary, description, acceptance criteria, subtasks, status, assignee
 4. Look for Figma URLs in description (`figma.com/design/...`)
 5. Build checklist from AC. If no explicit AC — derive from "Ожидаемый результат" / "Фактический результат" pattern
