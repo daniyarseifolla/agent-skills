@@ -107,7 +107,10 @@ steps:
   - wait_build: "ci-cd adapter wait_for_stage(pipeline, 'build', timeout=15min)"
   - deploy: "ci-cd adapter deploy(target_branch, 'test')"
   - wait_deploy: "Poll deploy job until success (timeout: 10min)"
-  - notify: "If --slack → notification_adapter.notify_deploy('latest changes', 'test')"
+  - notify: |
+      If --slack → notification_adapter.notify_deploy(task_key_or_summary, 'test')
+      task_key: from branch name (feat/ARGO-XXX) or commit message, if available
+      If no task_key: use commit summary as description
 report: "Deploy test: SUCCESS | {pipeline_url}"
 ```
 
@@ -119,7 +122,9 @@ confirmation: REQUIRED — "Deploy to production? (y/n)"
 steps:
   - deploy: "ci-cd adapter deploy(target_branch, 'prod')"
   - wait_deploy: "Poll deploy job until success (timeout: 15min)"
-  - notify: "If --slack → notification_adapter.notify_deploy('latest changes', 'prod')"
+  - notify: |
+      If --slack → notification_adapter.notify_deploy(task_key_or_summary, 'prod')
+      Same task_key resolution as test step
 report: "Deploy prod: SUCCESS | {pipeline_url}"
 ```
 
