@@ -108,9 +108,9 @@ steps:
   - deploy: "ci-cd adapter deploy(target_branch, 'test')"
   - wait_deploy: "Poll deploy job until success (timeout: 10min)"
   - notify: |
-      If --slack → notification_adapter.notify_deploy(task_key_or_summary, 'test')
-      task_key: from branch name (feat/ARGO-XXX) or commit message, if available
-      If no task_key: use commit summary as description
+      If --slack → notification_adapter.notify_deploy(task_key, 'test')
+      task_key: from branch name (feat/ARGO-XXX) or commit message
+      STRICT: follow adapter-slack template EXACTLY — no MR links, no pipeline links, no branch names
 report: "Deploy test: SUCCESS | {pipeline_url}"
 ```
 
@@ -123,8 +123,8 @@ steps:
   - deploy: "ci-cd adapter deploy(target_branch, 'prod')"
   - wait_deploy: "Poll deploy job until success (timeout: 15min)"
   - notify: |
-      If --slack → notification_adapter.notify_deploy(task_key_or_summary, 'prod')
-      Same task_key resolution as test step
+      If --slack → notification_adapter.notify_deploy(task_key, 'prod')
+      STRICT: follow adapter-slack template EXACTLY — no MR links, no pipeline links, no branch names
 report: "Deploy prod: SUCCESS | {pipeline_url}"
 ```
 
