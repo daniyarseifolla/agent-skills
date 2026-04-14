@@ -13,7 +13,7 @@ Implements the `notification` adapter contract. Loaded when `project.yaml` has `
 ## 1. notify_deploy(task_key, environment, options?)
 
 ```yaml
-trigger: "Called by worker Phase 6 after successful deploy"
+trigger: "Called by worker Phase 6 or ship Step 5/6 after successful deploy"
 
 env_vars:
   JIRA_BASE_URL: "Jira instance URL (e.g. https://team.atlassian.net)"
@@ -34,8 +34,11 @@ resolve:
       2. Last commit message summary (translated to Russian if needed)
       3. Jira task summary
   env_url: |
-    From project's deploy config or CI/CD adapter.
-    NOT hardcoded — resolved per project at deploy time.
+    MUST be resolved from the current project's config. Check in order:
+      1. CLAUDE.md — look for test/prod URLs
+      2. .gitlab-ci.yml — look for environment URLs in deploy jobs
+      3. project.yaml — look for environment config
+    NEVER hardcode. NEVER guess. If not found — ask user.
 
 missing_env: |
   IF any required env var is missing:
@@ -47,33 +50,43 @@ missing_env: |
 
 template: |
   {mention}
-  *{task_key}* задеплоен на {environment}
+  <{task_url}|{task_key}> задеплоен на {environment}
   {summary}
-  Задача: {task_url}
-  {env_label}: {env_url}
+  <{env_url}|{env_label}>
 
 template_fields:
   mention: "Resolved @qa-team or @specific-person"
-  task_key: "ARGO-12345 (bold with *)"
+  task_key: "PROJ-12345 — rendered as Slack hyperlink <url|text>"
+  task_url: "$JIRA_BASE_URL/browse/{task_key} — link target for task_key"
   environment: "test / prod"
   summary: "Краткое описание на русском, 1-2 предложения"
-  task_url: "$JIRA_BASE_URL/browse/{task_key}"
-  env_label: "'Тест' for test, 'Прод' for prod"
-  env_url: "URL среды из deploy config"
+  env_label: "'Тест' for test, 'Прод' for prod — rendered as Slack hyperlink"
+  env_url: "URL среды из CLAUDE.md / .gitlab-ci.yml — link target for env_label"
+
+slack_formatting:
+  hyperlink: "<https://example.com|Display Text> — clickable link in Slack"
+  bold: "*text* — bold text"
+  note: "Do NOT use markdown []() links — Slack uses <url|text> syntax"
 
 rules:
+  - Task key MUST be a Slack hyperlink: <{task_url}|{task_key}>
+  - Env label MUST be a Slack hyperlink: <{env_url}|{env_label}>
+  - env_url MUST come from project config (CLAUDE.md / .gitlab-ci.yml) — NEVER hardcode
   - NEVER include branch name
   - NEVER include MR/merge request link
   - NEVER include pipeline link or pipeline status
   - NEVER include verification steps (those go to Jira comment)
+  - NEVER include raw URLs in message text — all URLs must be hyperlinks
+  - NEVER put "Задача:" as separate line — task_key hyperlink replaces it
   - Summary MUST be in Russian
   - Keep message compact — no extra blank lines
-  - Message contains ONLY: mention, task_key, environment, summary, task_url, env_url — NOTHING ELSE
+  - Message contains EXACTLY 4 lines: mention, task hyperlink + env, summary, env hyperlink
 
 steps:
   - resolve_env: "Read $SLACK_QA_CHANNEL_ID, $SLACK_QA_MENTION, $JIRA_BASE_URL from env"
   - resolve_mention: "Use default or resolve specific person via slack_search_users"
-  - build_message: "Fill template with resolved values"
+  - resolve_env_url: "Read CLAUDE.md or .gitlab-ci.yml for test/prod URL"
+  - build_message: "Fill template using Slack <url|text> hyperlink syntax"
   - send_message:
       tool: slack_send_message
       channel_id: "{resolved_channel_id}"
@@ -81,29 +94,25 @@ steps:
 
 examples:
   - input: "notify_deploy('PROJ-850', 'test')"
-    env: "JIRA_BASE_URL=$JIRA_BASE_URL, SLACK_QA_CHANNEL_ID=$SLACK_QA_CHANNEL_ID"
     message: |
       {$SLACK_QA_MENTION}
-      *PROJ-850* задеплоен на test
+      <$JIRA_BASE_URL/browse/PROJ-850|PROJ-850> задеплоен на test
       Исправлен захардкоженный год в футере мобильной страницы.
-      Задача: $JIRA_BASE_URL/browse/PROJ-850
-      Тест: {env_url from deploy config}
+      <https://app.example.dev|Тест>
 
   - input: "notify_deploy('PROJ-824', 'test', mention: 'Sergey')"
     message: |
       <@RESOLVED_USER_ID>
-      *PROJ-824* задеплоен на test
+      <$JIRA_BASE_URL/browse/PROJ-824|PROJ-824> задеплоен на test
       Исправлен лейбл на странице Links — было "All Links", стало "Links".
-      Задача: $JIRA_BASE_URL/browse/PROJ-824
-      Тест: {env_url from deploy config}
+      <https://app.example.dev|Тест>
 
   - input: "notify_deploy('PROJ-1000', 'prod')"
     message: |
       {$SLACK_QA_MENTION}
-      *PROJ-1000* задеплоен на prod
+      <$JIRA_BASE_URL/browse/PROJ-1000|PROJ-1000> задеплоен на prod
       Добавлена валидация email при регистрации.
-      Задача: $JIRA_BASE_URL/browse/PROJ-1000
-      Прод: {env_url from deploy config}
+      <https://app.example.com|Прод>
 ```
 
 ---
