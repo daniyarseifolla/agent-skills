@@ -119,6 +119,7 @@ steps:
         <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на test
         {summary — импакт для пользователя, НЕ тех. термины}
         <{env_url from CLAUDE.md: host + base_href}|Тест>
+      env_url source: CLAUDE.md OR .gitlab-ci.yml
       NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
 report: "Deploy test: SUCCESS | {pipeline_url}"
 ```
@@ -138,6 +139,7 @@ steps:
         <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на prod
         {summary — импакт для пользователя, НЕ тех. термины}
         <{env_url from CLAUDE.md: host + base_href}|Прод>
+      env_url source: CLAUDE.md OR .gitlab-ci.yml
       NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
 report: "Deploy prod: SUCCESS | {pipeline_url}"
 ```

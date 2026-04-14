@@ -423,7 +423,7 @@ phases:
                 {mention}
                 <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на {environment}
                 {summary — импакт для пользователя, НЕ тех. термины}
-                <{env_url from CLAUDE.md: host + base_href}|Тест/Прод>
+                <{env_url from CLAUDE.md/.gitlab-ci.yml: host + base_href}|Тест/Прод>
               NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
               skip_if: no notification adapter
             13_report: |
