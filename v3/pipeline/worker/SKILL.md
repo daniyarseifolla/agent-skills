@@ -417,7 +417,14 @@ phases:
               task_source_adapter.transition(task_key, 'Ready for Test')
               skip_if: no task_source adapter
             12_notify: |
-              notification_adapter.notify_deploy(task_key, environment)
+              MUST load adapter-slack skill and follow its template EXACTLY.
+              Call: notification_adapter.notify_deploy(task_key, environment)
+              Template (4 lines, no extras):
+                {mention}
+                <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на {environment}
+                {summary — импакт для пользователя, НЕ тех. термины}
+                <{env_url from CLAUDE.md}|Тест/Прод>
+              NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
               skip_if: no notification adapter
             13_report: |
               Display:
