@@ -40,7 +40,9 @@ resolve:
     Пиши так, чтобы QA-инженер понял что проверять.
   env_url: |
     MUST be resolved from the current project's config. Check in order:
-      1. CLAUDE.md — look for test/prod URLs
+      1. CLAUDE.md — look for host URLs AND base href. Combine: host + base_href.
+         Example: host "https://app.ot4.dev" + base href "/creator/" = "https://app.ot4.dev/creator/"
+         CRITICAL: Do NOT use host alone. Always check for base href and append it.
       2. .gitlab-ci.yml — look for environment URLs in deploy jobs
       3. project.yaml — look for environment config
     NEVER hardcode. NEVER guess. If not found — ask user.

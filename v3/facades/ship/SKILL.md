@@ -118,7 +118,7 @@ steps:
         {mention}
         <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на test
         {summary — импакт для пользователя, НЕ тех. термины}
-        <{env_url from CLAUDE.md}|Тест>
+        <{env_url from CLAUDE.md: host + base_href}|Тест>
       NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
 report: "Deploy test: SUCCESS | {pipeline_url}"
 ```
@@ -137,7 +137,7 @@ steps:
         {mention}
         <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на prod
         {summary — импакт для пользователя, НЕ тех. термины}
-        <{env_url from CLAUDE.md}|Прод>
+        <{env_url from CLAUDE.md: host + base_href}|Прод>
       NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
 report: "Deploy prod: SUCCESS | {pipeline_url}"
 ```
