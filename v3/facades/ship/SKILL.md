@@ -107,6 +107,10 @@ steps:
   - wait_build: "ci-cd adapter wait_for_stage(pipeline, 'build', timeout=15min)"
   - deploy: "ci-cd adapter deploy(target_branch, 'test')"
   - wait_deploy: "Poll deploy job until success (timeout: 10min)"
+  - transition: |
+      If task_key resolved:
+        task_source_adapter.transition(task_key, 'Ready for Test')
+        skip_if: no task_source adapter
   - notify: |
       If --slack → notification_adapter.notify_deploy(task_key, 'test')
       task_key: from branch name (feat/ARGO-XXX) or commit message
@@ -141,6 +145,7 @@ format: |
   | MR | {status or skipped} | {mr_url} |
   | Deploy test | {status} | {pipeline_url} |
   | Deploy prod | {status or skipped} | {pipeline_url} |
+  | Jira | {status or skipped} | {task_key} → Ready for Test |
   | Slack | {status or skipped} | notified #{channel} |
 ```
 
