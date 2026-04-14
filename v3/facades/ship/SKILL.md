@@ -112,9 +112,14 @@ steps:
         task_source_adapter.transition(task_key, 'Ready for Test')
         skip_if: no task_source adapter
   - notify: |
-      If --slack → notification_adapter.notify_deploy(task_key, 'test')
+      If --slack → MUST load adapter-slack skill and follow its template EXACTLY.
       task_key: from branch name (feat/ARGO-XXX) or commit message
-      STRICT: follow adapter-slack template EXACTLY — no MR links, no pipeline links, no branch names
+      Template (4 lines, no extras):
+        {mention}
+        <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на test
+        {summary — импакт для пользователя, НЕ тех. термины}
+        <{env_url from CLAUDE.md}|Тест>
+      NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
 report: "Deploy test: SUCCESS | {pipeline_url}"
 ```
 
@@ -127,8 +132,13 @@ steps:
   - deploy: "ci-cd adapter deploy(target_branch, 'prod')"
   - wait_deploy: "Poll deploy job until success (timeout: 15min)"
   - notify: |
-      If --slack → notification_adapter.notify_deploy(task_key, 'prod')
-      STRICT: follow adapter-slack template EXACTLY — no MR links, no pipeline links, no branch names
+      If --slack → MUST load adapter-slack skill and follow its template EXACTLY.
+      Template (4 lines, no extras):
+        {mention}
+        <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на prod
+        {summary — импакт для пользователя, НЕ тех. термины}
+        <{env_url from CLAUDE.md}|Прод>
+      NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
 report: "Deploy prod: SUCCESS | {pipeline_url}"
 ```
 
