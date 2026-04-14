@@ -29,10 +29,15 @@ resolve:
       $SLACK_QA_MENTION — REQUIRED, fail if not set
   task_url: "$JIRA_BASE_URL/browse/{task_key}"
   summary: |
-    Short description of what was done. Sources (in priority order):
+    Описание видимого изменения / импакта для пользователя. НЕ технические детали.
+    Плохо: "Добавлена валидация whitespace-only строк для поля Title (En)"
+    Хорошо: "Поле Title (En) теперь не принимает строку из одних пробелов"
+    Sources (in priority order):
       1. User provided description
-      2. Last commit message summary (translated to Russian if needed)
-      3. Jira task summary
+      2. Jira task summary (title/description — что видит пользователь)
+      3. Last commit message — переформулировать на понятный язык
+    NEVER use: код терминов, названий функций, классов, технических деталей реализации.
+    Пиши так, чтобы QA-инженер понял что проверять.
   env_url: |
     MUST be resolved from the current project's config. Check in order:
       1. CLAUDE.md — look for test/prod URLs
@@ -59,7 +64,7 @@ template_fields:
   task_key: "PROJ-12345 — rendered as Slack hyperlink <url|text>"
   task_url: "$JIRA_BASE_URL/browse/{task_key} — link target for task_key"
   environment: "test / prod"
-  summary: "Краткое описание на русском, 1-2 предложения"
+  summary: "Импакт для пользователя на русском, без тех. терминов, 1-2 предложения"
   env_label: "'Тест' for test, 'Прод' for prod — rendered as Slack hyperlink"
   env_url: "URL среды из CLAUDE.md / .gitlab-ci.yml — link target for env_label"
 
@@ -97,7 +102,7 @@ examples:
     message: |
       {$SLACK_QA_MENTION}
       <$JIRA_BASE_URL/browse/PROJ-850|PROJ-850> задеплоен на test
-      Исправлен захардкоженный год в футере мобильной страницы.
+      В футере мобильной страницы отображался 2020 год вместо текущего. Исправлено.
       <https://app.example.dev|Тест>
 
   - input: "notify_deploy('PROJ-824', 'test', mention: 'Sergey')"
@@ -111,7 +116,7 @@ examples:
     message: |
       {$SLACK_QA_MENTION}
       <$JIRA_BASE_URL/browse/PROJ-1000|PROJ-1000> задеплоен на prod
-      Добавлена валидация email при регистрации.
+      Некорректный email теперь не проходит при регистрации.
       <https://app.example.com|Прод>
 ```
 
