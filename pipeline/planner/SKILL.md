@@ -1,12 +1,12 @@
 ---
 name: pipeline-planner
-description: "Planning phase: researches codebase, designs solution, creates implementation plan with AC mapping. Uses opus model for deep analysis. Called by pipeline/worker Phase 1."
+description: "Planning phase: researches codebase, designs solution, creates implementation plan with AC mapping. Uses opus model for deep analysis. Called by pipeline/worker Phase 5: plan."
 model: opus
 ---
 
 # Pipeline Planner
 
-Phase 1. Researches codebase, produces implementation plan. AC-driven, adapter-aware.
+Phase 5: plan. Researches codebase, runs architect (M+), produces implementation plan. AC-driven, adapter-aware.
 
 ---
 
@@ -26,9 +26,14 @@ input:
   route: "MINIMAL|STANDARD|FULL"
   tech_stack_adapter: "loaded adapter for patterns/commands"
   design_adapter: "loaded adapter for Figma (optional, null if none)"
+  architect_roles_adapter: "loaded architect-roles adapter (null if no role adapter)"
   ui_inventory_path: ".claude/ui-inventory.md (if exists)"
-  task_analysis_path: "docs/plans/{task-key}/task-analysis.md (from Phase 0.7, null for S complexity)"
-  impact_report_path: "docs/plans/{task-key}/impact-report.md (from Phase 0.8)"
+  task_analysis_path: "docs/plans/{task-key}/task-analysis.md (from Phase 3: research, null for S complexity)"
+  impact_report_path: "docs/plans/{task-key}/impact-report.md (from Phase 4: impact)"
+  flags:
+    auto_approve: bool    # --arch-auto, passed from worker
+    architect_model: opus|sonnet  # --model, passed from worker
+    mode: "full|architect-only"   # architect-only for standalone /arch
 ```
 
 ---
@@ -46,7 +51,7 @@ task_analysis:
     gaps: "Missing/broken endpoints — documented as risks/blockers in plan"
     api_strategy: "real|mock — affects service implementation approach"
   skip_step_2: "If task-analysis.md has '## Figma Screens' section → skip step_2_design_context entirely"
-  reason: "Phase 0.7 already explored all Figma frames. Re-scanning wastes tokens and API calls."
+  reason: "Phase 3: research already explored all Figma frames. Re-scanning wastes tokens and API calls."
 ```
 
 ---
@@ -89,7 +94,7 @@ steps:
     purpose: "Avoid reinventing existing components"
 
   step_1b_impact:
-    action: "Read impact-report.md from Phase 0.8"
+    action: "Read impact-report.md from Phase 4: impact"
     mandatory: true
     input: "impact_report_path"
     use_for:
@@ -205,7 +210,7 @@ steps:
       after: "All 3 agents complete"
       check_verdicts: "Any FAILED → WARN, continue with partial data"
       merge: "Read .tmp/research-*.md → combine into unified research context"
-      cleanup: "Keep .tmp/ until plan written (cleanup at step_7)"
+      cleanup: "Keep .tmp/ until plan written (cleanup at step_8)"
       output: "Merged research feeds directly into brainstorming + plan creation"
 
   step_4_brainstorming:
@@ -218,7 +223,34 @@ steps:
       - "What is the minimal approach to satisfy all AC?"
       - "What are the risks and edge cases? (from dependency-mapper)"
 
-  step_5_codebase_research_fallback:
+  step_5_architect:
+    activation: "complexity >= M AND mode != architect-only"
+    skip_if: "complexity == S OR no architect_roles_adapter"
+    action: "Load Skill: pipeline-architect"
+    input:
+      task: "pass-through"
+      brainstorming_output: "from step_4"
+      research_output: "from step_3 agents"
+      generated_context: "from architect_roles_adapter.generated_context"
+      role_adapter: "architect_roles_adapter"
+      tech_stack_adapter: "pass-through"
+      flags:
+        auto_approve: "from input flags"
+        model: "from input flags.architect_model"
+    output: "docs/plans/{task-key}/architecture.md"
+    on_architecture_md_exists: |
+      Plan creation (step_7) reads architecture.md as primary design input.
+      Planner does NOT reconsider architectural decisions — it concretizes them.
+      If planner spots a problem → writes to known_risks, does not change approach.
+
+  step_5b_architect_only:
+    activation: "mode == architect-only (standalone /arch)"
+    action: "Load Skill: pipeline-architect in standalone mode"
+    input: "same as step_5_architect"
+    output: "Display 3 approaches + comparison (no arbiter)"
+    after: "STOP — do not proceed to plan creation"
+
+  step_6_codebase_research_fallback:
     note: "Only for S complexity (consensus skipped). M+ use step_3 agents."
     skip_if: "complexity >= M (already done via consensus agents)"
     action: "Research existing code for patterns, dependencies, imports"
@@ -226,9 +258,17 @@ steps:
     scope: "focused on known modules"
     output: "relevant files, patterns, import graph"
 
-  step_6_plan_creation:
+  step_7_plan_creation:
     action: "Invoke Skill: superpowers:writing-plans"
     output_path: "docs/plans/{task-key}/plan.md"
+    architecture_input:
+      when: "architecture.md exists (M+ with architect)"
+      action: "Read architecture.md — use chosen approach as basis for plan"
+      planner_role: "Translate approach into implementation parts, order, commits"
+      planner_does_not: "Reconsider architectural decisions"
+      on_problem: "Write to known_risks. Plan-reviewer catches it."
+    when_no_architecture:
+      action: "Use brainstorming output directly (S complexity)"
     required_sections:
       - context: "Task summary, AC list, links"
       - scope: "Files to create, files to modify"
@@ -240,7 +280,7 @@ steps:
       - impact_items: "Must-fix and must-verify items from impact-report.md"
       - config_changes: "Environment, routing, module config (if any)"
 
-  step_7_checklist:
+  step_8_checklist:
     action: "Generate checklist from plan parts"
     output_path: "docs/plans/{task-key}/checklist.md"
     format:
@@ -266,7 +306,7 @@ steps:
         - [ ] {single task description}
         - [ ] Build + lint passes
 
-  step_8_handoff:
+  step_9_handoff:
     action: "Form handoff per core-orchestration planner_to_reviewer contract"
     payload:
       artifact_path: "docs/plans/{task-key}/plan.md"
