@@ -1,0 +1,34 @@
+stack: angular
+
+generated_context:
+  - "docs/plans/{task-key}/task-analysis.md"
+  - "docs/plans/{task-key}/impact-report.md"
+  - ".claude/ui-inventory.md"
+  - ".claude/project-practices.md"
+
+roles:
+  lens_1:
+    name: "Component Architect"
+    focus: |
+      UI decomposition: standalone components, projection, host directives,
+      reuse of existing components, lazy loading
+    codebase_research: "tech_stack_adapter.module_lookup"
+
+  lens_2:
+    name: "State & Data Architect"
+    focus: |
+      Signals, computed, linkedSignal, httpResource,
+      services vs component state, caching, optimistic updates
+    codebase_research: "tech_stack_adapter.patterns + tech_stack_adapter.api_discovery"
+
+  lens_3:
+    name: "Integration Architect"
+    focus: |
+      Forms, error handling, loading states, guards,
+      interceptors, a11y, responsive
+    codebase_research: "tech_stack_adapter.patterns"
+
+stack_constraints:
+  - "Standalone components only (no NgModules)"
+  - "Signals over BehaviorSubject for new code"
+  - "OnPush change detection"
