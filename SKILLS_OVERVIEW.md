@@ -12,15 +12,17 @@ User → Command → Facade → Worker → [Phase 1 → 2 → 3 → 4 → 5 → 
 facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 ├── jira-worker  ──┐        ├── worker (orchestrator)         ├── orchestration
 ├── figma-audit  ──┤        ├── planner        (opus)         ├── security
-├── deploy       ──┤        ├── plan-reviewer  (opus)         ├── consensus-review
-├── community-sync ┤        ├── coder          (sonnet)       └── metrics
-├── scan-ui-inv  ──┤        ├── figma-coding-rules
-├── scan-qa-pb   ──┤        ├── code-reviewer  (sonnet)
-└── scan-practices ┘        ├── ui-reviewer    (sonnet)       adapters/ (swappable)
-                            └── code-researcher (haiku)       ├── jira    (task-source)
-                                                              ├── gitlab  (ci-cd)
+├── deploy       ──┤        ├── architect      (opus)         ├── consensus-review
+├── community-sync ┤        ├── plan-reviewer  (opus)         └── metrics
+├── architect    ──┤        ├── coder          (sonnet)
+├── arch-review  ──┤        ├── figma-coding-rules
+├── scan-ui-inv  ──┤        ├── code-reviewer  (sonnet)
+├── scan-qa-pb   ──┤        ├── ui-reviewer    (sonnet)       adapters/ (swappable)
+├── scan-practices ┤        └── code-researcher (haiku)       ├── jira    (task-source)
+└── ship         ──┘                                          ├── gitlab  (ci-cd)
                                                               ├── angular (tech-stack)
                                                               ├── figma   (design)
+                                                              ├── architect-roles (architect-roles)
                                                               └── slack   (notification)
 ```
 
@@ -30,66 +32,72 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 
 | Skill | Lines | Purpose |
 |-------|-------|---------|
-| core/orchestration | 415 | Phases (0-6 + 0.5, 0.7, 0.8), handoffs, checkpoints, recovery, loops, routing, consensus activation |
+| core/orchestration | 444 | Phases (1-9), handoffs, checkpoints, recovery, loops, routing, consensus activation |
 | core/security | 151 | Universal OWASP checks. Framework-specific checks in tech-stack adapters (Section 7) |
-| core/consensus-review | 211 | Multi-agent review pattern: 3 agents × different angles → aggregate |
-| core/metrics | 212 | Pipeline metrics schema, phase ID normalization, collection, storage |
+| core/consensus-review | 211 | Multi-agent review pattern: 3 agents x different angles → aggregate |
+| core/metrics | 235 | Pipeline metrics schema, phase ID normalization, collection, storage |
 
 ### Pipeline (project-agnostic phases)
 
 | Skill | Lines | Model | Mode | Consensus (M+) | Purpose |
 |-------|-------|-------|------|-----------------|---------|
-| pipeline/worker | 469 | — | inline | — | Orchestrator: phases, checkpoints, dispatch, Phase 0.7 |
-| pipeline/impact-analyzer | ~200 | sonnet | inline | — | Impact analysis: consumers, siblings, shared code |
-| pipeline/planner | 283 | opus | inline | — | Research codebase, create plan (reads task-analysis.md) |
-| pipeline/plan-reviewer | 217 | opus | subagent | 3× opus: AC + Architecture + Design | Validate plan |
-| pipeline/coder | 281 | sonnet | inline | — | Evaluate gate + implement + commit gate |
-| pipeline/figma-coding-rules | 321 | — | loaded by coder | — | Figma extract, self-verify, UI quality, icons |
-| pipeline/code-reviewer | 279 | sonnet | subagent/worktree | 3× sonnet: Bugs + Compliance + Security | Review diff |
-| pipeline/ui-reviewer | 460 | sonnet | subagent | 3× sonnet: Functional + Visual + States/A11y | Browser + Figma testing |
+| pipeline/worker | 654 | — | inline | — | Orchestrator: phases, checkpoints, dispatch |
+| pipeline/impact-analyzer | 200 | sonnet | inline | — | Impact analysis: consumers, siblings, shared code |
+| pipeline/planner | 427 | opus | inline | — | Research codebase, create plan (reads task-analysis.md) |
+| pipeline/architect | 222 | opus | subagent | 3 agents + arbiter (M+) | Architectural analysis: 3 lenses → arbiter combines |
+| pipeline/plan-reviewer | 235 | opus | subagent | 3x opus: AC + Architecture + Design | Validate plan |
+| pipeline/coder | 303 | sonnet | inline | — | Evaluate gate + implement + commit gate |
+| pipeline/figma-coding-rules | 380 | — | loaded by coder | — | Figma extract, self-verify, UI quality, icons |
+| pipeline/code-reviewer | 319 | sonnet | subagent/worktree | 3x sonnet: Bugs + Compliance + Security | Review diff |
+| pipeline/ui-reviewer | 498 | sonnet | subagent | 3x sonnet: Functional + Visual + States/A11y | Browser + Figma testing |
 | pipeline/code-researcher | 101 | haiku | Agent tool | — | Cheap read-only search (L/XL only) |
 
 ### Adapters (swappable per project)
 
 | Skill | Lines | Type | Key Methods |
 |-------|-------|------|-------------|
-| adapters/jira | 197 | task-source | fetch_task, fetch_attachments, parse_ac, transition, format_mr |
+| adapters/jira | 202 | task-source | fetch_task, fetch_attachments, parse_ac, transition, format_mr |
 | adapters/gitlab | 304 | ci-cd | create_mr, pipeline, deploy, cherry_pick, CI disable/restore |
 | adapters/angular | 361 | tech-stack | commands, quality_checks, security_checks, api_discovery, patterns, module_lookup |
 | adapters/figma | 224 | design | get_design, get_screenshot, compare_visual, extract_tokens |
-| adapters/slack | 131 | notification | notify_deploy (env-based config, template with summary) |
+| adapters/architect-roles | 39 | architect-roles | roles (3 lenses), stack_constraints, generated_context |
+| adapters/slack | 150 | notification | notify_deploy (env-based config, template with summary) |
 
 ### Facades (user-facing entry points)
 
 | Skill | Lines | Triggers |
 |-------|-------|----------|
-| facades/figma-audit | 638 | `/figma`, "проверь верстку", "figma audit", "сравни с макетом" |
+| facades/figma-audit | 667 | `/figma`, "проверь верстку", "figma audit", "сравни с макетом" |
 | facades/scan-qa-playbook | 211 | `/scan-qa`, "скан QA", "сгенерируй playbook" |
 | facades/community-sync | 186 | `/sync`, "обновить ветки", "sync branches" |
 | facades/scan-practices | 149 | `/scan-practices`, "скан практик" |
 | facades/scan-ui-inventory | 132 | `/scan-ui`, "скан UI", "обнови инвентарь" |
 | facades/jira-worker | 45 | `/worker`, ARGO-XXX, "сделай задачу", "возьми тикет" |
-| facades/ship | 150 | `/ship`, "закоммить и задеплой", "ship it" |
+| facades/ship | 227 | `/ship`, "закоммить и задеплой", "ship it" |
 | facades/deploy | 34 | `/deploy`, "задеплой", "deploy to test/prod" |
+| facades/architect | 61 | `/arch`, "архитектурный совет", "предложи архитектуру" |
+| facades/arch-review | 126 | `/arch-review`, "оцени архитектуру", "review architecture" |
 
-### Commands (17 slash commands)
+### Commands (19 slash commands)
 
 | Command | Lines | Purpose |
 |---------|-------|---------|
 | /worker | 13 | Start full pipeline |
 | /figma | 25 | Figma audit & implementation |
 | /plan | 14 | Run planner only |
+| /arch | 13 | Standalone architectural analysis |
+| /arch-review | 13 | Retrospective architectural review |
 | /cr | 15 | Code review |
-| /code-review | 15 | Alias for /cr |
+| /code-review | 5 | Alias for /cr |
 | /ui-review | 13 | UI review |
 | /verify-figma | 53 | Figma CSS verification |
-| /ship | 14 | Commit + push + deploy [+prod] [+mr] [+slack] |
+| /ship | 15 | Commit + push + deploy [+prod] [+mr] [+slack] |
 | /deploy | 14 | Deploy to environment |
 | /sync | 11 | Sync community branches |
-| /attach | 162 | Attach to existing task |
-| /continue | 28 | Resume from checkpoint |
-| /progress | 24 | Show pipeline state |
-| /cleanup | 18 | Clean up artifacts |
+| /attach | 169 | Attach to existing task |
+| /continue | 95 | Resume from checkpoint |
+| /progress | 28 | Show pipeline state |
+| /cleanup | 26 | Clean up artifacts |
 | /scan-ui | 9 | Scan UI inventory |
 | /scan-qa | 9 | Generate QA playbook |
 | /scan-practices | 9 | Scan project practices |
@@ -98,18 +106,17 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 
 | Phase | Name | Model | Consensus (M+) | Skip |
 |-------|------|-------|-----------------|------|
-| 0 | Task analysis | sonnet | — | — |
-| 0.5 | Workspace setup | sonnet | — | Resume |
-| 0.7 | Deep analysis | opus+sonnet | Yes (Figma + API + Functional) | S complexity |
-| 0.8 | Impact analysis | sonnet | — | — |
-| 1 | Planning | opus | — | — |
-| 2 | Plan review | opus | Yes (AC + Architecture + Design) | S complexity |
-| 3 | Implementation | sonnet | — | — |
-| 4 | Code review | sonnet | Yes (Bugs + Compliance + Security) | — |
-| 5 | UI review | sonnet | Yes (Functional + Visual + States) | No design adapter |
-| 6 | Completion | sonnet | — | — |
+| 1 | analyze | sonnet | — | — |
+| 2 | setup | sonnet | — | Resume |
+| 3 | research | opus+sonnet | Yes (Figma + API + Functional) | S complexity |
+| 4 | impact | sonnet | — | — |
+| 5 | plan | opus | — (architect: 3 agents + arbiter for M+) | — |
+| 6 | plan-review | opus | Yes (AC + Architecture + Design) | S complexity |
+| 7 | implement | sonnet | — | — |
+| 8 | review | sonnet | Yes (Code: Bugs+Compliance+Security / UI: Functional+Visual+States) | — |
+| 9 | ship | sonnet | — | — |
 
-### Phase 0.7: Deep Task Analysis
+### Phase 3: Research (Deep Task Analysis)
 
 ```yaml
 agents:
@@ -121,7 +128,7 @@ output: "docs/plans/{task-key}/task-analysis.md"
 confirmation_gate: "Show user → y/edit/abort. Offer to create Jira tasks for missing endpoints."
 ```
 
-### Phase 0.8: Impact Analysis
+### Phase 4: Impact Analysis
 
 ```yaml
 analysis_types:
@@ -136,38 +143,53 @@ dispatch:
 output: "docs/plans/{task-key}/impact-report.md"
 ```
 
+### Phase 5: Plan (Architect Step)
+
+```yaml
+architect:
+  skip: "S complexity"
+  agents:
+    agent_1: "Lens from architect-roles adapter (e.g., Component)"
+    agent_2: "Lens from architect-roles adapter (e.g., State & Data)"
+    agent_3: "Lens from architect-roles adapter (e.g., Integration)"
+  arbiter: "Combines best elements from 3 proposals"
+  output: "docs/plans/{task-key}/architecture.md"
+  temporary: ".tmp/arch-agent-*.md"
+```
+
 ## Model Routing
 
 | Model | Skills | Purpose | Cost |
 |-------|--------|---------|------|
-| **opus** | planner, plan-reviewer (consensus), Phase 0.7 agents 1+3 | Deep research, analytical review | $$$ |
-| **sonnet** | coder, code-reviewer (consensus), ui-reviewer (consensus), Phase 0.7 agent 2 | Implementation, pattern matching | $$ |
+| **opus** | planner, architect, plan-reviewer (consensus), Phase 3 agents 1+3 | Deep research, architectural analysis, analytical review | $$$ |
+| **sonnet** | coder, code-reviewer (consensus), ui-reviewer (consensus), Phase 3 agent 2 | Implementation, pattern matching | $$ |
 | **haiku** | code-researcher | Read-only search, data collection | $ |
 
 ## Complexity Routing
 
-| Level | AC | Deep Analysis | Plan Review | UI Review | Code Review | Consensus |
-|-------|----|--------------|-------------|-----------|-------------|-----------|
-| S | 1-2 | skip | skip | if design adapter | 1 agent | No |
-| M | 3-4 | 3 agents | 3× opus | if design: 3× sonnet | 3× sonnet | Yes |
-| L | 5-6 | 3 agents | 3× opus | 3× sonnet | 3× sonnet | Yes |
-| XL | 7+ | 3 agents | 3× opus | 3× sonnet | 3× sonnet | Yes |
+| Level | AC | Research | Architect | Plan Review | UI Review | Code Review | Consensus |
+|-------|----|----------|-----------|-------------|-----------|-------------|-----------|
+| S | 1-2 | skip | skip | skip | if design adapter | 1 agent | No |
+| M | 3-4 | 3 agents | 3 agents + arbiter | 3x opus | if design: 3x sonnet | 3x sonnet | Yes |
+| L | 5-6 | 3 agents | 3 agents + arbiter | 3x opus | 3x sonnet | 3x sonnet | Yes |
+| XL | 7+ | 3 agents | 3 agents + arbiter | 3x opus | 3x sonnet | 3x sonnet | Yes |
 
 ## Adapter Contracts
 
 ```yaml
-task-source:     fetch_task, fetch_attachments, parse_ac, get_complexity_hints, transition, format_mr_description
-ci-cd:           create_mr, get_pipeline, wait_for_stage, deploy, retry_job, create_tag
-tech-stack:      commands (lint/test/build), quality_checks, security_checks, api_discovery, patterns, module_lookup
-design:          parse_urls, get_design, get_screenshot, compare_visual, extract_tokens
-notification:    notify_deploy
+task-source:       fetch_task, fetch_attachments, parse_ac, get_complexity_hints, transition, format_mr_description
+ci-cd:             create_mr, get_pipeline, wait_for_stage, deploy, retry_job, create_tag
+tech-stack:        commands (lint/test/build), quality_checks, security_checks, api_discovery, patterns, module_lookup
+design:            parse_urls, get_design, get_screenshot, compare_visual, extract_tokens
+architect-roles:   roles (3 lenses), stack_constraints, generated_context
+notification:      notify_deploy
 ```
 
 ## Project Configuration
 
 ```yaml
 # .claude/project.yaml
-version: "2.2"
+version: "4.0"
 task-source: jira
 ci-cd: gitlab
 tech-stack: angular
@@ -198,34 +220,36 @@ Fallback: autodetect from package.json, .gitlab-ci.yml, task URL, proxy.conf.jso
 | MCP Server | Used by | On unavailable |
 |-----------|---------|----------------|
 | Figma | adapter-figma, figma-audit, coder | HALT (for design tasks) |
-| Atlassian | adapter-jira, Phase 0.7 | HALT (for Jira tasks) |
+| Atlassian | adapter-jira, Phase 3 | HALT (for Jira tasks) |
 | Playwright / Chrome DevTools | ui-reviewer, figma-audit | Fallback: non-browser mode |
 
 ## Superpowers Integration
 
 | Superpowers Skill | Used by |
 |-------------------|---------|
-| brainstorming | pipeline/planner |
+| brainstorming | pipeline/planner, facades/architect |
 | writing-plans | pipeline/planner |
 | executing-plans | pipeline/coder (S, <3 parts) |
 | subagent-driven-development | pipeline/coder (M+, 3+ parts) |
-| dispatching-parallel-agents | pipeline/ui-reviewer, pipeline/impact-analyzer, facades/community-sync, Phase 0.7, figma-audit |
+| dispatching-parallel-agents | pipeline/ui-reviewer, pipeline/impact-analyzer, facades/community-sync, Phase 3, figma-audit |
 | figma:implement-design | pipeline/coder via figma-coding-rules |
 
 ## Output Files
 
 ```
 docs/plans/{task-key}/
-├── task-analysis.md       ← Phase 0.7 (Figma screens + API + flows)
-├── impact-report.md       ← Phase 0.8 (consumers, siblings, shared code)
-├── screenshots/           ← Phase 0.7 (Figma screenshots)
-├── plan.md                ← Phase 1
-├── evaluate.md            ← Phase 3
-├── figma-verify.md        ← Phase 3 (per-property Figma verification)
-├── code-review.md         ← Phase 4
-├── ui-review.md           ← Phase 5
+├── task-analysis.md       ← Phase 3 (Figma screens + API + flows)
+├── impact-report.md       ← Phase 4 (consumers, siblings, shared code)
+├── screenshots/           ← Phase 3 (Figma screenshots)
+├── plan.md                ← Phase 5
+├── architecture.md        ← Phase 5 (architect step)
+├── .tmp/arch-agent-*.md   ← Phase 5 (temporary)
+├── evaluate.md            ← Phase 7
+├── figma-verify.md        ← Phase 7 (per-property Figma verification)
+├── code-review.md         ← Phase 8
+├── ui-review.md           ← Phase 8
 ├── checkpoint.yaml        ← Recovery
-└── metrics.yaml           ← Phase 6
+└── metrics.yaml           ← Phase 9
 
 docs/figma-audit/{audit-id}/
 ├── figma-node-map.md      ← /figma Phase 1
