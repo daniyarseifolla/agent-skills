@@ -35,12 +35,12 @@ startup:
   step_4_recovery:
     action: "Check docs/plans/{task-key}/checkpoint.yaml"
     found:
-      primary: "Use checkpoint.resume_phase if present and non-null"
-      fallback: "next_phase_map[max(completed_phases)] — for old checkpoints without resume_phase"
+      primary: "Use checkpoint.resume if present and non-null"
+      fallback: "next_phase_map[max(completed)] — for old checkpoints without resume"
       terminal_check: "If checkpoint.terminal_status is set → show status, ask user before resuming"
-      invalidated_check: "If checkpoint.invalidated_phases is non-empty → those phases must re-run"
-    not_found: "Start from Phase 0"
-    note: "Prefer resume_phase (explicit) over max()+lookup (inferred). Both use next_phase_map as source of truth."
+      invalidated_check: "If checkpoint.invalidated is non-empty → those phases must re-run"
+    not_found: "Start from Phase 1: analyze"
+    note: "Prefer resume (explicit) over max()+lookup (inferred). Both use next_phase_map as source of truth."
 
   step_5_task:
     action: "Fetch task via task-source adapter"
@@ -57,13 +57,17 @@ startup:
     S: MINIMAL
     M: STANDARD
     L_XL: FULL
+
+  flags:
+    --arch-auto: "Pass auto_approve=true to planner's architect step"
+    --model: "Override model for architect agents (opus|sonnet)"
 ```
 
 ---
 
 ## Confirmation Summary
 
-CRITICAL: "This summary MUST be shown before ANY work begins. It is Phase 0 output."
+CRITICAL: "This summary MUST be shown before ANY work begins. It is Phase 1: analyze output."
 
 display_before_start:
   format: |
@@ -88,7 +92,7 @@ display_before_start:
     step_2_branch: "If worktree=n → create branch feat/{task_key} in current repo"
     step_2b_push: "Push branch to remote immediately: git push -u origin feat/{task_key}. Establishes remote tracking."
     step_3_ci: "If user chose CI=y AND not in worktree → ci-cd adapter disable_ci(task_key)"
-    step_4_checkpoint: "Save checkpoint: completed_phases: [0], ci_disabled: bool, worktree_path: string|null, app_url: string|null"
+    step_4_checkpoint: "Save checkpoint: completed: [1], ci_disabled: bool, worktree_path: string|null, app_url: string|null"
     step_4b_credentials: |
       If credentials found in task description:
         Write to docs/plans/{task-key}/.credentials (YAML)
@@ -184,15 +188,15 @@ Phases from core-orchestration. Worker dispatches each, validates handoffs, writ
 
 ```yaml
 phases:
-  - phase: 0
-    name: task-analysis
+  - phase: 1
+    name: analyze
     model: sonnet
     mode: inline
     action: "Classify complexity, select route (steps 5-7 above)"
     checkpoint: true
 
-  - phase: 0.5
-    name: workspace-setup
+  - phase: 2
+    name: setup
     model: inherited
     mode: inline
     actions:
@@ -202,15 +206,15 @@ phases:
     checkpoint: true
     skip_if: "resuming from checkpoint (workspace already set up)"
     on_resume_skip: |
-      Even when Phase 0.5 is skipped during resume, verify workspace state:
+      Even when Phase 2: setup is skipped during resume, verify workspace state:
         - worktree_path: if set, verify directory exists (cd into it)
         - credentials_path: if set, verify file exists. If missing → WARN, ask user to provide credentials
         - app_url: if set, verify server responds (curl). If unreachable → WARN, ask user to start dev server
-        - ci_disabled: restore flag (no verification needed, used at Phase 6)
+        - ci_disabled: restore flag (no verification needed, used at Phase 9: ship)
       This prevents silent failures when workspace state drifted between sessions.
 
-  - phase: 0.7
-    name: deep-analysis
+  - phase: 3
+    name: research
     model: opus
     mode: inline
     skip_if: "complexity == S"
@@ -257,8 +261,8 @@ phases:
     checkpoint: true
     output: "task_analysis_path: docs/plans/{task-key}/task-analysis.md"
 
-  - phase: 0.8
-    name: impact-analysis
+  - phase: 4
+    name: impact
     skill: "pipeline-impact-analyzer"
     model: sonnet
     mode: inline
@@ -267,16 +271,17 @@ phases:
     output: "impact_report_path: docs/plans/{task-key}/impact-report.md"
     checkpoint: true
 
-  - phase: 1
-    name: planning
+  - phase: 5
+    name: plan
     skill: "pipeline-planner"
     model: opus
     mode: inline
+    note: "Includes architect step for M+ (see planner SKILL.md)"
     input: "task, complexity, route, tech_stack_adapter, design_adapter, task_analysis_path, impact_report_path"
     output: "plan file path"
     checkpoint: true
 
-  - phase: 2
+  - phase: 6
     name: plan-review
     skill: "pipeline-plan-reviewer"
     model: opus
@@ -291,11 +296,11 @@ phases:
       with: "pipeline-planner"
       counter: "checkpoint.iteration.plan_review"
       on_NEEDS_CHANGES:
-        invalidated_phases: [2]
-        resume_phase: 1
+        invalidated: [6]
+        resume: 5
 
-  - phase: 3
-    name: implementation
+  - phase: 7
+    name: implement
     skill: "pipeline-coder"
     model: sonnet
     mode: inline
@@ -305,17 +310,17 @@ phases:
     evaluate_gate:
       on_RETURN:
         checkpoint_write:
-          invalidated_phases: [3]
-          resume_phase: 2
+          invalidated: [7]
+          resume: 6
           iteration.evaluate_return: "+= 1"
           handoff_payload: "coder_evaluate_return contract (plan_issues, blocked_parts)"
-        action: "Loop back to Phase 2 (plan-review) — not Phase 1 (planner)"
+        action: "Loop back to Phase 6: plan-review — not Phase 5: plan (planner)"
         note: "See core-orchestration invalidation_rules.evaluate_return"
 
-  - phase: "4+5"
-    name: "review (parallel)"
+  - phase: 8
+    name: review
     description: "Code review + UI review run in parallel (they are independent)"
-    consensus: "complexity >= M → MANDATORY: dispatch 3 subagents per reviewer. Do NOT do inline review. Do NOT run Phase 4+5 sequentially — PARALLEL."
+    consensus: "complexity >= M → MANDATORY: dispatch 3 subagents per reviewer. Do NOT do inline review. Do NOT run Phase 8 reviews sequentially — PARALLEL."
     parallel:
       - skill: "pipeline-code-reviewer"
         model: sonnet
@@ -334,39 +339,39 @@ phases:
     after_parallel:
       - "If code-review returned CHANGES_REQUESTED:"
       - "  → discard ui-review results (tested pre-fix code)"
-      - "  → loop back to coder (Phase 3)"
-      - "  → after fix, re-run Phase 4+5 parallel again"
+      - "  → loop back to coder (Phase 7: implement)"
+      - "  → after fix, re-run Phase 8: review parallel again"
       - "If code-review returned APPROVED/APPROVED_WITH_COMMENTS:"
       - "  → accept both results"
-      - "  → proceed to Phase 6"
+      - "  → proceed to Phase 9: ship"
 
     checkpoint_rules:
       on_CHANGES_REQUESTED: |
-        completed_phases: [...existing] (do NOT add 4 or 5 — both results are stale)
-        invalidated_phases: [4, 5]
-        resume_phase: 3
+        completed: [...existing] (do NOT add 8 — results are stale)
+        invalidated: [8]
+        resume: 7
         iteration.code_review += 1
-        Note: Phase 4 verdict itself is an artifact of the rejected code — not a valid completed phase.
+        Note: Phase 8 verdict itself is an artifact of the rejected code — not a valid completed phase.
       on_APPROVED: |
-        completed_phases: [...existing, 4, 5]
-        invalidated_phases: [] (clear)
-        resume_phase: 6
-        Proceed to Phase 6. Do NOT add 6 yet — Phase 6 is completion, it writes its own checkpoint.
+        completed: [...existing, 8]
+        invalidated: [] (clear)
+        resume: 9
+        Proceed to Phase 9: ship. Do NOT add 9 yet — Phase 9 is ship, it writes its own checkpoint.
       on_APPROVED_plus_ISSUES_FOUND: |
-        completed_phases: [...existing, 4, 5]
-        invalidated_phases: [] (clear)
-        resume_phase: 6
-        Log ISSUES_FOUND findings. Proceed to Phase 6.
+        completed: [...existing, 8]
+        invalidated: [] (clear)
+        resume: 9
+        Log ISSUES_FOUND findings. Proceed to Phase 9: ship.
 
     checkpoint: true
     loop: "max 3 with coder (per iron_laws)"
 
-  - phase: 6
-    name: completion
+  - phase: 9
+    name: ship
     model: sonnet
     mode: inline
     actions:
-      - commit: "If uncommitted changes exist (from review fixes), commit them. If all parts already committed in Phase 3, skip."
+      - commit: "If uncommitted changes exist (from review fixes), commit them. If all parts already committed in Phase 7: implement, skip."
       - restore_ci: "IF checkpoint.ci_disabled == true → ci-cd adapter restore_ci(task_key)"
       - auto_generate:
           mr_title: "{task.key}: {task.title}"
@@ -389,7 +394,7 @@ phases:
             "y": "Full cycle"
             "только MR": "Create MR only"
             "отмена": "Do nothing"
-          on_cancel: "Write checkpoint: terminal_status: stopped_by_user, resume_phase: 6. STOP."
+          on_cancel: "Write checkpoint: terminal_status: stopped_by_user, resume: 9. STOP."
       - completion_flow:
           description: "Executed when user confirms 'y' or 'только MR'"
           steps:
@@ -414,8 +419,12 @@ phases:
             9_deploy: "ci-cd adapter deploy(target_branch, environment)"
             10_wait_deploy: "Poll deploy job until success. Timeout: 10min"
             11_transition: |
+              MANDATORY — Jira transition is a REQUIRED step, not optional.
               task_source_adapter.transition(task_key, 'Ready for Test')
-              skip_if: no task_source adapter
+              QA tracks readiness via Jira status — skipping this breaks their workflow.
+              skip_if: no task_source adapter loaded (this is the ONLY valid skip reason)
+              Do NOT rationalize skipping: "small change", "not critical", "I'll do later" — WRONG.
+              If transition API call fails → WARN (don't halt pipeline), log error, continue to step 12.
             12_notify: |
               MUST load adapter-slack skill and follow its template EXACTLY.
               Call: notification_adapter.notify_deploy(task_key, environment)
@@ -438,9 +447,9 @@ phases:
           merge_conflict: "Show conflicted files. STOP. User resolves manually, then /continue."
           deploy_fail: "Show deploy log. Offer: retry / rollback / abort."
           mr_pipeline_timeout: "Show pipeline URL. Ask: keep waiting / abort."
-      - checkpoint: "completed_phases: [...existing, 6], terminal_status: success, resume_phase: null"
+      - checkpoint: "completed: [...existing, 9], terminal_status: success, resume: null"
       - metrics: "Load core-metrics, collect and store (success collection — reads from checkpoint written above)"
-      - ordering: "checkpoint BEFORE metrics — metrics reads phases_completed and terminal_status from checkpoint"
+      - ordering: "checkpoint BEFORE metrics — metrics reads completed and terminal_status from checkpoint"
 ```
 
 ---
@@ -453,12 +462,12 @@ dispatch:
     - validate: "handoff payload against core-orchestration contract"
     - check_skip: "evaluate skip_if condition"
     - check_invalidation: |
-        If this phase is in checkpoint.invalidated_phases:
-          → Remove from invalidated_phases (it's about to re-run)
-          → Log: "Phase {N} re-running (was invalidated by loop-back)"
-        If ANY phase in invalidated_phases has lower ID than current phase:
-          → HALT: "Cannot proceed to Phase {N} — Phase {invalidated} must re-run first"
-          → Set resume_phase to min(invalidated_phases)
+        If this phase is in checkpoint.invalidated:
+          → Remove from invalidated (it's about to re-run)
+          → Log: "Phase {N}: {name} re-running (was invalidated by loop-back)"
+        If ANY phase in invalidated has lower ID than current phase:
+          → HALT: "Cannot proceed to Phase {N}: {name} — Phase {invalidated} must re-run first"
+          → Set resume to min(invalidated)
           → This prevents skipping to completion with stale review state
     - check_loop: "guard against loop_limits (core-orchestration)"
     - log: "Starting Phase {N}: {name}"
@@ -468,11 +477,11 @@ dispatch:
     - write_checkpoint: "docs/plans/{task-key}/checkpoint.yaml"
     - push_checkpoint: |
         After phases that produce commits or artifacts, push to remote:
-          Phase 0.5: git push -u origin feat/{task_key} (establish tracking)
-          Phase 3 (coder): git push (implementation commits)
-          Phase 4+5 (after fix loop): git push (review fix commits)
-          Phase 6 (completion): git push (final state)
-        Phases 0, 0.7, 1, 2: no push needed (no commits, only plan/analysis artifacts)
+          Phase 2: setup — git push -u origin feat/{task_key} (establish tracking)
+          Phase 7: implement — git push (implementation commits)
+          Phase 8: review (after fix loop) — git push (review fix commits)
+          Phase 9: ship — git push (final state)
+        Phases 1: analyze, 3: research, 4: impact, 5: plan, 6: plan-review — no push needed (no commits, only plan/analysis artifacts)
         Rule: NEVER lose work to a crashed session. If commits exist locally, push them.
     - log: "Completed Phase {N}: {name}"
     - message: |
@@ -484,7 +493,7 @@ dispatch:
     - increment: "checkpoint.iteration.{loop_type}"
     - check_limit: "core-orchestration loop_limits"
     - on_exceeded: |
-        1. Write checkpoint: terminal_status = "loop_exceeded", resume_phase = loop target, handoff = preserve
+        1. Write checkpoint: terminal_status = "loop_exceeded", resume = loop target, handoff = preserve
         2. Write terminal metrics (reads from checkpoint written in step 1)
         3. STOP, show iteration summary, request user intervention
       ordering: "checkpoint → metrics → display → STOP"
@@ -547,7 +556,7 @@ errors:
     action: |
       1. Write checkpoint FIRST:
          - terminal_status: "failed"
-         - resume_phase: failed phase (to retry)
+         - resume: failed phase (to retry)
          - handoff_payload: preserve last known
       2. Write terminal metrics (reads from checkpoint written in step 1)
       3. Show error, ask user
@@ -563,8 +572,8 @@ errors:
     action: |
       1. Write checkpoint FIRST:
          - terminal_status: "loop_exceeded"
-         - resume_phase: current loop target phase (for potential manual re-run)
-         - completed_phases: current state (preserve)
+         - resume: current loop target phase (for potential manual re-run)
+         - completed: current state (preserve)
          - handoff_payload: last known payload (preserve for repair)
       2. Write terminal metrics (reads from checkpoint written in step 1)
       3. STOP, show iteration summary (from core-orchestration)
@@ -577,10 +586,10 @@ errors:
     action: |
       1. Write checkpoint FIRST:
          - terminal_status: "stopped_by_user"
-         - resume_phase: current phase (to retry later)
+         - resume: current phase (to retry later)
          - handoff_payload: preserve last known
       2. Write terminal metrics (reads from checkpoint written in step 1)
-      3. Display: "Pipeline stopped by user at Phase {N}. Resume with /continue {task_key}"
+      3. Display: "Pipeline stopped by user at Phase {N}: {name}. Resume with /continue {task_key}"
     ordering: "checkpoint → metrics → display → STOP"
 
   git_conflicts:
@@ -634,7 +643,7 @@ From core-orchestration. Worker applies mid-pipeline.
 
 ```yaml
 re_routing:
-  check_points: [after_phase_1, after_phase_2]
+  check_points: [after_plan, after_plan-review]
   triggers:
     upgrade: "More AC/modules discovered than estimated"
     downgrade: "Task simpler than estimated"
