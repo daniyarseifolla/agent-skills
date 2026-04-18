@@ -41,15 +41,15 @@ research/        — analysis and research notes
 `/worker ARGO-12345` runs a multi-phase pipeline:
 
 ```
-Phase 0     Fetch task from Jira, classify complexity (S/M/L/XL)
-Phase 0.5   Create branch, optional worktree, disable CI
-Phase 0.7   Deep analysis: Figma screens, Swagger endpoints, functional map
-Phase 0.8   Impact analysis: consumers, siblings, shared code
-Phase 1     Plan implementation (opus model)
-Phase 2     Review plan with consensus agents
-Phase 3     Implement code with Figma self-verify
-Phase 4+5   Code review + UI review in parallel
-Phase 6     Create MR, deploy, collect metrics
+Phase 1: analyze     Fetch task from Jira, classify complexity (S/M/L/XL)
+Phase 2: setup       Create branch, optional worktree, disable CI
+Phase 3: research    Deep analysis: Figma screens, Swagger endpoints, functional map
+Phase 4: impact      Impact analysis: consumers, siblings, shared code
+Phase 5: plan        Plan implementation (opus model)
+Phase 6: plan-review Review plan with consensus agents
+Phase 7: implement   Implement code with Figma self-verify
+Phase 8: review      Code review + UI review in parallel
+Phase 9: ship        Create MR, deploy, collect metrics
 ```
 
 Simple tasks (S complexity) skip heavy phases automatically.

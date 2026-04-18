@@ -1,12 +1,12 @@
 ---
 name: pipeline-code-reviewer
-description: "Code review phase: reviews diff against plan, architecture, security, and quality. Runs as sonnet subagent with worktree isolation. Called by pipeline/worker Phase 4. Also usable standalone."
+description: "Code review phase: reviews diff against plan, architecture, security, and quality. Runs as sonnet subagent with worktree isolation. Called by pipeline/worker Phase 8: review. Also usable standalone."
 model: sonnet
 ---
 
 # Pipeline Code Reviewer
 
-Phase 4. Architecture + security + quality review. Runs in worktree for isolation.
+Phase 8: review. Architecture + security + quality review. Runs in worktree for isolation.
 
 ---
 
@@ -278,6 +278,13 @@ s_complexity_mode:
   review_areas: "All areas from Section 3 (same checklist, same severity rules)"
   consensus: "None — single pass"
   note: "Same rigor, less parallelism. Every review area still applies."
+
+  CRITICAL_S_ENFORCEMENT: |
+    S-complexity does NOT mean reduced verification. It means fewer reviewers.
+    Pre-checks (lint + test) are BLOCKING gates for S — same as M/L/XL.
+    test_coverage check is MAJOR for S — same as M/L/XL.
+    If coder skipped lint/test (verification_gate not passed) → CHANGES_REQUESTED immediately.
+    Do NOT rationalize: "it's a small change, tests aren't critical" — run them.
 ```
 
 ---

@@ -13,9 +13,9 @@
 ## Архитектура
 
 ```
-User → Command → Facade → Worker → [Phase 0 → 0.5 → 0.7 → 0.8 → 1 → 2 → 3 → 4+5 → 6]
-                                      ↓         ↓         ↓        ↓       ↓
-                                    Adapters   Core    Consensus  Subagents  MCP
+User → Command → Facade → Worker → [Phase 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9]
+                                      ↓       ↓       ↓        ↓       ↓
+                                    Adapters  Core  Consensus  Subagents  MCP
 ```
 
 | Layer | Count | Скиллы |
@@ -39,25 +39,24 @@ User → Command → Facade → Worker → [Phase 0 → 0.5 → 0.7 → 0.8 → 
 ## Pipeline `/worker` (M+ задачи, 33 агента)
 
 ```
-Phase 0   → classify (S/M/L/XL)
-Phase 0.5 → workspace (branch, worktree, CI)
-Phase 0.7 → deep analysis (3 agents: Figma + API + Functional) + confirmation gate
-Phase 0.8 → impact analysis (consumers, siblings, shared code → impact-report.md)
-Phase 1   → planner (opus) + consensus research (3 agents: Codebase + Deps + UX Flow)
-Phase 2   → plan review (3x3 opus = 9 agents)
-Phase 3   → coder (sonnet) + subagents per part + commit gate
-Phase 4   → code review (3x3 sonnet = 9 agents)  } parallel
-Phase 5   → UI review (3x3 sonnet = 9 agents)     }
-Phase 6   → auto-completion (MR → merge → deploy → notify → metrics)
+Phase 1: analyze  → classify (S/M/L/XL)
+Phase 2: setup    → workspace (branch, worktree, CI)
+Phase 3: research → deep analysis (3 agents: Figma + API + Functional) + confirmation gate
+Phase 4: impact   → impact analysis (consumers, siblings, shared code → impact-report.md)
+Phase 5: plan     → planner (opus) + consensus research (3 agents: Codebase + Deps + UX Flow)
+Phase 6: plan-review → plan review (3x3 opus = 9 agents)
+Phase 7: implement   → coder (sonnet) + subagents per part + commit gate
+Phase 8: review      → code review (3x3 sonnet = 9 agents) + UI review (3x3 sonnet = 9 agents) in parallel
+Phase 9: ship        → auto-completion (MR → merge → deploy → notify → metrics)
 ```
 
-S задачи: Phases 0.7, 2 skip. Phase 5 skip if no design adapter. Single agent на 4. ~0 consensus overhead.
+S задачи: Phases 3, 6 skip. Phase 8 UI review skip if no design adapter. Single agent on review. ~0 consensus overhead.
 
 ## Ключевые решения (P0 фиксы)
 
 1. **Source of truth** — repo canonical, ~/.claude/skills/ is install target
-2. **Checkpoint** — `completed_phases` array + `next_phase_map` lookup (not `phase_completed + 1`)
-3. **Model routing** — Phase 2 plan-reviewer = opus (canonical table fixed)
+2. **Checkpoint** — `completed` array + `next_phase_map` lookup (not `phase_completed + 1`)
+3. **Model routing** — Phase 6: plan-review = opus (canonical table fixed)
 4. **Scoring** — 1-10 everywhere (ui-reviewer fixed from 0-100)
 5. **Credentials** — `.credentials` file (gitignored), never inline in checkpoint.yaml
 
@@ -67,8 +66,8 @@ S задачи: Phases 0.7, 2 skip. Phase 5 skip if no design adapter. Single ag
 - Source of truth, checkpoint model, model/score drift, credentials isolation
 
 ### Done (P0)
-- Checkpoint: completed_phases array + next_phase_map everywhere (worker, /continue, /progress, metrics, /cleanup)
-- Model drift fixed (orchestration Phase 2 = opus)
+- Checkpoint: completed array + next_phase_map everywhere (worker, /continue, /progress, metrics, /cleanup)
+- Model drift fixed (orchestration Phase 6: plan-review = opus)
 - Score drift fixed (ui-reviewer = 1-10)
 - Credentials isolation (.credentials gitignored)
 - Root SKILLS_OVERVIEW.md cleaned (was v1.0 trash)
@@ -91,8 +90,8 @@ S задачи: Phases 0.7, 2 skip. Phase 5 skip if no design adapter. Single ag
 
 | Model | Skills |
 |-------|--------|
-| opus | planner, plan-reviewer (3x3 consensus), Phase 0.7 agents 1+3, Phase 1 research agents 1+3 |
-| sonnet | coder, code-reviewer (3x3), ui-reviewer (3x3), Phase 0.7 agent 2, Phase 1 agent 2, figma-audit |
+| opus | planner, plan-reviewer (3x3 consensus), Phase 3: research agents 1+3, Phase 5: plan research agents 1+3 |
+| sonnet | coder, code-reviewer (3x3), ui-reviewer (3x3), Phase 3: research agent 2, Phase 5: plan agent 2, figma-audit |
 | haiku | code-researcher |
 
 ## Как продолжить

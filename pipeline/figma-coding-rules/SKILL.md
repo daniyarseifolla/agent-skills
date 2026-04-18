@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Figma Coding Rules
 
-Loaded by pipeline-coder Phase 3 when design adapter is active. Contains all Figma extraction, verification, and UI implementation rules.
+Loaded by pipeline-coder Phase 7: implement when design adapter is active. Contains all Figma extraction, verification, and UI implementation rules.
 
 ---
 

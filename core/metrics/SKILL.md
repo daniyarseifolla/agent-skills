@@ -34,7 +34,7 @@ metrics:
   lines_removed: number
   duration:
     total_minutes: "number — total pipeline duration"
-    per_phase: "object — { deep_analysis: N, planning: N, plan_review: N, implementation: N, code_review: N, ui_review: N }"
+    per_phase: "object — { analyze: N, setup: N, research: N, impact: N, plan: N, plan_review: N, implement: N, review: N, ship: N }"
   outcome: "success | failed | stopped_by_user | loop_exceeded"
   stopped_at_phase: "number | null — which phase stopped (if not completed)"
   stopped_reason: "string | null — why stopped"
@@ -50,7 +50,7 @@ validation:
     task_key: "regex: [A-Z]+-\\d+"
     complexity: "enum: S|M|L|XL"
     route: "enum: MINIMAL|STANDARD|FULL"
-    phases_completed: "integer — count of completed worker phases. Range: 0-9 (FULL route has 9 phases: 0, 0.5, 0.7, 1, 2, 3, 4, 5, 6)"
+    phases_completed: "integer — count of completed worker phases. Range: 0-9 (FULL route has 9 phases: 1 through 9)"
     iterations.plan_review: "integer 0-3"
     iterations.code_review: "integer 0-3"
     iterations.evaluate_return: "integer 0-2"
@@ -70,37 +70,27 @@ validation:
 
 ```yaml
 phase_ids:
-  source: "core/orchestration phase_id_normalization"
+  source: "core/orchestration phases 1-9"
   mapping:
-    0: task-analysis
-    1: workspace-setup
-    2: deep-analysis
-    3: planning
-    4: plan-review
-    5: implementation
-    6: code-review
-    7: ui-review
-    8: completion
-  storage_type: "integer 0-8"
+    1: analyze
+    2: setup
+    3: research
+    4: impact
+    5: plan
+    6: plan-review
+    7: implement
+    8: review
+    9: ship
+  storage_type: "integer 1-9"
 
-  normalization_table:
-    # Worker phase → Metrics phase ID (clean integers, no fractions)
-    "0":     0   # task-analysis → 0
-    "0.5":   1   # workspace-setup → 1
-    "0.7":   2   # deep-analysis → 2
-    "1":     3   # planning → 3
-    "2":     4   # plan-review → 4
-    "3":     5   # implementation → 5
-    "4":     6   # code-review → 6
-    "5":     7   # ui-review → 7
-    "6":     8   # completion → 8
+  note: "Phases 1-9 are sequential integers — no normalization needed"
 ```
 
 ---
 
 ## 2. Collection
 
-Worker collects metrics at two points: Phase 8 (Completion) for success, and on terminal events for non-success outcomes.
+Worker collects metrics at two points: Phase 9: ship for success, and on terminal events for non-success outcomes.
 
 ### 2a. Terminal Collection (non-success)
 
@@ -108,13 +98,13 @@ Worker collects metrics at two points: Phase 8 (Completion) for success, and on 
 terminal_collection:
   trigger: "checkpoint.terminal_status in [failed, stopped_by_user, loop_exceeded]"
   when: "AFTER checkpoint is written with terminal_status — before showing error to user"
-  ordering: "Worker writes checkpoint FIRST (with terminal_status, resume_phase, handoff), THEN calls metrics collection. Metrics reads from the just-written checkpoint."
+  ordering: "Worker writes checkpoint FIRST (with terminal_status, resume, handoff), THEN calls metrics collection. Metrics reads from the just-written checkpoint."
   fields:
     always_available:
       - task_key: "from checkpoint"
       - complexity: "from checkpoint"
       - route: "from checkpoint"
-      - phases_completed: "length(checkpoint.completed_phases) — count, not phase ID"
+      - phases_completed: "length(checkpoint.completed) — count, not phase ID"
       - outcome: "terminal_status value"
       - stopped_at_phase: "current phase when stopped"
       - stopped_reason: "error message, loop limit text, or 'user requested stop'"
@@ -130,7 +120,7 @@ terminal_collection:
   note: "Partial metrics are better than no metrics. Always write what you have."
 ```
 
-### 2b. Success Collection (Phase 8)
+### 2b. Success Collection (Phase 9: ship)
 
 
 ```yaml
@@ -143,7 +133,7 @@ collection_sources:
       - iteration.code_review
       - re_routed
       - re_route_detail
-      - phases_completed: "length(completed_phases)"
+      - phases_completed: "length(completed)"
 
   - source: "docs/plans/{task-key}/evaluate.md"
     fields:

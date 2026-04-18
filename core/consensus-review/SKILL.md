@@ -10,9 +10,9 @@ Dispatch multiple independent agents per review section. Aggregate findings. Cat
 
 ## When to Use
 
-- Code review (Phase 4): 3 agents review same diff from different angles
-- UI review (Phase 5): 3 agents test same page with different focus
-- Plan review (Phase 2): 2-3 agents validate plan from different perspectives
+- Code review (Phase 8: review): 3 agents review same diff from different angles
+- UI review (Phase 8: review, parallel): 3 agents test same page with different focus
+- Plan review (Phase 6: plan-review): 2-3 agents validate plan from different perspectives
 - /attach: 3 agents assess current state independently
 - Any review where confidence matters more than speed
 
@@ -193,9 +193,9 @@ budget:
 ```yaml
 integration:
   pipeline_worker:
-    Phase_3: "condition: complexity >= M. Use code_review_sections for per-part verification"
-    Phase_4: "condition: complexity >= M. Use code_review_sections"
-    Phase_5: "condition: complexity >= M. Use ui_review_sections"
+    Phase_7_implement: "condition: complexity >= M. Use code_review_sections for per-part verification"
+    Phase_8_review: "condition: complexity >= M. Use code_review_sections"
+    Phase_8_review_parallel: "condition: complexity >= M. Use ui_review_sections"
 
   commands:
     /cr: "condition: user adds --thorough flag. Use code_review_sections"

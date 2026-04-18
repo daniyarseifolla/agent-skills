@@ -1,12 +1,12 @@
 ---
 name: pipeline-plan-reviewer
-description: "Plan review phase: validates plan against AC, architecture patterns, and completeness. Runs as opus subagent (consensus 3x3 for M+). Called by pipeline/worker Phase 2."
+description: "Plan review phase: validates plan against AC, architecture patterns, and completeness. Runs as opus subagent (consensus 3x3 for M+). Called by pipeline/worker Phase 6: plan-review."
 model: opus
 ---
 
 # Pipeline Plan Reviewer
 
-Phase 2. Validates plan quality and completeness. Runs as subagent for objectivity. Uses opus for deep analytical review.
+Phase 6: plan-review. Validates plan quality and completeness. Runs as subagent for objectivity. Uses opus for deep analytical review.
 
 ---
 
@@ -174,7 +174,7 @@ Sections run sequentially (Iron Law #5: max 7 parallel). 3 agents per section ru
 consensus_mode:
   activation: "complexity >= M"
   model: opus
-  model_rationale: "Plan review is analytical — catching subtle AC misinterpretation, architectural flaws, scope gaps. Opus outperforms sonnet on reasoning tasks. Cost justified: errors caught here save full Phase 3 rework."
+  model_rationale: "Plan review is analytical — catching subtle AC misinterpretation, architectural flaws, scope gaps. Opus outperforms sonnet on reasoning tasks. Cost justified: errors caught here save full Phase 7: implement rework."
   dispatch: "Use Skill: superpowers:dispatching-parallel-agents per section"
   sections: 3
   agents_per_section: 3

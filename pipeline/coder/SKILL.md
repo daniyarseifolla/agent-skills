@@ -1,12 +1,12 @@
 ---
 name: pipeline-coder
-description: "Implementation phase: evaluates plan critically, then implements code in dependency order. Uses sonnet model. Called by pipeline/worker Phase 3."
+description: "Implementation phase: evaluates plan critically, then implements code in dependency order. Uses sonnet model. Called by pipeline/worker Phase 7: implement."
 model: sonnet
 ---
 
 # Pipeline Coder
 
-Phase 3. Evaluate gate, then implement. Plan-driven, adapter-aware.
+Phase 7: implement. Evaluate gate, then implement. Plan-driven, adapter-aware.
 
 ---
 
@@ -95,13 +95,17 @@ implement:
     step_5: "Run tech_stack_adapter test command"
     step_6: "If verify/lint/test fail → fix → retry"
     step_7: "git add changed files && git commit -m '{task_key}: Part {N} — {part_description}'"
+    verification_gate: |
+      BEFORE git commit (step_7), ALL of these must pass:
+      1. tech_stack_adapter lint command → exit code 0
+      2. tech_stack_adapter test command → exit code 0
+      3. If CSS/SCSS/HTML touched → figma-verify.md has NO MISMATCH rows
+      If ANY check fails → fix → retry (up to max_retries_per_part).
+      Do NOT commit with failing lint, failing tests, or unresolved Figma mismatches.
+      This gate applies to ALL complexities including S.
     commit_gate: |
-      BEFORE git commit, if this part touches CSS/SCSS/HTML:
-      1. Verify docs/plans/{task-key}/figma-verify.md exists for this part
-      2. Verify it contains NO rows with status MISMATCH
-      3. Verify flex-direction is explicitly listed and matches Figma
-      If ANY check fails → run Self-Verify (figma-coding-rules section 2) BEFORE committing.
-      Do NOT commit with unresolved mismatches.
+      DEPRECATED — merged into verification_gate above.
+      Kept for backward compat. verification_gate is the single source of truth.
     commit_rule: "One commit per successfully verified part. Do not batch multiple parts into one commit."
     max_retries_per_part: 3
 
@@ -130,6 +134,15 @@ implement:
       The loop is: research → copy structure → extract CSS → write → verify → fix → next component.
       KEY PRINCIPLE: Figma = source of truth. COPY the design, don't interpret it.
       NEVER move to the next part until ALL elements in current part pass Figma verification.
+
+    CRITICAL_VERIFICATION: |
+      Steps 4 and 5 (lint + test) are MANDATORY for EVERY part, regardless of complexity.
+      S-tier tasks are NOT exempt from lint and test verification.
+      The verification_gate MUST pass before ANY commit.
+      If tech_stack_adapter has no test command → skip step_5 only.
+      If tech_stack_adapter has no lint command → skip step_4 only.
+      NEVER skip both — at minimum one verification must run.
+      Common S-tier skip pattern to AVOID: "this is a simple change, tests aren't needed" — WRONG. Run them.
 
   rules:
     - "Implement ONLY what is in the plan"

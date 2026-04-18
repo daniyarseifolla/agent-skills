@@ -1,12 +1,12 @@
 ---
 name: pipeline-ui-reviewer
-description: "UI review phase: functional testing via browser agent + visual comparison against Figma designs. Runs as sonnet subagent. Called by pipeline/worker Phase 5. Also usable standalone."
+description: "UI review phase: functional testing via browser agent + visual comparison against Figma designs. Runs as sonnet subagent. Called by pipeline/worker Phase 8: review (parallel). Also usable standalone."
 model: sonnet
 ---
 
 # Pipeline UI Reviewer
 
-Phase 5. Functional testing + visual comparison. Dispatches parallel subagents.
+Phase 8: review (parallel). Functional testing + visual comparison. Dispatches parallel subagents.
 
 ---
 

@@ -1,12 +1,12 @@
 ---
 name: pipeline-impact-analyzer
-description: "Impact analysis phase: scans consumers, siblings, and shared code to find what else may break. Produces impact-report.md consumed by planner, code-review, and ui-review. Called by pipeline/worker Phase 0.8."
+description: "Impact analysis phase: scans consumers, siblings, and shared code to find what else may break. Produces impact-report.md consumed by planner, code-review, and ui-review. Called by pipeline/worker Phase 4: impact."
 model: sonnet
 ---
 
 # Pipeline Impact Analyzer
 
-Phase 0.8. Finds what code is affected beyond the direct task scope. Runs for ALL complexities.
+Phase 4: impact. Finds what code is affected beyond the direct task scope. Runs for ALL complexities.
 
 ---
 
@@ -144,7 +144,7 @@ dispatch:
       after: "All 3 agents complete"
       check_verdicts: "Any FAILED → WARN, continue with partial data"
       merge: "Read .tmp/impact-*.md → combine into impact-report.md"
-      cleanup: "Keep .tmp/ until planner reads report (cleanup at Phase 1)"
+      cleanup: "Keep .tmp/ until planner reads report (cleanup at Phase 5: plan)"
 ```
 
 ---
@@ -190,7 +190,7 @@ output:
 
 ```yaml
 handoff:
-  to: "planner (Phase 1)"
+  to: "planner (Phase 5: plan)"
   payload:
     impact_report_path: string
     must_fix_count: number
