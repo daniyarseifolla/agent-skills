@@ -8,7 +8,7 @@ Arguments: $ARGUMENTS
 
 ## What this does
 
-Connects the v2.2 pipeline to a task already in progress (started without /worker or with old skills).
+Connects the pipeline to a task already in progress (started without /worker or with old skills).
 Detects what's done, creates checkpoint, runs missing phases.
 
 ## Steps
