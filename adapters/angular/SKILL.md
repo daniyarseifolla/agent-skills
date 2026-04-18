@@ -318,7 +318,7 @@ cherry_pick_fixes:
 
 ## 9. API Discovery
 
-Implements the `tech-stack.api_discovery` contract. Called by worker Phase 0.7.
+Implements the `tech-stack.api_discovery` contract. Called by worker Phase 3.
 
 ```yaml
 api_discovery:

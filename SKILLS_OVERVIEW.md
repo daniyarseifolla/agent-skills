@@ -1,11 +1,11 @@
-# Agent Skills v3 — Overview
+# Agent Skills v4.0 — Overview
 
-> **Source of truth:** This repository is canonical. `~/.claude/skills/` is the install target, not the source. All edits in `v3/`, then sync to global.
+> **Source of truth:** This repository is canonical. `~/.claude/skills/` is the install target, not the source. All edits here, then sync to global.
 
 ## Architecture
 
 ```
-User → Command → Facade → Worker → [Phase 0 → 0.5 → 0.7 → 0.8 → 1 → 2 → 3 → 4+5 → 6]
+User → Command → Facade → Worker → [Phase 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9]
                                       ↓         ↓         ↓        ↓       ↓
                                     Adapters   Core    Consensus  Subagents  MCP
 
