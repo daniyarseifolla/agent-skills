@@ -15,44 +15,17 @@ Internal protocol definitions for pipeline execution. Not a user-facing skill.
 ```yaml
 # CANONICAL phase table — single source of truth for all skills
 phase_sequence:
-  - { id: 0,   name: task-analysis,    model: sonnet, mode: inline,            action: "classify complexity, select route" }
-  - { id: 0.5, name: workspace-setup,  model: sonnet, mode: inline,            action: "worktree, CI disable, dev server, confirmation" }
-  - { id: 0.7, name: deep-analysis,   model: opus,   mode: inline,            action: "Figma exploration + API discovery + functional map", skip_when: "complexity == S" }
-  - { id: 0.8, name: impact-analysis, model: sonnet, mode: inline,            action: "consumers, siblings, shared code → impact-report.md" }
-  - { id: 1,   name: planner,          model: opus,   mode: inline,            action: "research codebase, produce plan" }
-  - { id: 2,   name: plan-reviewer,    model: opus,   mode: subagent,          action: "validate plan against AC (consensus 3x3 opus for M+)", skip_when: "complexity == S" }
-  - { id: 3,   name: coder,            model: sonnet, mode: inline,            action: "evaluate gate, then implement" }
-  - { id: 4,   name: code-reviewer,    model: sonnet, mode: subagent_worktree, action: "architecture + security review (core-security + tech-stack security_checks)" }
-  - { id: 5,   name: ui-reviewer,      model: sonnet, mode: subagent,          action: "functional + visual review", skip_when: "no design adapter" }
-  - { id: 6,   name: completion,        model: sonnet, mode: inline,            action: "commit, collect metrics, store lessons" }
+  - { id: 1,  name: analyze,     model: sonnet, mode: inline,            action: "classify complexity, select route" }
+  - { id: 2,  name: setup,       model: sonnet, mode: inline,            action: "worktree, CI disable, dev server, confirmation" }
+  - { id: 3,  name: research,    model: opus,   mode: inline,            action: "Figma + API + functional map", skip_when: "complexity == S" }
+  - { id: 4,  name: impact,      model: sonnet, mode: inline,            action: "consumers, siblings, shared code → impact-report.md" }
+  - { id: 5,  name: plan,        model: opus,   mode: inline,            action: "brainstorming + architect (M+) + plan creation" }
+  - { id: 6,  name: plan-review, model: opus,   mode: subagent,          action: "validate plan (consensus 3x3 opus for M+)", skip_when: "complexity == S" }
+  - { id: 7,  name: implement,   model: sonnet, mode: inline,            action: "evaluate gate, then implement" }
+  - { id: 8,  name: review,      model: sonnet, mode: subagent_worktree, action: "code-review + ui-review parallel" }
+  - { id: 9,  name: ship,        model: sonnet, mode: inline,            action: "push, MR, deploy, transition, notify" }
 
-# Phase 4+5 run in PARALLEL when both are active (Iron Law #1)
-
-phase_id_normalization:
-  note: "Worker uses fractional IDs (0, 0.5, 0.7, 0.8, 1-6). Metrics use clean integer 0-9."
-  worker_to_metrics:
-    "0":     0    # task-analysis
-    "0.5":   1    # workspace-setup
-    "0.7":   2    # deep-analysis
-    "0.8":   3    # impact-analysis
-    "1":     4    # planning
-    "2":     5    # plan-review
-    "3":     6    # implementation
-    "4":     7    # code-review
-    "5":     8    # ui-review
-    "6":     9    # completion
-  metrics_mapping:
-    0: task-analysis
-    1: workspace-setup
-    2: deep-analysis
-    3: impact-analysis
-    4: planning
-    5: plan-review
-    6: implementation
-    7: code-review
-    8: ui-review
-    9: completion
-  storage_type: "integer 0-9"
+# Phase 8 runs code-review + ui-review in PARALLEL when both are active (Iron Law #1)
 ```
 
 ---
@@ -67,9 +40,9 @@ complexity_matrix:
   XL: { ac: "7+",  modules: "4+", plan_review: standard, ui_review: true,              code_researcher: true,  seq_thinking: required,    route: FULL }
 
 route_definitions:
-  MINIMAL:  { phases: [0, 0.5, 0.8, 1, 3, 4, 5, 6],          note: "skip deep-analysis, plan-review. Phase 5 conditional on design adapter." }
-  STANDARD: { phases: [0, 0.5, 0.7, 0.8, 1, 2, 3, 4, 5, 6],   note: "all phases, ui-review conditional on design adapter" }
-  FULL:     { phases: [0, 0.5, 0.7, 0.8, 1, 2, 3, 4, 5, 6],   note: "all phases, all tools enabled" }
+  MINIMAL:  { phases: [1, 2, 4, 5, 7, 8, 9],          note: "skip research, plan-review. Phase 8 ui-review conditional." }
+  STANDARD: { phases: [1, 2, 3, 4, 5, 6, 7, 8, 9],    note: "all phases, ui-review conditional on design adapter" }
+  FULL:     { phases: [1, 2, 3, 4, 5, 6, 7, 8, 9],    note: "all phases, all tools enabled" }
 ```
 
 ---
@@ -123,8 +96,8 @@ handoff_contracts:
     task: "task_schema — typed object from task-source adapter"
     required: [task, complexity, route, figma_urls, ui_inventory_path, task_analysis_path, impact_report_path]
     optional: [tech_stack_adapter, design_adapter]
-    task_analysis_path: "string|null — path to task-analysis.md from Phase 0.7. Null for S complexity."
-    impact_report_path: "string — path to impact-report.md from Phase 0.8."
+    task_analysis_path: "string|null — path to task-analysis.md from Phase 3: research. Null for S complexity."
+    impact_report_path: "string — path to impact-report.md from Phase 4: impact."
     note: "Worker passes full task object (see task_schema above) + classification results to planner"
 
   impact_analyzer_to_planner:
@@ -132,7 +105,7 @@ handoff_contracts:
     must_fix_count: number
     must_verify_count: number
     required: [impact_report_path]
-    note: "Phase 0.8 output. Planner reads impact-report.md to include must-fix items as plan Parts."
+    note: "Phase 4: impact output. Planner reads impact-report.md to include must-fix items as plan Parts."
 
   worker_to_ui_reviewer:
     required: [branch, figma_urls, app_url, credentials]
@@ -191,9 +164,9 @@ Path: `docs/plans/{task-key}/checkpoint.yaml`. Overwritten after each phase.
 ```yaml
 checkpoint_schema:
   task_key: string
-  completed_phases: "number[] — e.g. [0, 0.5, 0.7, 1, 2]. Set semantics, append-only."
-  resume_phase: "number|null — explicit next phase to execute. Written on every checkpoint. Primary source for recovery."
-  invalidated_phases: "number[] — phases whose results are no longer valid (e.g. [4, 5] after CHANGES_REQUESTED loop-back). Cleared when those phases re-complete."
+  completed: "string[] — e.g. [analyze, setup, research]. Set semantics, append-only."
+  resume: "string|null — explicit next phase to execute. Written on every checkpoint. Primary source for recovery. e.g. impact"
+  invalidated: "string[] — phases whose results are no longer valid (e.g. [review] after CHANGES_REQUESTED loop-back). Cleared when those phases re-complete."
   terminal_status: "running|success|failed|stopped_by_user|loop_exceeded|null — set on pipeline exit. null while running."
   phase_name: string
   iteration: { plan_review: "N/3", code_review: "N/3", evaluate_return: "N/2" }
@@ -203,25 +176,21 @@ checkpoint_schema:
   timestamp: "ISO-8601"
   ci_disabled: "boolean — whether CI was disabled during development"
   worktree_path: "string|null — path to worktree if used, null if working in main repo"
-  app_url: "string|null — dev server URL for UI review, resolved in Phase 0.5"
+  app_url: "string|null — dev server URL for UI review, resolved in Phase 2: setup"
   credentials_path: "string|null — path to .credentials file (gitignored), NOT inline credentials"
   handoff_payload: object
   issues_history: object[]
 
-  DEPRECATED: "phase_completed (scalar) is replaced by completed_phases (array). max(completed_phases) is fallback only — prefer resume_phase."
-
 next_phase_map:
-  note: "Lookup table for resume — replaces phase_completed + 1 arithmetic"
-  "0":   0.5
-  "0.5": 0.7    # or 0.8 if complexity == S (0.7 skipped)
-  "0.7": 0.8
-  "0.8": 1
-  "1":   2      # or 3 if complexity == S (2 skipped)
-  "2":   3
-  "3":   4
-  "4":   5      # or 6 if no design adapter (5 skipped)
-  "5":   6
-  "6":   null   # done
+  analyze: setup
+  setup: research     # or impact if complexity == S (research skipped)
+  research: impact
+  impact: plan
+  plan: plan-review   # or implement if complexity == S (plan-review skipped)
+  plan-review: implement
+  implement: review
+  review: ship
+  ship: null          # done
 
 checkpoint_rules:
   write_after: [phase_completion, review_iteration, re_route_decision, terminal_event]
@@ -229,32 +198,26 @@ checkpoint_rules:
   location: "docs/plans/{task-key}/checkpoint.yaml"
   overwrite: true
   on_every_write:
-    - "Set resume_phase to the next phase that should execute (from next_phase_map or loop target)"
-    - "Set invalidated_phases if loop-back occurred (see invalidation_rules)"
+    - "Set resume to the next phase that should execute (from next_phase_map or loop target)"
+    - "Set invalidated if loop-back occurred (see invalidation_rules)"
     - "Set terminal_status on pipeline exit (success, failed, stopped_by_user, loop_exceeded)"
-    - "Clear invalidated_phases entries when those phases re-complete successfully"
+    - "Clear invalidated entries when those phases re-complete successfully"
 
 invalidation_rules:
   code_review_loop:
-    trigger: "Phase 4 verdict == CHANGES_REQUESTED"
-    invalidated_phases: [4, 5]
-    resume_phase: 3
-    reason: "Both review results are artifacts of the rejected code. Phase 4 itself is an assessment of code that will change — its findings are stale after rework."
-    clear_when: "Phase 4 and 5 re-complete after coder fix"
+    trigger: "review verdict == CHANGES_REQUESTED"
+    invalidated: [review]
+    resume: implement
 
   plan_review_loop:
-    trigger: "Phase 2 verdict == NEEDS_CHANGES"
-    invalidated_phases: [2]
-    resume_phase: 1
-    reason: "Plan-review result references a plan that will be revised"
-    clear_when: "Phase 2 re-completes after planner revision"
+    trigger: "plan-review verdict == NEEDS_CHANGES"
+    invalidated: [plan-review]
+    resume: plan
 
   evaluate_return:
-    trigger: "Phase 3 evaluate gate verdict == RETURN"
-    invalidated_phases: [3]
-    resume_phase: 2
-    reason: "Coder determined plan is not implementable — return to plan-review"
-    clear_when: "Phase 3 re-completes after plan revision"
+    trigger: "implement evaluate gate verdict == RETURN"
+    invalidated: [implement]
+    resume: plan-review
 ```
 
 ---
@@ -267,25 +230,25 @@ Strategy: checkpoint-first, heuristic fallback.
 recovery_from_checkpoint:
   - read: "docs/plans/{task-key}/checkpoint.yaml"
   - resume_from: |
-      PRIMARY:  checkpoint.resume_phase (if present and non-null)
-      FALLBACK: next_phase_map[max(completed_phases)] (backward compat for old checkpoints)
+      PRIMARY:  checkpoint.resume (if present and non-null)
+      FALLBACK: next_phase_map[last(completed)] (backward compat for old checkpoints)
   - enforce_invalidation: |
-      If invalidated_phases is non-empty:
-        → resume_phase MUST be <= min(invalidated_phases)
-        → If resume_phase > min(invalidated_phases): override resume_phase = min(invalidated_phases)
-        → Worker before_phase guard blocks any phase > min(invalidated_phases) until cleared
+      If invalidated is non-empty:
+        → resume MUST precede or equal the earliest invalidated phase
+        → If resume is after earliest invalidated: override resume = earliest invalidated phase
+        → Worker before_phase guard blocks any phase after earliest invalidated until cleared
         → This is an invariant, not a suggestion
   - check_terminal: "If terminal_status is set (success|failed|stopped_by_user|loop_exceeded) → do NOT auto-resume. Show status, ask user."
   - restore: [handoff_payload, iteration_counters, worktree_path, credentials_path, app_url, ci_disabled]
 
 recovery_heuristic:
   # Artifact presence -> resume point (when no checkpoint exists)
-  # Uses worker phase IDs (fractional). Heuristic creates checkpoint with resume_phase set.
-  - { task_analysis: yes, plan: no, evaluate: "-", code: "-", resume: "Phase 0.8 (worker 0.8) — impact analysis (with task-analysis.md)" }
-  - { plan: no,  evaluate: "-", code: "-", resume: "Phase 0.8 (worker 0.8) — impact analysis then planning" }
-  - { plan: yes, evaluate: no,  code: no,  resume: "Phase 3 (worker 3) — evaluate gate" }
-  - { plan: yes, evaluate: yes, code: no,  resume: "Phase 3 (worker 3) — start coding" }
-  - { plan: yes, evaluate: "-", code: yes, resume: "Phase 4 (worker 4) — code review" }
+  # Heuristic creates checkpoint with resume set.
+  - { task_analysis: yes, plan: no, evaluate: "-", code: "-", resume: "impact — impact analysis (with task-analysis.md)" }
+  - { plan: no,  evaluate: "-", code: "-", resume: "impact — impact analysis then planning" }
+  - { plan: yes, evaluate: no,  code: no,  resume: "implement — evaluate gate" }
+  - { plan: yes, evaluate: yes, code: no,  resume: "implement — start coding" }
+  - { plan: yes, evaluate: "-", code: yes, resume: "review — code review" }
 
 artifact_paths:
   plan: "docs/plans/{task-key}/plan.md"
@@ -330,7 +293,7 @@ Coder evaluates the plan before writing any implementation code.
 
 ```yaml
 evaluate_gate:
-  trigger: "Phase 3 start, before any code changes"
+  trigger: "Phase 7: implement start, before any code changes"
   output: "docs/plans/{task-key}/evaluate.md"
 
   verdicts:
@@ -350,7 +313,7 @@ evaluate_gate:
 
 ## 8. Re-routing
 
-Self-correction when complexity was misclassified at Phase 0.
+Self-correction when complexity was misclassified at Phase 1: analyze.
 
 ```yaml
 re_routing:
@@ -384,8 +347,8 @@ confirmation_gates:
 
 gate_rules:
   never_auto_approve: true
-  on_timeout: "Write checkpoint with terminal_status: stopped_by_user, resume_phase: current phase. Write terminal metrics. Halt."
-  on_rejection: "Write checkpoint with terminal_status: stopped_by_user, resume_phase: current phase. Write terminal metrics. Halt, await instructions."
+  on_timeout: "Write checkpoint with terminal_status: stopped_by_user, resume: current phase. Write terminal metrics. Halt."
+  on_rejection: "Write checkpoint with terminal_status: stopped_by_user, resume: current phase. Write terminal metrics. Halt, await instructions."
 ```
 
 ---
@@ -427,15 +390,15 @@ task_classification:
   independent:
     description: "Tasks with no shared state, can run in parallel"
     examples:
-      - "Phase 4 (code-review) + Phase 5 (ui-review)"
+      - "Phase 8: review (code-review + ui-review in parallel)"
       - "QA agent groups in ui-reviewer"
     dispatch: "Parallel — multiple Agent calls in one message"
 
   dependent:
     description: "Task B needs Task A's output"
     examples:
-      - "Phase 1 (plan) → Phase 2 (plan-review) — reviewer needs the plan"
-      - "Phase 3 (code) → Phase 4 (code-review) — reviewer needs the diff"
+      - "Phase 5: plan → Phase 6: plan-review — reviewer needs the plan"
+      - "Phase 7: implement → Phase 8: review — reviewer needs the diff"
     dispatch: "Sequential — wait for A, then start B"
 
   fan_out_fan_in:
@@ -448,7 +411,7 @@ task_classification:
   pipeline:
     description: "Data flows through a chain of transformations"
     examples:
-      - "plan → review → code → review → completion"
+      - "plan → plan-review → implement → review → ship"
     dispatch: "Strictly sequential with handoff contracts"
 ```
 
