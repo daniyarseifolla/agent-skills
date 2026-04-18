@@ -79,7 +79,19 @@ implement:
     then: "Invoke Skill: superpowers:subagent-driven-development"
     else: "Execute in current session (superpowers:executing-plans)"
 
+  resume_from_checkpoint:
+    action: "Check checkpoint.last_committed_part before starting loop"
+    if_set: |
+      Skip parts 1..N where N = last_committed_part.
+      Verify each skipped part's commit exists: git log --oneline | grep "Part {N}"
+      If commit missing for a "skipped" part → do NOT skip, re-implement.
+    if_not_set: "Start from Part 1 (fresh run)"
+
   for_each_part:
+    step_0_idempotency: |
+      Before implementing part {N}, check if its commit already exists:
+      git log --oneline | grep "{task_key}: Part {N}"
+      If found → skip this part (already committed in a previous session).
     step_0: "RESEARCH existing patterns — find the closest existing component in the project and study its approach"
     step_0b: |
       If part has UI → COPY FIGMA STRUCTURE before anything else (figma-coding-rules STRUCTURE_COPY_RULE):
@@ -95,6 +107,11 @@ implement:
     step_5: "Run tech_stack_adapter test command"
     step_6: "If verify/lint/test fail → fix → retry"
     step_7: "git add changed files && git commit -m '{task_key}: Part {N} — {part_description}'"
+    step_7b: |
+      Write per-part checkpoint after successful commit:
+      - Update checkpoint: last_committed_part: {N}, last_commit_hash: $(git rev-parse HEAD)
+      - Do NOT update completed (Phase 7 is not complete until all parts done)
+      - This ensures /continue can resume from part N+1, not from scratch
     verification_gate: |
       BEFORE git commit (step_7), ALL of these must pass:
       1. tech_stack_adapter lint command → exit code 0
