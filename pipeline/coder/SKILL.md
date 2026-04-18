@@ -120,9 +120,6 @@ implement:
       If ANY check fails → fix → retry (up to max_retries_per_part).
       Do NOT commit with failing lint, failing tests, or unresolved Figma mismatches.
       This gate applies to ALL complexities including S.
-    commit_gate: |
-      DEPRECATED — merged into verification_gate above.
-      Kept for backward compat. verification_gate is the single source of truth.
     commit_rule: "One commit per successfully verified part. Do not batch multiple parts into one commit."
     max_retries_per_part: 3
 

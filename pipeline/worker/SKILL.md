@@ -92,7 +92,7 @@ display_before_start:
     step_2_branch: "If worktree=n → create branch feat/{task_key} in current repo"
     step_2b_push: "Push branch to remote immediately: git push -u origin feat/{task_key}. Establishes remote tracking."
     step_3_ci: "If user chose CI=y AND not in worktree → ci-cd adapter disable_ci(task_key)"
-    step_4_checkpoint: "Save checkpoint: completed: [1], ci_disabled: bool, worktree_path: string|null, app_url: string|null"
+    step_4_checkpoint: "Save checkpoint: completed: [analyze], ci_disabled: bool, worktree_path: string|null, app_url: string|null"
     step_4b_credentials: |
       If credentials found in task description:
         Write to docs/plans/{task-key}/.credentials (YAML)
@@ -347,20 +347,20 @@ phases:
 
     checkpoint_rules:
       on_CHANGES_REQUESTED: |
-        completed: [...existing] (do NOT add 8 — results are stale)
-        invalidated: [8]
-        resume: 7
+        completed: [...existing] (do NOT add review — results are stale)
+        invalidated: [review]
+        resume: implement
         iteration.code_review += 1
         Note: Phase 8 verdict itself is an artifact of the rejected code — not a valid completed phase.
       on_APPROVED: |
-        completed: [...existing, 8]
+        completed: [...existing, review]
         invalidated: [] (clear)
-        resume: 9
-        Proceed to Phase 9: ship. Do NOT add 9 yet — Phase 9 is ship, it writes its own checkpoint.
+        resume: ship
+        Proceed to Phase 9: ship. Do NOT add ship yet — Phase 9: ship writes its own checkpoint.
       on_APPROVED_plus_ISSUES_FOUND: |
-        completed: [...existing, 8]
+        completed: [...existing, review]
         invalidated: [] (clear)
-        resume: 9
+        resume: ship
         Log ISSUES_FOUND findings. Proceed to Phase 9: ship.
 
     checkpoint: true
@@ -447,7 +447,7 @@ phases:
           merge_conflict: "Show conflicted files. STOP. User resolves manually, then /continue."
           deploy_fail: "Show deploy log. Offer: retry / rollback / abort."
           mr_pipeline_timeout: "Show pipeline URL. Ask: keep waiting / abort."
-      - checkpoint: "completed: [...existing, 9], terminal_status: success, resume: null"
+      - checkpoint: "completed: [...existing, ship], terminal_status: success, resume: null"
       - metrics: "Load core-metrics, collect and store (success collection — reads from checkpoint written above)"
       - ordering: "checkpoint BEFORE metrics — metrics reads completed and terminal_status from checkpoint"
 ```
