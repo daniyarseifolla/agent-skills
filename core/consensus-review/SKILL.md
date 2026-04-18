@@ -168,6 +168,44 @@ plan_review_sections:
       - angle: "Component design — reuse existing, correct patterns, responsive"
 ```
 
+## Agent Failure Handling
+
+```yaml
+failure_handling:
+  per_agent_timeout: "5 minutes — if agent does not return within 5 min, treat as FAILED"
+
+  detection:
+    no_verdict: "Agent returned text but no verdict keyword (BLOCKER/MAJOR/MINOR/Score) → FAILED"
+    empty_output: "Agent returned empty or error message → FAILED"
+    timeout: "Agent did not complete within per_agent_timeout → FAILED"
+
+  degradation:
+    one_of_three_fails:
+      action: "Use 2 remaining agents for consensus"
+      consensus_rule: "2 agents agree → confirmed (same as normal). 1 unique → lower confidence."
+      log: "WARN: Agent {N} failed in section {section_name}. Proceeding with 2/3 agents."
+
+    two_of_three_fail:
+      action: "Fall back to single inline review for this section"
+      consensus_rule: "No consensus possible — treat all findings as unique (lower confidence)"
+      log: "WARN: 2/3 agents failed in section {section_name}. Falling back to single-agent findings."
+
+    all_three_fail:
+      action: "HALT section. Mark section as FAILED in output."
+      log: "ERROR: All agents failed in section {section_name}. Section skipped."
+      pipeline_action: "Continue to next section. Final verdict excludes failed sections."
+
+  cross_section:
+    one_section_fails: "Proceed with remaining sections. Note gap in output."
+    two_sections_fail: "WARN user. Proceed with single section if it passed."
+    all_sections_fail: "HALT review. Return ERROR verdict to worker. Request user intervention."
+
+  NEVER:
+    - "Do NOT silently ignore a failed agent — always log and adjust consensus"
+    - "Do NOT stall the pipeline waiting for an agent that will never return"
+    - "Do NOT re-dispatch failed agents automatically — log failure, degrade gracefully"
+```
+
 ## Budget
 
 ```yaml
