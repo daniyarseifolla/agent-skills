@@ -76,7 +76,9 @@ handoff_contracts:
     approved_notes: string[]      # non-blocking suggestions
     issues: string[]              # if NEEDS_CHANGES
     iteration: "N/3"
-    required: [verdict, iteration]
+    plan_path: string             # explicit path to plan.md — no convention guessing
+    impact_report_path: string    # explicit path to impact-report.md
+    required: [verdict, iteration, plan_path, impact_report_path]
 
   coder_to_reviewer:
     branch: string
@@ -94,11 +96,21 @@ handoff_contracts:
 
   worker_to_planner:
     task: "task_schema — typed object from task-source adapter"
-    required: [task, complexity, route, figma_urls, ui_inventory_path, task_analysis_path, impact_report_path]
-    optional: [tech_stack_adapter, design_adapter]
+    complexity: "S|M|L|XL"
+    route: "MINIMAL|STANDARD|FULL"
+    figma_urls: "string[]"
+    ui_inventory_path: "string|null — .claude/ui-inventory.md if exists"
     task_analysis_path: "string|null — path to task-analysis.md from Phase 3: research. Null for S complexity."
     impact_report_path: "string — path to impact-report.md from Phase 4: impact."
-    note: "Worker passes full task object (see task_schema above) + classification results to planner"
+    tech_stack_adapter: "loaded tech-stack adapter — for patterns, commands, quality checks"
+    design_adapter: "loaded design adapter|null — for Figma context"
+    architect_roles_adapter: "loaded architect-roles adapter|null — for architect lenses (M+)"
+    flags:
+      auto_approve: "bool — --arch-auto flag, skip architect confirmation gate"
+      architect_model: "opus|sonnet — --model flag for architect agents"
+    required: [task, complexity, route, tech_stack_adapter, impact_report_path]
+    optional: [design_adapter, architect_roles_adapter, figma_urls, ui_inventory_path, task_analysis_path, flags]
+    note: "Worker passes full task object + adapters + flags. tech_stack_adapter is REQUIRED — all downstream phases use it."
 
   impact_analyzer_to_planner:
     impact_report_path: string
@@ -178,6 +190,8 @@ checkpoint_schema:
   worktree_path: "string|null — path to worktree if used, null if working in main repo"
   app_url: "string|null — dev server URL for UI review, resolved in Phase 2: setup"
   credentials_path: "string|null — path to .credentials file (gitignored), NOT inline credentials"
+  last_committed_part: "number|null — last successfully committed implementation part in Phase 7. On resume, skip parts 1..N whose commits already exist."
+  last_commit_hash: "string|null — HEAD hash at last checkpoint write. On resume, compare to detect workspace drift."
   handoff_payload: object
   issues_history: object[]
 
