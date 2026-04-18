@@ -11,18 +11,18 @@ Task key: $ARGUMENTS
 2. **Validate checkpoint** (if found):
    ```yaml
    validation:
-     required: [task_key, completed_phases, complexity, route]
+     required: [task_key, completed, complexity, route]
      required_for_resume: [handoff_payload]
-     recommended: [iteration, resume_phase]
+     recommended: [iteration, resume]
      on_missing_required: "HALT — checkpoint malformed, fall through to heuristic recovery"
      on_missing_handoff:
        action: "Attempt reconstruction from artifacts"
        repair:
-         phase_1_input: "Reconstruct from task-analysis.md + checkpoint fields (complexity, route)"
-         phase_2_input: "Reconstruct from plan.md path + checkpoint fields"
-         phase_3_input: "Reconstruct from plan.md + evaluate.md (verdict, iteration)"
-         phase_4_input: "Reconstruct from git diff main..HEAD (branch, files changed)"
-         phase_6_input: "Reconstruct from review verdicts in checkpoint.verdict"
+         analyze_input: "Reconstruct from task-analysis.md + checkpoint fields (complexity, route)"
+         plan_input: "Reconstruct from plan.md path + checkpoint fields"
+         implement_input: "Reconstruct from plan.md + evaluate.md (verdict, iteration)"
+         review_input: "Reconstruct from git diff main..HEAD (branch, files changed)"
+         ship_input: "Reconstruct from review verdicts in checkpoint.verdict"
        on_repair_failed: "HALT — cannot resume without handoff context. Show: 'Checkpoint missing handoff_payload and repair failed. Re-run from earlier phase? (y/n)'"
      on_missing_recommended: "WARN — proceed with defaults (iteration: all zeros)"
    ```
@@ -30,14 +30,14 @@ Task key: $ARGUMENTS
 3. **Check terminal status**:
    - If `terminal_status` is set (success|failed|stopped_by_user|loop_exceeded):
      - Display: "Pipeline ended with status: {terminal_status} at phase {phase_name}"
-     - Ask: "Re-run from {resume_phase}? (y/n)"
+     - Ask: "Re-run from {resume}? (y/n)"
      - If no → stop
      - If yes → **terminal cleanup before re-entry**:
        ```yaml
        terminal_cleanup:
          - clear: "terminal_status → null (pipeline is running again)"
-         - keep: "completed_phases, invalidated_phases, iteration (preserve history)"
-         - verify: "resume_phase is set and valid for current route"
+         - keep: "completed, invalidated, iteration (preserve history)"
+         - verify: "resume is set and valid for current route"
          - write_checkpoint: "MUST write cleaned checkpoint BEFORE loading worker"
          - note: "This ensures worker sees a non-terminal, resumable checkpoint"
        ```
@@ -45,9 +45,9 @@ Task key: $ARGUMENTS
 4. **Determine resume phase**:
    ```yaml
    resume_logic:
-     primary: "checkpoint.resume_phase (if present and non-null)"
-     fallback: "next_phase_map[max(completed_phases)]"
-     with_invalidation: "If invalidated_phases is non-empty → show which phases will re-run"
+     primary: "checkpoint.resume (if present and non-null)"
+     fallback: "next_phase_map[max(completed)]"
+     with_invalidation: "If invalidated is non-empty → show which phases will re-run"
    ```
 
 5. Display current state (same as /progress)
@@ -57,12 +57,12 @@ Task key: $ARGUMENTS
    - Use core-orchestration recovery_heuristic table:
      | Analysis? | Plan? | Evaluate? | Code? | Resume from |
      |-----------|-------|-----------|-------|-------------|
-     | Yes       | No    | —         | —     | Phase 0.8 — impact analysis (with task-analysis.md) |
-     | No        | No    | —         | —     | Phase 0.8 — impact analysis then planning |
-     | —         | Yes   | No        | No    | Phase 3 — evaluate gate |
-     | —         | Yes   | Yes       | No    | Phase 3 — start coding |
-     | —         | Yes   | —         | Yes   | Phase 4 — code review |
-   - Write checkpoint from detected state (with resume_phase set)
+     | Yes       | No    | —         | —     | Phase 4: impact (with task-analysis.md) |
+     | No        | No    | —         | —     | Phase 4: impact then planning |
+     | —         | Yes   | No        | No    | Phase 7: implement — evaluate gate |
+     | —         | Yes   | Yes       | No    | Phase 7: implement — start coding |
+     | —         | Yes   | —         | Yes   | Phase 8: review |
+   - Write checkpoint from detected state (with resume set)
    - Resume from detected phase
 
 7. If still nothing found → "No task artifacts found. Start new with /worker {task_key}"

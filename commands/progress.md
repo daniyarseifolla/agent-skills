@@ -14,9 +14,9 @@ Display:
 ```
 Task: {task_key}
 Status: {terminal_status or "running"}
-Completed: {completed_phases}
-Invalidated: {invalidated_phases or "none"}
-Next: {resume_phase} — {metrics_mapping[worker_to_metrics[resume_phase]]}
+Completed: {completed}
+Invalidated: {invalidated or "none"}
+Next: {resume} — {metrics_mapping[worker_to_metrics[resume]]}
 Complexity: {complexity} → Route: {route}
 Iterations: plan_review {N}/3, code_review {N}/3
 CI: {disabled/enabled}
@@ -24,5 +24,5 @@ Worktree: {path or "main repo"}
 Last update: {timestamp}
 ```
 
-If terminal_status is null and resume_phase is not null → suggest: "Resume with /continue {task_key}"
+If terminal_status is null and resume is not null → suggest: "Resume with /continue {task_key}"
 If terminal_status is set → show: "Pipeline ended: {terminal_status}. Re-run with /continue {task_key}"

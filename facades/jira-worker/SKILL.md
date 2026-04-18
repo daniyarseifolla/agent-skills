@@ -34,7 +34,7 @@ Entry point for Jira-based task workflow. Delegates to pipeline/worker with Jira
 |-----------|--------|
 | "быстро", "по-быстрому", "quick" | Force SIMPLE route (S complexity) |
 | "полный цикл", "full cycle", "с ревью" | Force FULL route (L complexity) |
-| "только план", "just plan" | Run only Phase 1 (Planning), stop |
+| "только план", "just plan" | Run only Phase 5: plan, stop |
 | "без деплоя", "no deploy" | Skip MR/deploy at completion |
 
 ## What this facade does NOT do

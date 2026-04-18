@@ -1,13 +1,13 @@
 ---
 name: ship
-description: "Standalone commit+push+deploy command. Standalone Phase 6 for quick fixes. Supports direct push (default) or MR, test/prod deploy. Use when user says /ship, \"закоммить и задеплой\", \"ship it\", \"запуши и задеплой\"."
+description: "Standalone commit+push+deploy command. Standalone Phase 9: ship for quick fixes. Supports direct push (default) or MR, test/prod deploy. Use when user says /ship, \"закоммить и задеплой\", \"ship it\", \"запуши и задеплой\"."
 allowed-tools: Bash(glab *), Bash(git *), Read, Glob, Grep
 ---
 
 # Ship — Facade
 
 Standalone deployment pipeline: commit → push → deploy.
-Extracted from Phase 6 for independent use when making quick fixes outside the full worker pipeline.
+Extracted from Phase 9: ship for independent use when making quick fixes outside the full worker pipeline.
 
 ## Syntax
 
@@ -108,9 +108,12 @@ steps:
   - deploy: "ci-cd adapter deploy(target_branch, 'test')"
   - wait_deploy: "Poll deploy job until success (timeout: 10min)"
   - transition: |
-      If task_key resolved:
-        task_source_adapter.transition(task_key, 'Ready for Test')
-        skip_if: no task_source adapter
+      MANDATORY — Jira transition MUST happen after every test deploy.
+      Resolve task_key: branch name feat/{TASK_KEY} → {TASK_KEY}, or parse from commit messages.
+      task_source_adapter.transition(task_key, 'Ready for Test')
+      skip_if: no task_source adapter loaded (ONLY valid reason to skip)
+      Do NOT skip because "task_key not resolved" — extract from branch name first, then commits.
+      If task_key truly unresolvable → WARN, continue. If API fails → WARN, continue.
   - notify: |
       If --slack → MUST load adapter-slack skill and follow its template EXACTLY.
       task_key: from branch name (feat/ARGO-XXX) or commit message
@@ -132,6 +135,12 @@ confirmation: REQUIRED — "Deploy to production? (y/n)"
 steps:
   - deploy: "ci-cd adapter deploy(target_branch, 'prod')"
   - wait_deploy: "Poll deploy job until success (timeout: 15min)"
+  - transition: |
+      MANDATORY — same rules as Step 5 transition.
+      Resolve task_key: branch name feat/{TASK_KEY} → {TASK_KEY}, or parse from commit messages.
+      task_source_adapter.transition(task_key, 'Done')
+      skip_if: no task_source adapter loaded (ONLY valid reason to skip)
+      If task_key unresolvable → WARN, continue. If API fails → WARN, continue.
   - notify: |
       If --slack → MUST load adapter-slack skill and follow its template EXACTLY.
       Template (4 lines, no extras):
