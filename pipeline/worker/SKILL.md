@@ -395,58 +395,15 @@ phases:
             "только MR": "Create MR only"
             "отмена": "Do nothing"
           on_cancel: "Write checkpoint: terminal_status: stopped_by_user, resume: 9. STOP."
-      - completion_flow:
-          description: "Executed when user confirms 'y' or 'только MR'"
-          steps:
-            1_push: "git push"
-            2_create_mr: |
-              ci-cd adapter create_mr(branch, mr_title, mr_description, target_branch)
-              Output: mr_url, mr_iid
-            3_stop_if_mr_only: "If user chose 'только MR' → skip to checkpoint"
-            4_wait_mr_pipeline: |
-              ci-cd adapter wait_for_stage(pipeline, 'build')
-              Timeout: 15min
-            5_merge: "glab mr merge {mr_iid} --auto-merge"
-            6_wait_merge: |
-              Poll MR state until state == 'merged'
-              Poll interval: 30s, timeout: 10min
-            7_find_target_pipeline: |
-              ci-cd adapter get_pipeline(target_branch)
-              Note: post-merge pipeline on target branch
-            8_wait_build: |
-              ci-cd adapter wait_for_stage(target_pipeline, 'build')
-              Timeout: 15min
-            9_deploy: "ci-cd adapter deploy(target_branch, environment)"
-            10_wait_deploy: "Poll deploy job until success. Timeout: 10min"
-            11_transition: |
-              MANDATORY — Jira transition is a REQUIRED step, not optional.
-              task_source_adapter.transition(task_key, 'Ready for Test')
-              QA tracks readiness via Jira status — skipping this breaks their workflow.
-              skip_if: no task_source adapter loaded (this is the ONLY valid skip reason)
-              Do NOT rationalize skipping: "small change", "not critical", "I'll do later" — WRONG.
-              If transition API call fails → WARN (don't halt pipeline), log error, continue to step 12.
-            12_notify: |
-              MUST load adapter-slack skill and follow its template EXACTLY.
-              Call: notification_adapter.notify_deploy(task_key, environment)
-              Template (4 lines, no extras):
-                {mention}
-                <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на {environment}
-                {summary — импакт для пользователя, НЕ тех. термины}
-                <{env_url from CLAUDE.md/.gitlab-ci.yml: host + base_href}|Тест/Прод>
-              NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
-              skip_if: no notification adapter
-            13_report: |
-              Display:
-                Готово:
-                - MR: {mr_url}
-                - Deploy: {environment} success
-                - Jira: Ready for Test
-                - Slack: notified #qa
-      - completion_errors:
-          pipeline_fail: "Show job log tail. Ask: retry / abort. On abort: write checkpoint, MR stays open."
-          merge_conflict: "Show conflicted files. STOP. User resolves manually, then /continue."
-          deploy_fail: "Show deploy log. Offer: retry / rollback / abort."
-          mr_pipeline_timeout: "Show pipeline URL. Ask: keep waiting / abort."
+      - ship_protocol: |
+          Load core-ship-protocol. Execute shared steps with inputs:
+            task_key: {task_key}
+            mr_title: {mr_title}
+            mr_description: {mr_description}
+            target_branch: {target_branch}
+            environment: {deploy_environment}
+            skip_after_mr: (user chose 'только MR')
+          Error handling defined in core-ship-protocol.
       - checkpoint: "completed: [...existing, ship], terminal_status: success, resume: null"
       - metrics: "Load core-metrics, collect and store (success collection — reads from checkpoint written above)"
       - ordering: "checkpoint BEFORE metrics — metrics reads completed and terminal_status from checkpoint"

@@ -75,59 +75,49 @@ mode_mr: # --mr flag
   note: "Push feature branch, MR created in step 3"
 ```
 
-### Step 3: Create MR (only with --mr)
+### Step 3: MR + Merge + Deploy Test (--mr path uses protocol)
 
 ```yaml
-skip_if: "No --mr flag"
-action: |
-  ci-cd adapter create_mr(
-    branch: current_branch,
-    title: auto-generate from latest commits,
-    description: auto-generate from git diff,
-    target_branch: target_branch
-  )
-  Output: mr_url, mr_iid
+mr_path: # only with --mr
+  action: |
+    Load core-ship-protocol. Execute shared steps with inputs:
+      task_key: resolved from branch name feat/{TASK_KEY} or commit messages
+      mr_title: auto-generate from latest commits
+      mr_description: auto-generate from git diff
+      target_branch: target_branch
+      environment: 'test'
+      skip_after_mr: false
+    If --slack → ensure notification adapter is loaded before protocol runs.
+    Error handling defined in core-ship-protocol.
+
+direct_path: # no --mr (default)
+  action: |
+    Skip MR creation/merge (already pushed direct in Step 2).
+    Deploy test:
+      - find_pipeline: "ci-cd adapter get_pipeline(target_branch)"
+      - wait_build: "ci-cd adapter wait_for_stage(pipeline, 'build', timeout=15min)"
+      - deploy: "ci-cd adapter deploy(target_branch, 'test')"
+      - wait_deploy: "Poll deploy job until success (timeout: 10min)"
+      - transition: |
+          MANDATORY — Jira transition MUST happen after every test deploy.
+          Resolve task_key: branch name feat/{TASK_KEY} → {TASK_KEY}, or parse from commit messages.
+          task_source_adapter.transition(task_key, 'Ready for Test')
+          skip_if: no task_source adapter loaded (ONLY valid reason to skip)
+          Do NOT skip because "task_key not resolved" — extract from branch name first, then commits.
+          If task_key truly unresolvable → WARN, continue. If API fails → WARN, continue.
+      - notify: |
+          If --slack → MUST load adapter-slack skill and follow its template EXACTLY.
+          Template (4 lines, no extras):
+            {mention}
+            <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на test
+            {summary — импакт для пользователя, НЕ тех. термины}
+            <{env_url from CLAUDE.md: host + base_href}|Тест>
+          env_url source: CLAUDE.md OR .gitlab-ci.yml
+          NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
+  report: "Deploy test: SUCCESS | {pipeline_url}"
 ```
 
-### Step 4: Merge MR (only with --mr)
-
-```yaml
-skip_if: "No --mr flag"
-steps:
-  - wait_pipeline: "ci-cd adapter wait_for_stage(mr_pipeline, 'build', timeout=15min)"
-  - merge: "glab mr merge {mr_iid} --auto-merge"
-  - wait_merge: "Poll MR state until 'merged' (30s polls, 10min timeout)"
-```
-
-### Step 5: Deploy Test
-
-```yaml
-steps:
-  - find_pipeline: "ci-cd adapter get_pipeline(target_branch)"
-  - wait_build: "ci-cd adapter wait_for_stage(pipeline, 'build', timeout=15min)"
-  - deploy: "ci-cd adapter deploy(target_branch, 'test')"
-  - wait_deploy: "Poll deploy job until success (timeout: 10min)"
-  - transition: |
-      MANDATORY — Jira transition MUST happen after every test deploy.
-      Resolve task_key: branch name feat/{TASK_KEY} → {TASK_KEY}, or parse from commit messages.
-      task_source_adapter.transition(task_key, 'Ready for Test')
-      skip_if: no task_source adapter loaded (ONLY valid reason to skip)
-      Do NOT skip because "task_key not resolved" — extract from branch name first, then commits.
-      If task_key truly unresolvable → WARN, continue. If API fails → WARN, continue.
-  - notify: |
-      If --slack → MUST load adapter-slack skill and follow its template EXACTLY.
-      task_key: from branch name (feat/ARGO-XXX) or commit message
-      Template (4 lines, no extras):
-        {mention}
-        <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на test
-        {summary — импакт для пользователя, НЕ тех. термины}
-        <{env_url from CLAUDE.md: host + base_href}|Тест>
-      env_url source: CLAUDE.md OR .gitlab-ci.yml
-      NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
-report: "Deploy test: SUCCESS | {pipeline_url}"
-```
-
-### Step 6: Deploy Prod (only with `prod`)
+### Step 4: Deploy Prod (only with `prod`)
 
 ```yaml
 skip_if: "No prod flag"
@@ -136,7 +126,7 @@ steps:
   - deploy: "ci-cd adapter deploy(target_branch, 'prod')"
   - wait_deploy: "Poll deploy job until success (timeout: 15min)"
   - transition: |
-      MANDATORY — same rules as Step 5 transition.
+      MANDATORY — same rules as Step 3 transition.
       Resolve task_key: branch name feat/{TASK_KEY} → {TASK_KEY}, or parse from commit messages.
       task_source_adapter.transition(task_key, 'Done')
       skip_if: no task_source adapter loaded (ONLY valid reason to skip)
@@ -153,7 +143,7 @@ steps:
 report: "Deploy prod: SUCCESS | {pipeline_url}"
 ```
 
-### Step 7: Report
+### Step 5: Report
 
 ```yaml
 action: "Show summary table of everything that happened"
