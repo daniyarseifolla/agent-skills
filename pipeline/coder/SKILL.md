@@ -92,7 +92,7 @@ implement:
       Before implementing part {N}, check if its commit already exists:
       git log --oneline | grep "{task_key}: Part {N}"
       If found → skip this part (already committed in a previous session).
-    step_0: "RESEARCH existing patterns — find the closest existing component in the project and study its approach"
+    step_0: "RESEARCH existing patterns — find the closest existing component in the project and study its approach. Check .claude/ui-inventory.md FIRST — NEVER create a new component if a shared one covers ≥80% of the need."
     step_0b: |
       If part has UI → COPY FIGMA STRUCTURE before anything else (figma-coding-rules STRUCTURE_COPY_RULE):
       - Figma layer hierarchy → HTML template structure (preserve nesting)
@@ -101,6 +101,7 @@ implement:
       - Figma icons → source from Figma export (NEVER hand-draw SVG)
       This step creates the HTML skeleton. CSS comes AFTER.
     step_1: "If part has UI/CSS → run Figma CSS Extract (figma-coding-rules section 1) to get exact CSS values for the skeleton from step_0b"
+    step_2_reuse_check: "Before writing new code: verify no existing shared component covers this need (ui-inventory.md). NEVER duplicate what already exists."
     step_2: "Implement code: combine HTML skeleton (step_0b) + CSS values (step_1) + existing pattern (step_0)"
     step_3: "If part has UI/CSS → run Figma Self-Verify (figma-coding-rules section 2) — verify BOTH structure AND CSS properties against Figma"
     step_4: "Run tech_stack_adapter lint command"
@@ -297,14 +298,12 @@ css_architecture:
 
 ```yaml
 component_reuse:
-  mandatory:
-    - "MUST reuse existing components from .claude/ui-inventory.md"
-    - "MUST use existing SCSS mixins for common patterns (spacing, flexbox, typography)"
-    - "MUST use design token variables (colors, sizes, shadows)"
+  rules:
+    - "Reuse components from .claude/ui-inventory.md"
+    - "Use existing SCSS mixins for common patterns (spacing, flexbox, typography)"
+    - "Use design token variables (colors, sizes, shadows)"
     - "NEVER hardcode colors, font sizes, or spacing values"
-    - "NEVER create a new component if a shared one covers ≥80% of the need"
-
-  check: "Read .claude/ui-inventory.md before implementing any UI"
+  note: "Primary enforcement is at step_0 and step_2_reuse_check in the implementation loop."
 ```
 
 ---

@@ -432,10 +432,13 @@ figma_first:
 
 ```yaml
 plan_constraints:
-  - "Each task = one logical commit"
-  - "Map every AC to at least one task"
-  - "Include exact file paths (create/modify)"
-  - "Include build/lint verification step per task"
-  - "Library code is read-only"
-  - "Use path aliases from tech-stack adapter"
+  CRITICAL: |
+    These constraints are mandatory for every plan. Violations are BLOCKER in plan-review.
+  rules:
+    - "Each task = one logical commit"
+    - "Map every AC to at least one task"
+    - "Include exact file paths (create/modify)"
+    - "Include build/lint verification step per task"
+    - "NEVER modify library/node_modules code — read-only"
+    - "Use path aliases from tech-stack adapter"
 ```
