@@ -39,7 +39,7 @@ startup:
       fallback: "next_phase_map[max(completed_phases)] — for old checkpoints without resume_phase"
       terminal_check: "If checkpoint.terminal_status is set → show status, ask user before resuming"
       invalidated_check: "If checkpoint.invalidated_phases is non-empty → those phases must re-run"
-    not_found: "Start from Phase 0"
+    not_found: "Start from Phase 1: analyze"
     note: "Prefer resume_phase (explicit) over max()+lookup (inferred). Both use next_phase_map as source of truth."
 
   step_5_task:
@@ -63,7 +63,7 @@ startup:
 
 ## Confirmation Summary
 
-CRITICAL: "This summary MUST be shown before ANY work begins. It is Phase 0 output."
+CRITICAL: "This summary MUST be shown before ANY work begins. It is Phase 1: analyze output."
 
 display_before_start:
   format: |

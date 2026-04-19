@@ -97,7 +97,7 @@ scope_thresholds:
   XL: "ac_count >= 7"
 ```
 
-Used by worker Phase 0 for complexity classification.
+Used by worker Phase 1: analyze for complexity classification.
 
 ---
 

@@ -6,11 +6,11 @@ allowed-tools: Bash(*), Read, Write, Edit, Glob, Grep, Agent, mcp__plugin_figma_
 
 # Figma Audit Pipeline
 
-Full-cycle Figma design comparison and implementation. Orchestrates 4 phases: consensus node map → visual/property/UX comparison → implementation → verification.
+Full-cycle Figma design comparison and implementation. Orchestrates 4 steps: consensus node map → visual/property/UX comparison → implementation → verification.
 
 ---
 
-## Phase 0: Preflight
+## Step 0: Preflight
 
 ```yaml
 preflight:
@@ -30,15 +30,15 @@ preflight:
     modes:
       audit_fix:
         condition: "has_app_url AND code_exists"
-        phases: "0, 1, 2, 3, 4"
+        steps: "0, 1, 2, 3, 4"
         description: "Compare Figma vs live app, fix mismatches in existing code"
       build:
         condition: "has_app_url AND NOT code_exists"
-        phases: "0, 1, 3, 4"
+        steps: "0, 1, 3, 4"
         description: "Build new components from Figma design, then verify"
       audit_only:
         condition: "NOT has_app_url"
-        phases: "0, 1, 2"
+        steps: "0, 1, 2"
         description: "Map Figma nodes and compare without live browser (no fixes)"
 
   step_3_preflight_checks:
@@ -61,7 +61,7 @@ preflight:
       File:       {figma_file_name} (last modified: {last_modified})
       App URL:    {app_url | 'not provided'}
       Components: {component_count} files found in project
-      Phases:     {phase_list}
+      Steps:      {step_list}
       Output dir: docs/figma-audit/{audit_id}/
       ─────────────────────────────────
     action: "Ask user: 'Proceed with audit? (y/n)' — HALT if user says no"
@@ -76,9 +76,9 @@ preflight:
 
 ---
 
-## Phase 1: Consensus Node Map
+## Step 1: Consensus Node Map
 
-3 agents in parallel, each mapping Figma nodes to code from a different angle. Requires Phase 0 to complete.
+3 agents in parallel, each mapping Figma nodes to code from a different angle. Requires Step 0 to complete.
 
 ```yaml
 node_map:
@@ -95,7 +95,7 @@ node_map:
     delay: "15 seconds before launch"
     budget: "max 60 tool calls"
     prompt: |
-      You are the Structure Mapper agent for a Figma audit (Phase 1).
+      You are the Structure Mapper agent for a Figma audit (Step 1).
 
       Inputs:
       - Figma fileKey: {fileKey}
@@ -134,7 +134,7 @@ node_map:
     skip_when: "audit-only mode (has_app_url = false) — skip entirely, write empty file"
     budget: "max 60 tool calls"
     prompt: |
-      You are the Visual Matcher agent for a Figma audit (Phase 1).
+      You are the Visual Matcher agent for a Figma audit (Step 1).
 
       Inputs:
       - Figma fileKey: {fileKey}, nodeId: {nodeId}
@@ -184,7 +184,7 @@ node_map:
     model: sonnet
     budget: "max 60 tool calls"
     prompt: |
-      You are the Code Scanner agent for a Figma audit (Phase 1).
+      You are the Code Scanner agent for a Figma audit (Step 1).
 
       Inputs:
       - Figma fileKey: {fileKey}, nodeId: {nodeId}
@@ -272,9 +272,9 @@ node_map:
 
 ---
 
-## Phase 2: Consensus Comparison
+## Step 2: Consensus Comparison
 
-3 agents in parallel. Requires app-url. Phase 1 aggregation must complete first.
+3 agents in parallel. Requires app-url. Step 1 aggregation must complete first.
 
 ```yaml
 comparison:
@@ -286,7 +286,7 @@ comparison:
     model: sonnet
     budget: "max 80 tool calls, 15 min"
     prompt: |
-      You are the Visual Comparator for Figma audit Phase 2.
+      You are the Visual Comparator for Figma audit Step 2.
 
       Inputs:
       - figma-node-map.md at: docs/figma-audit/{audit_id}/figma-node-map.md
@@ -321,7 +321,7 @@ comparison:
     model: sonnet
     budget: "max 100 tool calls, 15 min"
     prompt: |
-      You are the Property & Structure Auditor for Figma audit Phase 2.
+      You are the Property & Structure Auditor for Figma audit Step 2.
 
       Inputs:
       - figma-node-map.md at: docs/figma-audit/{audit_id}/figma-node-map.md
@@ -386,7 +386,7 @@ comparison:
     model: sonnet
     budget: "max 80 tool calls, 15 min"
     prompt: |
-      You are the UX/Interaction Reviewer for Figma audit Phase 2.
+      You are the UX/Interaction Reviewer for Figma audit Step 2.
 
       Inputs:
       - figma-node-map.md at: docs/figma-audit/{audit_id}/figma-node-map.md
@@ -430,7 +430,7 @@ comparison:
           PASS_WITH_ISSUES: "score 7.0–8.4 — minor deviations"
           ISSUES_FOUND: "score <7.0 — significant mismatches"
     property_diff_serialization:
-      action: "Parse comparison-properties.md → structured YAML for Phase 3 subagents (includes BOTH structural and CSS mismatches)"
+      action: "Parse comparison-properties.md → structured YAML for Step 3 subagents (includes BOTH structural and CSS mismatches)"
       format: |
         components:
           - selector: "app-card .header"
@@ -450,9 +450,9 @@ comparison:
 
 ---
 
-## Phase 3: Implementation
+## Step 3: Implementation
 
-Triggered in audit+fix and build modes. Skipped in audit-only. Phase 2 COMPLETE → Phase 3 → all COMPLETE → reload gate → Phase 4.
+Triggered in audit+fix and build modes. Skipped in audit-only. Step 2 COMPLETE → Step 3 → all COMPLETE → reload gate → Step 4.
 
 ```yaml
 implementation:
@@ -523,7 +523,7 @@ implementation:
       # Implementation Summary
 
       **Audit ID:** {audit_id}
-      **Phase 3 completed:** {datetime}
+      **Step 3 completed:** {datetime}
 
       | Component | Mode | Properties Fixed | Properties Remaining | Status | Commit |
       |-----------|------|-----------------|---------------------|--------|--------|
@@ -533,36 +533,36 @@ implementation:
 
 ## Reload Gate
 
-Runs after all Phase 3 fixes/builds complete, before Phase 4.
+Runs after all Step 3 fixes/builds complete, before Step 4.
 
 ```yaml
 reload_gate:
   step_1:
-    action: "Confirm all Phase 3 subagents and inline fixes are complete"
+    action: "Confirm all Step 3 subagents and inline fixes are complete"
     condition: "implementation-summary.md written"
   step_2:
     action: "Run tech_stack_adapter.commands.build"
     on_failure: "HALT — show build errors, ask user to fix before proceeding"
   step_3:
     check: "Hot-reload detected? (watch for browser auto-refresh or server log)"
-    on_hot_reload: "Proceed automatically to Phase 4"
+    on_hot_reload: "Proceed automatically to Step 4"
     on_no_hot_reload: "Prompt user: 'Please restart your dev server, then confirm when ready.'"
   step_4:
     action: "Wait for user confirmation"
     prompt: "Dev server restarted and app is running? (y/n)"
-    on_confirm: "Proceed to Phase 4"
+    on_confirm: "Proceed to Step 4"
     on_deny: "HALT — wait for user to resolve"
 ```
 
 ---
 
-## Phase 4: Consensus Verification
+## Step 4: Consensus Verification
 
-Same 3 agents as Phase 2, re-run after fixes. Phase 3 must be fully complete before Phase 4 starts.
+Same 3 agents as Step 2, re-run after fixes. Step 3 must be fully complete before Step 4 starts.
 
 ```yaml
 verification:
-  dispatch: "Same as Phase 2 — reuse agent prompts with updated context"
+  dispatch: "Same as Step 2 — reuse agent prompts with updated context"
   prerequisite: "implementation-summary.md written AND reload gate confirmed"
   input_change: "Agents compare AFTER implementation (new browser state post-reload)"
 
@@ -570,35 +570,35 @@ verification:
     agent_1_visual:
       name: "visual-comparator"
       model: sonnet
-      prompt: "Same as Phase 2 agent_1_visual — compare updated browser screenshots vs Figma"
+      prompt: "Same as Step 2 agent_1_visual — compare updated browser screenshots vs Figma"
       budget: "max 80 tool calls, 15 min"
 
     agent_2_property:
       name: "property-and-structure-auditor"
       model: sonnet
-      prompt: "Same as Phase 2 agent_2_property — re-evaluate structure AND computed CSS properties after fixes"
+      prompt: "Same as Step 2 agent_2_property — re-evaluate structure AND computed CSS properties after fixes"
       budget: "max 100 tool calls, 15 min"
 
     agent_3_ux:
       name: "ux-reviewer"
       model: sonnet
-      prompt: "Same as Phase 2 agent_3_ux — re-check states, responsive, accessibility after fixes"
+      prompt: "Same as Step 2 agent_3_ux — re-check states, responsive, accessibility after fixes"
       budget: "max 80 tool calls, 15 min"
 
   additional_output:
-    before_score: "Phase 2 overall average score"
-    after_score: "Phase 4 overall average score"
+    before_score: "Step 2 overall average score"
+    after_score: "Step 4 overall average score"
     delta: "after_score - before_score"
     remaining_mismatches: "list of MISMATCH rows still present from property auditor"
 
   aggregation:
     steps:
-      - "Read all 3 Phase 4 agent outputs"
+      - "Read all 3 Step 4 agent outputs"
       - "Consensus: 2+ agents agree → confirmed finding"
       - "Conflicts: flag for user"
       - "Compute after_score = average of 3 agent scores"
       - "Compute delta = after_score - before_score"
-      - "Collect remaining_mismatches from Phase 4 property auditor"
+      - "Collect remaining_mismatches from Step 4 property auditor"
     output: "docs/figma-audit/{audit_id}/figma-verification.md"
 
   verdict:
@@ -606,14 +606,14 @@ verification:
     PASS_WITH_ISSUES: "after_score 7.0–8.4 — minor deviations remain"
     ISSUES_FOUND: "after_score <7.0 — significant mismatches remain"
 
-  no_reloop: "Phase 4 runs ONCE. User decides on remaining issues — no automatic re-entry."
+  no_reloop: "Step 4 runs ONCE. User decides on remaining issues — no automatic re-entry."
 ```
 
 ---
 
 ## Final Report
 
-Generated after Phase 4 completes (or after Phase 2 in audit-only mode).
+Generated after Step 4 completes (or after Step 2 in audit-only mode).
 
 ```yaml
 report:
@@ -631,10 +631,10 @@ report:
 
     ## Scores
 
-    | Phase | Visual | Property | UX | Average |
-    |-------|--------|----------|----|---------|
-    | Before (Phase 2) | {v1} | {p1} | {u1} | {avg1} |
-    | After (Phase 4)  | {v2} | {p2} | {u2} | {avg2} |
+    | Step | Visual | Property | UX | Average |
+    |------|--------|----------|----|---------|
+    | Before (Step 2) | {v1} | {p1} | {u1} | {avg1} |
+    | After (Step 4)  | {v2} | {p2} | {u2} | {avg2} |
     | Delta            | {dv} | {dp} | {du} | {davg} |
 
     ## Verdict: {PASS|PASS_WITH_ISSUES|ISSUES_FOUND}
