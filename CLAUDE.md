@@ -12,7 +12,7 @@ See [SKILLS_OVERVIEW.md](SKILLS_OVERVIEW.md) for full architecture and catalog.
 
 | Trigger | Facade | Pipeline |
 |---------|--------|----------|
-| ARGO-XXX, "сделай задачу" | jira-worker | worker → planner → review → coder → review → deploy |
+| ARGO-XXX, "сделай задачу" | worker | worker → planner → review → coder → review → deploy |
 | "deploy", "задеплой" | deploy | gitlab adapter direct |
 | `/ship`, "закоммить и задеплой" | ship | commit → push → deploy [+prod] [+mr] [+slack] |
 | "sync branches" | community-sync | gitlab adapter + parallel cherry-pick |

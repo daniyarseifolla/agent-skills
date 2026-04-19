@@ -40,7 +40,7 @@
 | `v2.2/facades/community-sync/SKILL.md` | `community-sync` | `ports/literal/facades/community-sync/SKILL.md` | `literal-facade-community-sync` |
 | `v2.2/facades/deploy/SKILL.md` | `deploy` | `ports/literal/facades/deploy/SKILL.md` | `literal-facade-deploy` |
 | `v2.2/facades/figma-audit/SKILL.md` | `figma-audit` | `ports/literal/facades/figma-audit/SKILL.md` | `literal-facade-figma-audit` |
-| `v2.2/facades/jira-worker/SKILL.md` | `jira-worker` | `ports/literal/facades/jira-worker/SKILL.md` | `literal-facade-jira-worker` |
+| `v2.2/facades/worker/SKILL.md` | `worker` | `ports/literal/facades/worker/SKILL.md` | `literal-facade-worker` |
 | `v2.2/facades/scan-practices/SKILL.md` | `scan-practices` | `ports/literal/facades/scan-practices/SKILL.md` | `literal-facade-scan-practices` |
 | `v2.2/facades/scan-qa-playbook/SKILL.md` | `scan-qa-playbook` | `ports/literal/facades/scan-qa-playbook/SKILL.md` | `literal-facade-scan-qa-playbook` |
 | `v2.2/facades/scan-ui-inventory/SKILL.md` | `scan-ui-inventory` | `ports/literal/facades/scan-ui-inventory/SKILL.md` | `literal-facade-scan-ui-inventory` |

@@ -10,7 +10,7 @@ User → Command → Facade → Worker → [Phase 1 → 2 → 3 → 4 → 5 → 
                                     Adapters   Core    Consensus  Subagents  MCP
 
 facades/                    pipeline/ (project-agnostic)      core/ (invisible)
-├── jira-worker  ──┐        ├── worker (orchestrator)         ├── orchestration
+├── worker       ──┐        ├── worker (orchestrator)         ├── orchestration
 ├── figma-audit  ──┤        ├── planner        (opus)         ├── security
 ├── deploy       ──┤        ├── architect      (opus)         ├── consensus-review
 ├── community-sync ┤        ├── plan-reviewer  (opus)         └── metrics
@@ -72,7 +72,7 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 | facades/community-sync | 186 | `/sync`, "обновить ветки", "sync branches" |
 | facades/scan-practices | 149 | `/scan-practices`, "скан практик" |
 | facades/scan-ui-inventory | 132 | `/scan-ui`, "скан UI", "обнови инвентарь" |
-| facades/jira-worker | 45 | `/worker`, ARGO-XXX, "сделай задачу", "возьми тикет" |
+| facades/worker | 45 | `/worker`, ARGO-XXX, "сделай задачу", "возьми тикет" |
 | facades/ship | 227 | `/ship`, "закоммить и задеплой", "ship it" |
 | facades/deploy | 34 | `/deploy`, "задеплой", "deploy to test/prod" |
 | facades/architect | 61 | `/arch`, "архитектурный совет", "предложи архитектуру" |

@@ -11,7 +11,7 @@
 |--------|-------|
 | architect | 20/20 |
 | arch-review | 20/20 |
-| jira-worker | 20/20 |
+| worker | 20/20 |
 | ship | 20/20 |
 | deploy | 20/20 |
 | community-sync | 20/20 |
@@ -25,7 +25,7 @@
 
 - "оцени архитектуру" → arch-review (retrospective) ✅
 - "предложи архитектуру" → architect (new design) ✅
-- "/arch ARGO-11200" → architect (command prefix wins over jira-worker) ✅
+- "/arch ARGO-11200" → architect (command prefix wins over worker) ✅
 - "предложи улучшения к коду" → arch-review (context "к коду" = existing code) ✅ ⚠️ high-risk
 
 ## Trigger Eval Coverage
@@ -34,7 +34,7 @@
 |--------|-----------|---------|
 | architect | facades/architect/evals/trigger-eval.json | 20 |
 | arch-review | facades/arch-review/evals/trigger-eval.json | 20 |
-| jira-worker | facades/jira-worker/evals/trigger-eval.json | 20 |
+| worker | facades/worker/evals/trigger-eval.json | 20 |
 | ship | facades/ship/evals/trigger-eval.json | 20 |
 | deploy | facades/deploy/evals/trigger-eval.json | 20 |
 | community-sync | facades/community-sync/evals/trigger-eval.json | 20 |

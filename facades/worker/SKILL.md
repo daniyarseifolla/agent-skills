@@ -1,28 +1,38 @@
 ---
-name: jira-worker
-description: "Full-cycle Jira task implementation. Use PROACTIVELY when user provides a Jira issue key (ARGO-10698), Jira URL (atlassian.net/browse/..., atlassian.net/jira/...), or says anything like \"сделай задачу\", \"возьми тикет\", \"реализуй\", \"take this ticket\", \"implement this issue\", \"work on ARGO-XXX\". Even if the user just pastes a Jira key or URL without any context, this skill applies."
-human_description: "Точка входа для Jira-задач: парсит ключ, делегирует в pipeline-worker для полного цикла реализации."
+name: worker
+description: "Full-cycle task implementation. Use PROACTIVELY when user provides a Jira issue key (ARGO-10698), Jira URL (atlassian.net/browse/..., atlassian.net/jira/...), GitHub issue (#123), task URL, or says anything like \"сделай задачу\", \"возьми тикет\", \"реализуй\", \"take this ticket\", \"implement this issue\", \"work on ARGO-XXX\". Even if the user just pastes a task key or URL without any context, this skill applies."
+human_description: "Universal entry point for task implementation: autodetects task source, delegates to pipeline-worker for full-cycle execution."
 allowed-tools: Bash(*), Read, Write, Edit, Glob, Grep, Agent, Skill, mcp__plugin_atlassian_atlassian__getJiraIssue, mcp__plugin_atlassian_atlassian__getTransitionsForJiraIssue, mcp__plugin_atlassian_atlassian__transitionJiraIssue, mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql, mcp__plugin_figma_figma__get_design_context, mcp__plugin_figma_figma__get_screenshot
 ---
 
-# Jira Worker — Facade
+# Worker — Facade
 
-Entry point for Jira-based task workflow. Delegates to pipeline/worker with Jira adapter.
+Universal entry point for task implementation. Autodetects task source and delegates to pipeline/worker.
 
 ## Activation
 
-1. Parse task key from user input (regex: `[A-Z]{2,10}-\d+`)
-2. If task key found or user intent matches triggers → activate
+1. Parse task reference from user input
+2. If task reference found or user intent matches triggers → activate
+
+## Task Source Autodetect
+
+| Pattern | Detected source |
+|---------|----------------|
+| `[A-Z]{2,10}-\d+` (e.g., ARGO-XXX) | Jira |
+| `#\d+` | GitHub |
+| URL containing `atlassian.net` | Jira |
+| URL containing `github.com` | GitHub |
+| Other URL | Parse and detect |
 
 ## Delegation
 
-1. Set adapter overrides:
+1. Autodetect task source from input and set adapter overrides:
    ```yaml
-   task-source: jira
+   task-source: "{autodetected}"
    task_key: "{parsed key}"
    ```
 
-2. Load and invoke: `Skill: pipeline-worker`
+2. Load Skill: pipeline-worker
    - Worker reads .claude/project.yaml for remaining config (ci-cd, tech-stack, design)
    - Worker handles full pipeline with all phases
 

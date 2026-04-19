@@ -8,7 +8,7 @@ Reusable development pipeline skills for Claude Code. Automates the full cycle: 
 pipeline/        — phases (worker, planner, architect, coder, reviewers)
 adapters/        — swappable integrations (jira, gitlab, angular, figma, slack, architect-roles)
 core/            — protocols (orchestration, security, metrics, consensus, ship-protocol)
-facades/         — entry points (jira-worker, architect, arch-review, deploy, sync, figma-audit, scans)
+facades/         — entry points (worker, architect, arch-review, deploy, sync, figma-audit, scans)
 commands/        — 21 slash commands
 docs/            — specs, plans, reviews
 ports/           — cross-agent portability (Codex, Literal)
