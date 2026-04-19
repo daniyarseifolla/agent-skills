@@ -303,24 +303,11 @@ guard_check:
 
 ## 7. Evaluate Gate
 
-Coder evaluates the plan before writing any implementation code.
-
 ```yaml
 evaluate_gate:
-  trigger: "Phase 7: implement start, before any code changes"
-  output: "docs/plans/{task-key}/evaluate.md"
-
-  verdicts:
-    PROCEED: "Plan valid — begin implementation"
-    REVISE:  "Plan mostly valid — document deviations in evaluate.md, continue"
-    RETURN:  "Plan not implementable — return to plan-review with {issues, suggestions}"
-
-  checks:
-    - "All referenced files/modules accessible?"
-    - "Proposed APIs compatible with existing code?"
-    - "Hidden dependencies missed?"
-    - "Implementation order logical?"
-    - "AC testable with proposed approach?"
+  defined_in: "pipeline/coder/SKILL.md section 2"
+  note: "Coder executes the evaluate gate before implementation. See coder skill for checks, verdicts, and output format."
+  verdicts: [PROCEED, REVISE, RETURN]
 ```
 
 ---
