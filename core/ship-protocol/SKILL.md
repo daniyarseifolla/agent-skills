@@ -1,6 +1,7 @@
 ---
 name: core-ship-protocol
 description: "Use when executing shipping steps (MR, pipeline, merge, deploy, transition, notify). Loaded by worker Phase 9 and ship facade as shared protocol."
+human_description: "Общий протокол деплоя: MR → pipeline → merge → deploy → Jira transition → Slack notify."
 disable-model-invocation: true
 ---
 

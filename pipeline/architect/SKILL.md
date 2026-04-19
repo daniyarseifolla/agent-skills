@@ -1,6 +1,7 @@
 ---
 name: pipeline-architect
 description: "Use when planner needs architectural analysis for M+ tasks, or when user invokes /arch for standalone consultation. Provides 3 competing approaches from different lenses with trade-off comparison."
+human_description: "Запускает 3 агента-архитектора с разными линзами (conservative/balanced/challenger), каждый предлагает свой подход. Арбитр комбинирует лучшие элементы в финальное решение."
 model: opus
 ---
 

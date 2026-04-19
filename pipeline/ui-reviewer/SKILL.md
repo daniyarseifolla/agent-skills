@@ -1,6 +1,7 @@
 ---
 name: pipeline-ui-reviewer
 description: "UI review phase: functional testing via browser agent + visual comparison against Figma designs. Runs as sonnet subagent. Called by pipeline/worker Phase 8: review (parallel). Also usable standalone."
+human_description: "Тестирует UI в браузере: функциональное тестирование + визуальное сравнение с Figma. Для M+ — consensus."
 model: sonnet
 ---
 

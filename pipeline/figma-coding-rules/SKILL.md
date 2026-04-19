@@ -1,6 +1,7 @@
 ---
 name: figma-coding-rules
 description: "Figma extraction, CSS self-verify, UI quality check, icon rules, and UI implementation rules. Loaded by pipeline-coder when design adapter is active. Never invoked directly by user."
+human_description: "Правила извлечения CSS из Figma, self-verify, UI quality check, работа с иконками. Загружается coder-ом."
 disable-model-invocation: true
 ---
 

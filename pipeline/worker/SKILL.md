@@ -1,6 +1,7 @@
 ---
 name: pipeline-worker
 description: "Project-agnostic development pipeline orchestrator. Manages phases, checkpoints, recovery, and adapter loading. Called by facade skills — not directly by user."
+human_description: "Оркестратор pipeline: управляет фазами 1-9, checkpoint-ами, recovery. Делегирует работу pipeline-скиллам, не делает ничего сам."
 ---
 
 # Pipeline Worker

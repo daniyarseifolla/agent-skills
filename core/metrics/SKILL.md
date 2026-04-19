@@ -1,6 +1,7 @@
 ---
 name: core-metrics
 description: "Pipeline metrics collection and storage. Loaded by pipeline/worker at completion — never invoked directly."
+human_description: "Сбор и хранение метрик pipeline: длительность фаз, итерации, issues."
 disable-model-invocation: true
 ---
 

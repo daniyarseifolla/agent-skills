@@ -1,6 +1,7 @@
 ---
 name: consensus-review
 description: "Multi-agent consensus review pattern. Dispatches 2-3 agents per section for independent analysis, then aggregates findings. Used by pipeline-code-reviewer, pipeline-ui-reviewer, and /attach for thorough reviews."
+human_description: "Паттерн мульти-агентного ревью: 3 агента на секцию, разные углы, агрегация consensus."
 disable-model-invocation: true
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: pipeline-planner
 description: "Planning phase: researches codebase, designs solution, creates implementation plan with AC mapping. Uses opus model for deep analysis. Called by pipeline/worker Phase 5: plan."
+human_description: "Исследует кодовую базу, запускает архитектора (M+), создаёт детальный план реализации с маппингом AC, файлами, сигнатурами."
 model: opus
 ---
 
