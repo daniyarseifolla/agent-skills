@@ -5,14 +5,21 @@
 **Method:** 4 sonnet subagents, each with 10 queries against full skill list
 **Result:** 40/40 (100%)
 
-## Results
+## Results — All 10 Facades
 
-| Test | Score |
-|------|-------|
-| architect should-trigger (10 queries) | 10/10 |
-| architect should-NOT-trigger (10 queries) | 10/10 |
-| arch-review should-trigger (10 queries) | 10/10 |
-| arch-review should-NOT-trigger (10 queries) | 10/10 |
+| Facade | Score |
+|--------|-------|
+| architect | 20/20 |
+| arch-review | 20/20 |
+| jira-worker | 20/20 |
+| ship | 20/20 |
+| deploy | 20/20 |
+| community-sync | 20/20 |
+| figma-audit | 20/20 |
+| scan-ui-inventory | 20/20 |
+| scan-qa-playbook | 20/20 |
+| scan-practices | 20/20 |
+| **Total** | **200/200 (100%)** |
 
 ## Key Boundary Cases
 
