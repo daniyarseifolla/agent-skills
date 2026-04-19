@@ -1,6 +1,6 @@
 ---
 name: core-orchestration
-description: "Internal orchestration protocols: handoff contracts, checkpoint/recovery, loop limits, evaluate gate, complexity routing, re-routing. Loaded by pipeline/worker — never invoked directly."
+description: "Use when loading pipeline protocols: phase sequence, handoff contracts, checkpoint schema, loop limits."
 human_description: "Source of truth для pipeline: фазы 1-9, handoff-контракты, checkpoint-схема, loop limits, routing."
 disable-model-invocation: true
 ---

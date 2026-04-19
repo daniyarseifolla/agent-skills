@@ -1,6 +1,6 @@
 ---
 name: pipeline-impact-analyzer
-description: "Impact analysis phase: scans consumers, siblings, and shared code to find what else may break. Produces impact-report.md consumed by planner, code-review, and ui-review. Called by pipeline/worker Phase 4: impact."
+description: "Use when scanning for code that may break from planned changes. Called by worker Phase 4: impact."
 human_description: "Сканирует consumers, siblings и shared code чтобы найти что ещё может сломаться от изменений."
 model: sonnet
 ---

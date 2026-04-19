@@ -1,6 +1,6 @@
 ---
 name: pipeline-code-reviewer
-description: "Code review phase: reviews diff against plan, architecture, security, and quality. Runs as sonnet subagent with worktree isolation. Called by pipeline/worker Phase 8: review. Also usable standalone."
+description: "Use when reviewing code diff against plan, architecture, and security. Called by worker Phase 8: review. Also usable standalone."
 human_description: "Ревьюит diff: план-compliance, архитектура, безопасность, качество. Для M+ — consensus из 9 агентов (3×3)."
 model: sonnet
 ---

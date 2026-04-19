@@ -1,6 +1,6 @@
 ---
 name: pipeline-plan-reviewer
-description: "Plan review phase: validates plan against AC, architecture patterns, and completeness. Runs as opus subagent (consensus 3x3 for M+). Called by pipeline/worker Phase 6: plan-review."
+description: "Use when validating plan completeness and architecture. Called by worker Phase 6: plan-review."
 human_description: "Валидирует план: AC-покрытие, архитектурные паттерны, полнота scope. Для M+ — consensus из 9 opus-агентов."
 model: opus
 ---

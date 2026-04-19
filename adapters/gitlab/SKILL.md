@@ -1,6 +1,6 @@
 ---
 name: adapter-gitlab
-description: "GitLab CI/CD adapter. Provides MR creation, pipeline monitoring, deploy triggers, and branch management. Loaded by pipeline skills when ci-cd is gitlab."
+description: "Use when interacting with GitLab CI/CD. Provides MR creation, pipeline monitoring, and deploy triggers."
 human_description: "Адаптер для GitLab CI/CD: MR, pipeline, deploy, cherry-pick, управление CI."
 allowed-tools: Bash(glab *), Bash(git *)
 ---

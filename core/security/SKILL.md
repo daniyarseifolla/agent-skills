@@ -1,6 +1,6 @@
 ---
 name: core-security
-description: "OWASP-adapted security checklist with grep patterns — framework-agnostic universal checks. Tech-stack-specific checks live in the respective adapter. Loaded by pipeline/code-reviewer — never invoked directly."
+description: "Use when checking code for OWASP vulnerabilities. Loaded by code-reviewer."
 human_description: "OWASP чеклист с grep-паттернами для поиска уязвимостей в коде."
 disable-model-invocation: true
 ---

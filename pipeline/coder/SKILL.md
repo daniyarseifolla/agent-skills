@@ -1,6 +1,6 @@
 ---
 name: pipeline-coder
-description: "Implementation phase: evaluates plan critically, then implements code in dependency order. Uses sonnet model. Called by pipeline/worker Phase 7: implement."
+description: "Use when implementing code from an approved plan. Called by worker Phase 7: implement."
 human_description: "Оценивает план через evaluate gate, затем реализует код по частям. Каждая часть: research → implement → verify → commit."
 model: sonnet
 ---
