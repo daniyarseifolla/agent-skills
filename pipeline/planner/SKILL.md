@@ -353,10 +353,24 @@ plan_template:
     - Figma nodes: {node-ids from Figma Node Map for this part}
     - States: {list ALL states needed: default, hover, disabled, loading, empty, error}
     - Dependencies: {other parts}
+    - Signatures: {key method/interface/model definitions for this part}
     - Details: {what to implement}
 
+  signatures_requirement: |
+    Each Implementation Part MUST include Signatures with:
+    - Method names and their parameters/return types
+    - Interface/model shapes (fields and types)
+    - Service method signatures if creating/modifying services
+    Example:
+      Signatures:
+        - NotificationService.send(userId: string, message: NotificationPayload): Observable<void>
+        - NotificationPayload: { title: string, body: string, type: 'info'|'warning'|'error' }
+        - NotificationListComponent: inputs: [notifications: Signal<Notification[]>], outputs: [dismiss: EventEmitter<string>]
+    WHY: Coder (sonnet) needs concrete targets, not prose descriptions. Reduces REVISE/RETURN rate.
+
     ## AC Mapping
-    | AC # | Description | Part(s) |
+    | AC # | Description | Part(s) | How Satisfied |
+    How Satisfied column: one sentence per AC describing the concrete mechanism (not just "Part 2")
 
     ## Test Plan
     {test scenarios, coverage targets}
