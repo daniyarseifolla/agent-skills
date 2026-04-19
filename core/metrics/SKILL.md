@@ -157,10 +157,10 @@ collection_sources:
     fields: [duration.total_minutes, duration.per_phase]
     method: |
       For each phase transition:
-        phase_start = checkpoint[N-1].timestamp (or pipeline_start for phase 0)
+        phase_start = checkpoint[N-1].timestamp (or pipeline_start for phase 1)
         phase_end = checkpoint[N].timestamp
         per_phase[phase_name] = (phase_end - phase_start) in minutes
-      total_minutes = completion.timestamp - phase_0.timestamp
+      total_minutes = completion.timestamp - pipeline_start
     fallback: "If checkpoint timestamps missing → set duration fields to null"
 ```
 
