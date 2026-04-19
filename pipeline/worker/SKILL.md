@@ -86,19 +86,7 @@ display_before_start:
     Proceed? (y/n)
 
   skip_if: "autonomous mode (--auto flag)"
-
-  after_confirm:
-    step_1_worktree: "If user chose worktree=y → Invoke Skill: superpowers:using-git-worktrees"
-    step_2_branch: "If worktree=n → create branch feat/{task_key} in current repo"
-    step_2b_push: "Push branch to remote immediately: git push -u origin feat/{task_key}. Establishes remote tracking."
-    step_3_ci: "If user chose CI=y AND not in worktree → ci-cd adapter disable_ci(task_key)"
-    step_4_checkpoint: "Save checkpoint: completed: [analyze], ci_disabled: bool, worktree_path: string|null, app_url: string|null"
-    step_4b_credentials: |
-      If credentials found in task description:
-        Write to docs/plans/{task-key}/.credentials (YAML)
-        Add docs/plans/**/.credentials to .gitignore
-        Store credentials_path in checkpoint (NOT credentials object)
-      NEVER write passwords/tokens directly into checkpoint.yaml
+  after_confirm: "Execute Workspace Setup section below (worktree → branch → CI → checkpoint)"
 
 ---
 
@@ -491,95 +479,49 @@ autodetect:
 
 ```yaml
 errors:
-  no_config_no_detect:
-    level: WARN
-    action: "Ask user for project type or create .claude/project.yaml"
+  # Simple errors — single-action resolution
+  | Error | Level | Action |
+  |-------|-------|--------|
+  | no_config_no_detect | WARN | Ask user for project type or create .claude/project.yaml |
+  | task_fetch_failed | ERROR | Verify task key and MCP connection |
+  | project_detect_failed | WARN | Ask user for project type |
+  | adapter_not_found | ERROR | List available adapters, ask user |
+  | handoff_validation_failed | ERROR | Halt pipeline, report missing fields to user |
+  | git_conflicts | ERROR | Show conflicted files, ask user to resolve |
+  | build_fails | ERROR | Show errors. Lint-only: auto-fix. Test: show failures |
+  | pre_existing_lint_warnings | INFO | Ignore — exit code 1 on lint is normal for existing code |
+  | dev_server_wont_start | ERROR | Check if port is in use: lsof -i :4200 |
+  | agent_browser_fails | WARN | Close browser, retry once. Still fails → skip UI review |
+  | glab_not_installed | ERROR | Install: brew install glab && glab auth login |
+  | glab_auth_expired | ERROR | Run: glab auth login |
+  | skill_not_found | WARN | Warn, fall back to inline execution |
 
-  task_fetch_failed:
-    level: ERROR
-    action: "Verify task key and MCP connection. Is Atlassian MCP running?"
-
-  project_detect_failed:
-    level: WARN
-    action: "Ask user for project type"
-
-  adapter_not_found:
-    level: ERROR
-    message: "Adapter '{name}' not found. Available: {list}"
-    action: "List available adapters, ask user"
-
+  # Complex errors — multi-step handling with ordering rules
   phase_failed:
     level: ERROR
     action: |
-      1. Write checkpoint FIRST:
-         - terminal_status: "failed"
-         - resume: failed phase (to retry)
-         - handoff_payload: preserve last known
-      2. Write terminal metrics (reads from checkpoint written in step 1)
+      1. Write checkpoint: terminal_status=failed, resume=failed phase, handoff_payload=preserve
+      2. Write terminal metrics (reads from checkpoint)
       3. Show error, ask user
-    ordering: "checkpoint → metrics → display (always this order)"
-
-  handoff_validation_failed:
-    level: ERROR
-    message: "Missing required fields: {fields}"
-    action: "Halt pipeline, report to user"
+    ordering: "checkpoint → metrics → display"
 
   loop_exceeded:
     level: STOP
     action: |
-      1. Write checkpoint FIRST:
-         - terminal_status: "loop_exceeded"
-         - resume: current loop target phase (for potential manual re-run)
-         - completed: current state (preserve)
-         - handoff_payload: last known payload (preserve for repair)
-      2. Write terminal metrics (reads from checkpoint written in step 1)
-      3. STOP, show iteration summary (from core-orchestration)
-    ordering: "checkpoint → metrics → display → STOP (always this order)"
+      1. Write checkpoint: terminal_status=loop_exceeded, resume=loop target, completed=preserve, handoff_payload=preserve
+      2. Write terminal metrics (reads from checkpoint)
+      3. STOP, show iteration summary
+    ordering: "checkpoint → metrics → display → STOP"
     do_not: "Auto-proceed or auto-approve"
 
   user_stop:
     level: STOP
     trigger: "User says 'stop', 'отмена', 'abort', rejects confirmation gate, or /continue is declined"
     action: |
-      1. Write checkpoint FIRST:
-         - terminal_status: "stopped_by_user"
-         - resume: current phase (to retry later)
-         - handoff_payload: preserve last known
-      2. Write terminal metrics (reads from checkpoint written in step 1)
+      1. Write checkpoint: terminal_status=stopped_by_user, resume=current phase, handoff_payload=preserve
+      2. Write terminal metrics (reads from checkpoint)
       3. Display: "Pipeline stopped by user at Phase {N}: {name}. Resume with /continue {task_key}"
     ordering: "checkpoint → metrics → display → STOP"
-
-  git_conflicts:
-    level: ERROR
-    action: "Show conflicted files, ask user to resolve"
-
-  build_fails:
-    level: ERROR
-    action: "Show errors. If lint-only: auto-fix with format command. If test: show failures."
-
-  pre_existing_lint_warnings:
-    level: INFO
-    action: "Ignore — exit code 1 on lint is normal for existing code"
-
-  dev_server_wont_start:
-    level: ERROR
-    action: "Check if port is in use: lsof -i :4200"
-
-  agent_browser_fails:
-    level: WARN
-    action: "Close browser, retry once. If still fails, skip UI review."
-
-  glab_not_installed:
-    level: ERROR
-    action: "Install: brew install glab && glab auth login"
-
-  glab_auth_expired:
-    level: ERROR
-    action: "Run: glab auth login"
-
-  skill_not_found:
-    level: WARN
-    action: "Warn, fall back to inline execution"
 ```
 
 ---
