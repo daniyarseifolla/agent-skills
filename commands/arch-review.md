@@ -1,5 +1,6 @@
 ---
-description: "Retrospective architectural review. Usage: /arch-review [ARGO-12345|path] [--stack=angular] [--model=sonnet]"
+name: arch-review
+description: "Use when user wants to review architecture of existing code or completed task. Usage: /arch-review [ARGO-12345|path] [--stack=angular] [--model=sonnet]"
 ---
 
 # Arch-Review

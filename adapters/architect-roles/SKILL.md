@@ -1,6 +1,6 @@
 ---
 name: adapter-architect-roles
-description: "Architect role adapter. Provides stack-specific lenses for architect agents. Loaded by planner when architect step runs."
+description: "Use when loading architect lenses for a specific tech stack. Loaded by planner when architect step runs for M+ tasks."
 disable-model-invocation: true
 ---
 

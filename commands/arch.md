@@ -1,5 +1,6 @@
 ---
-description: "Standalone architectural analysis. Usage: /arch [ARGO-12345] [--stack=angular] [--model=sonnet]"
+name: arch
+description: "Use when user wants architectural analysis or design consultation. Usage: /arch [ARGO-12345] [--stack=angular] [--model=sonnet]"
 ---
 
 # Architect

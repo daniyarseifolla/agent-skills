@@ -1,6 +1,6 @@
 ---
 name: core-ship-protocol
-description: "Shared shipping protocol: MR → pipeline → merge → deploy → transition → notify. Used by worker Phase 9 and ship facade."
+description: "Use when executing shipping steps (MR, pipeline, merge, deploy, transition, notify). Loaded by worker Phase 9 and ship facade as shared protocol."
 disable-model-invocation: true
 ---
 

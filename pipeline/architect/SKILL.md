@@ -1,6 +1,6 @@
 ---
 name: pipeline-architect
-description: "Architectural analysis: 3 agents with different lenses propose approaches, arbiter combines. Step inside planner (Phase 5: plan) for M+. Also standalone via /arch."
+description: "Use when planner needs architectural analysis for M+ tasks, or when user invokes /arch for standalone consultation. Provides 3 competing approaches from different lenses with trade-off comparison."
 model: opus
 ---
 
