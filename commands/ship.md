@@ -1,5 +1,6 @@
 ---
 description: "Commit, push, and deploy. Usage: /ship [prod] [--mr] [--sync]"
+human_description: "Commit + push + deploy в одну команду."
 ---
 
 # Ship

@@ -1,5 +1,6 @@
 ---
 description: "Attach pipeline to existing task. Detects current state, creates checkpoint, runs missing phases. Usage: /attach [ARGO-12345]"
+human_description: "Подключить pipeline к задаче, начатой без /worker."
 ---
 
 # Attach Pipeline to Existing Task

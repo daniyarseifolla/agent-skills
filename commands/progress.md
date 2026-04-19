@@ -1,5 +1,6 @@
 ---
 description: "Show current pipeline progress. Usage: /progress [ARGO-12345]"
+human_description: "Показать текущий прогресс pipeline."
 ---
 
 # Pipeline Progress

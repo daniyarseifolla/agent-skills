@@ -1,5 +1,6 @@
 ---
 description: "Clean up pipeline artifacts. Usage: /cleanup ARGO-12345"
+human_description: "Удалить артефакты pipeline (docs/plans/)."
 ---
 
 # Cleanup

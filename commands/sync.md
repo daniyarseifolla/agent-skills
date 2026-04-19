@@ -1,5 +1,6 @@
 ---
 description: "Distribute commits across community branches. Usage: /sync [commit-hash]"
+human_description: "Раскатка коммитов по community-веткам."
 ---
 
 # Community Sync

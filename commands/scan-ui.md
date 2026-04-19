@@ -1,5 +1,6 @@
 ---
 description: "Scan project for reusable UI components, SCSS mixins, and design tokens. Usage: /scan-ui"
+human_description: "Сканировать UI-компоненты проекта."
 ---
 
 # Scan UI Inventory

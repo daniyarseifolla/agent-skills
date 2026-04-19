@@ -1,5 +1,6 @@
 ---
 description: "Run code review on current branch. Usage: /cr"
+human_description: "Code review текущей ветки."
 ---
 
 # Code Review (standalone)

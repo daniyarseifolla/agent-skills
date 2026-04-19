@@ -1,5 +1,6 @@
 ---
 description: "Figma audit & implementation pipeline: consensus node map, visual + property comparison, subagent implementation. Usage: /figma <figma-url> [app-url]"
+human_description: "Аудит вёрстки по Figma-макету."
 ---
 
 # Figma Audit Pipeline

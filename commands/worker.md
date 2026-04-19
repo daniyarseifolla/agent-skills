@@ -1,5 +1,6 @@
 ---
 description: "Full-cycle task implementation pipeline. Usage: /worker ARGO-12345 or /worker <jira-url>"
+human_description: "Полный цикл реализации Jira-задачи: от анализа до деплоя."
 ---
 
 # Worker Pipeline

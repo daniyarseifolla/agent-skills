@@ -1,5 +1,6 @@
 ---
 description: "Continue interrupted pipeline from last checkpoint. Usage: /continue ARGO-12345"
+human_description: "Продолжить pipeline с последнего checkpoint-а."
 ---
 
 # Resume Pipeline

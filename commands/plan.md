@@ -1,5 +1,6 @@
 ---
 description: "Create implementation plan only (no coding). Usage: /plan ARGO-12345"
+human_description: "Создать план реализации без кодирования."
 ---
 
 # Plan Only

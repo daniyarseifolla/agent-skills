@@ -1,5 +1,6 @@
 ---
 description: "Generate QA playbook: credentials, edge cases, fragile areas, pre-MR checklist. Usage: /scan-qa"
+human_description: "Сгенерировать QA playbook."
 ---
 
 # Scan QA Playbook

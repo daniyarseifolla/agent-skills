@@ -1,5 +1,6 @@
 ---
 description: "Verify ALL CSS properties against Figma for current branch. Usage: /verify-figma [figma-url]"
+human_description: "Проверить CSS-свойства против Figma."
 ---
 
 # Figma Verification

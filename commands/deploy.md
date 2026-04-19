@@ -1,5 +1,6 @@
 ---
 description: "Deploy to test or production. Usage: /deploy [test|prod] or /deploy check"
+human_description: "Деплой на test или production."
 ---
 
 # Deploy

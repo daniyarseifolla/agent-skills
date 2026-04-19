@@ -1,5 +1,6 @@
 ---
 description: "Run UI review: functional testing + Figma visual comparison. Usage: /ui-review [app-url]"
+human_description: "UI ревью: тестирование в браузере + сравнение с Figma."
 ---
 
 # UI Review (standalone)
