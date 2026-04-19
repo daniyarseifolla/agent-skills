@@ -1,0 +1,82 @@
+[
+  {
+    "query": "ARGO-10698",
+    "should_trigger": true
+  },
+  {
+    "query": "возьми тикет ARGO-11234",
+    "should_trigger": true
+  },
+  {
+    "query": "https://argonautdev.atlassian.net/browse/ARGO-10700",
+    "should_trigger": true
+  },
+  {
+    "query": "сделай задачу ARGO-10500, там фикс валидации в форме",
+    "should_trigger": true
+  },
+  {
+    "query": "реализуй ARGO-11100 — добавить пагинацию в таблицу",
+    "should_trigger": true
+  },
+  {
+    "query": "take this ticket ARGO-10999",
+    "should_trigger": true
+  },
+  {
+    "query": "https://argonautdev.atlassian.net/jira/software/c/projects/ARGO/boards/3?selectedIssue=ARGO-10800",
+    "should_trigger": true
+  },
+  {
+    "query": "ARGO-12001 быстро, там простая правка текста",
+    "should_trigger": true
+  },
+  {
+    "query": "implement this issue ARGO-10650 full cycle",
+    "should_trigger": true
+  },
+  {
+    "query": "work on ARGO-11500, the acceptance criteria are in the ticket",
+    "should_trigger": true
+  },
+  {
+    "query": "какой статус у ARGO-10700, в каком она состоянии",
+    "should_trigger": false
+  },
+  {
+    "query": "найди все тикеты в спринте Sprint 45",
+    "should_trigger": false
+  },
+  {
+    "query": "создай тикет в жире: баг с отображением аватарки",
+    "should_trigger": false
+  },
+  {
+    "query": "переведи ARGO-10600 в статус Done",
+    "should_trigger": false
+  },
+  {
+    "query": "задеплой текущую ветку на тест",
+    "should_trigger": false
+  },
+  {
+    "query": "покажи мой бэклог на этот спринт",
+    "should_trigger": false
+  },
+  {
+    "query": "сколько багов открыто в проекте ARGO",
+    "should_trigger": false
+  },
+  {
+    "query": "напиши коммент в ARGO-10900 что фича готова к ревью",
+    "should_trigger": false
+  },
+  {
+    "query": "/ship закоммить и задеплой на тест",
+    "should_trigger": false
+  },
+  {
+    "query": "прикрепи скриншот к тикету ARGO-10750",
+    "should_trigger": false
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "query": "задеплой на тест",
+    "should_trigger": true
+  },
+  {
+    "query": "deploy to test",
+    "should_trigger": true
+  },
+  {
+    "query": "залей на прод",
+    "should_trigger": true
+  },
+  {
+    "query": "trigger pipeline для текущей ветки",
+    "should_trigger": true
+  },
+  {
+    "query": "проверь пайплайн, что там со статусом",
+    "should_trigger": true
+  },
+  {
+    "query": "запусти деплой на тестовую среду",
+    "should_trigger": true
+  },
+  {
+    "query": "deploy to prod, всё проверено",
+    "should_trigger": true
+  },
+  {
+    "query": "check pipeline for feat/ARGO-10700",
+    "should_trigger": true
+  },
+  {
+    "query": "перезапусти упавший job в пайплайне",
+    "should_trigger": true
+  },
+  {
+    "query": "залей на тест ветку community/alex",
+    "should_trigger": true
+  },
+  {
+    "query": "/ship закоммить и задеплой",
+    "should_trigger": false
+  },
+  {
+    "query": "поправь конфиг gitlab-ci.yml, добавь стейдж для линтера",
+    "should_trigger": false
+  },
+  {
+    "query": "почему билд падает с ошибкой out of memory",
+    "should_trigger": false
+  },
+  {
+    "query": "закоммить изменения и запушить",
+    "should_trigger": false
+  },
+  {
+    "query": "ARGO-10700 сделай задачу",
+    "should_trigger": false
+  },
+  {
+    "query": "настрой CI для нового микросервиса",
+    "should_trigger": false
+  },
+  {
+    "query": "напиши Dockerfile для angular приложения",
+    "should_trigger": false
+  },
+  {
+    "query": "обновить ветки — раскатай коммит на все community",
+    "should_trigger": false
+  },
+  {
+    "query": "создай MR из текущей ветки в develop",
+    "should_trigger": false
+  },
+  {
+    "query": "ship it to prod with mr",
+    "should_trigger": false
+  }
+]

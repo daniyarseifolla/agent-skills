@@ -1,0 +1,82 @@
+[
+  {
+    "query": "/arch-review посмотри как мы реализовали модуль уведомлений",
+    "should_trigger": true
+  },
+  {
+    "query": "оцени архитектуру нашего notification service",
+    "should_trigger": true
+  },
+  {
+    "query": "review architecture of the auth module, feels overcomplicated",
+    "should_trigger": true
+  },
+  {
+    "query": "как улучшить архитектуру в папке shared/services, там каша",
+    "should_trigger": true
+  },
+  {
+    "query": "архитектурный ревью текущей реализации кэширования",
+    "should_trigger": true
+  },
+  {
+    "query": "/arch-review ARGO-10900",
+    "should_trigger": true
+  },
+  {
+    "query": "предложи улучшения к коду авторизации, хочу оценить текущий подход",
+    "should_trigger": true
+  },
+  {
+    "query": "оцени архитектуру — мы запилили state management через BehaviorSubject, норм или переделывать",
+    "should_trigger": true
+  },
+  {
+    "query": "review architecture: наш data layer, repositories + services, всё ли правильно",
+    "should_trigger": true
+  },
+  {
+    "query": "как улучшить архитектуру feature modules, чувствую что coupling высокий",
+    "should_trigger": true
+  },
+  {
+    "query": "/cr — сделай ревью моего кода",
+    "should_trigger": false
+  },
+  {
+    "query": "предложи архитектуру для нового модуля оплаты",
+    "should_trigger": false
+  },
+  {
+    "query": "/arch какой подход выбрать для real-time фичи",
+    "should_trigger": false
+  },
+  {
+    "query": "зарефактори этот сервис, слишком много методов",
+    "should_trigger": false
+  },
+  {
+    "query": "ARGO-10800 возьми тикет",
+    "should_trigger": false
+  },
+  {
+    "query": "сделай code review диффа в текущей ветке",
+    "should_trigger": false
+  },
+  {
+    "query": "как спроектировать с нуля систему логирования",
+    "should_trigger": false
+  },
+  {
+    "query": "перепиши этот компонент на standalone",
+    "should_trigger": false
+  },
+  {
+    "query": "проверь мой PR на ошибки и уязвимости",
+    "should_trigger": false
+  },
+  {
+    "query": "помоги разобраться почему тесты падают в ci",
+    "should_trigger": false
+  }
+]

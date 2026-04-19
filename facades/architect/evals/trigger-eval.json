@@ -1,0 +1,82 @@
+[
+  {
+    "query": "/arch как лучше сделать нотификации — websocket или polling",
+    "should_trigger": true
+  },
+  {
+    "query": "архитектурный совет нужен, хотим вынести auth в отдельный микросервис",
+    "should_trigger": true
+  },
+  {
+    "query": "предложи архитектуру для real-time чата между юзерами",
+    "should_trigger": true
+  },
+  {
+    "query": "как лучше спроектировать систему прав, RBAC или ABAC?",
+    "should_trigger": true
+  },
+  {
+    "query": "какой подход выбрать для кэширования — redis vs in-memory",
+    "should_trigger": true
+  },
+  {
+    "query": "/arch ARGO-11200",
+    "should_trigger": true
+  },
+  {
+    "query": "дай архитектурный совет — делать monorepo или polyrepo для фронта",
+    "should_trigger": true
+  },
+  {
+    "query": "architect advice: should we use event sourcing for audit trail or simple log table?",
+    "should_trigger": true
+  },
+  {
+    "query": "как лучше спроектировать state management, у нас angular + ngrx но может signals лучше",
+    "should_trigger": true
+  },
+  {
+    "query": "предложи архитектуру апи-гейтвея, у нас 5 микросервисов и нужен единый вход",
+    "should_trigger": true
+  },
+  {
+    "query": "сделай код ревью моего PR",
+    "should_trigger": false
+  },
+  {
+    "query": "ARGO-10700 — возьми в работу",
+    "should_trigger": false
+  },
+  {
+    "query": "давай побрейнштормим фичи для дашборда, что бы добавить",
+    "should_trigger": false
+  },
+  {
+    "query": "напиши план реализации для ARGO-11000",
+    "should_trigger": false
+  },
+  {
+    "query": "зарефактори ProfileService, там дублирование кода",
+    "should_trigger": false
+  },
+  {
+    "query": "оцени архитектуру текущего модуля авторизации",
+    "should_trigger": false
+  },
+  {
+    "query": "как починить circular dependency в DI",
+    "should_trigger": false
+  },
+  {
+    "query": "какие best practices для angular standalone components",
+    "should_trigger": false
+  },
+  {
+    "query": "как настроить webpack для lazy loading",
+    "should_trigger": false
+  },
+  {
+    "query": "накидай идей как улучшить UX формы логина",
+    "should_trigger": false
+  }
+]

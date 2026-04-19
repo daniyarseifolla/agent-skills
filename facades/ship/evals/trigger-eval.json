@@ -1,0 +1,82 @@
+[
+  {
+    "query": "/ship",
+    "should_trigger": true
+  },
+  {
+    "query": "закоммить и задеплой на тест",
+    "should_trigger": true
+  },
+  {
+    "query": "ship it",
+    "should_trigger": true
+  },
+  {
+    "query": "запуши и задеплой",
+    "should_trigger": true
+  },
+  {
+    "query": "/ship prod --mr",
+    "should_trigger": true
+  },
+  {
+    "query": "закоммить, запушить и выкатить на тест",
+    "should_trigger": true
+  },
+  {
+    "query": "/ship prod --slack",
+    "should_trigger": true
+  },
+  {
+    "query": "ship it to prod with MR",
+    "should_trigger": true
+  },
+  {
+    "query": "шипни, фикс готов",
+    "should_trigger": true
+  },
+  {
+    "query": "/ship --mr --slack",
+    "should_trigger": true
+  },
+  {
+    "query": "задеплой текущую ветку на тест",
+    "should_trigger": false
+  },
+  {
+    "query": "git commit -m 'fix validation'",
+    "should_trigger": false
+  },
+  {
+    "query": "запуши мои изменения в remote",
+    "should_trigger": false
+  },
+  {
+    "query": "проверь статус пайплайна",
+    "should_trigger": false
+  },
+  {
+    "query": "создай MR из текущей ветки",
+    "should_trigger": false
+  },
+  {
+    "query": "закоммить изменения с описанием 'fix: header alignment'",
+    "should_trigger": false
+  },
+  {
+    "query": "залей на прод последний коммит",
+    "should_trigger": false
+  },
+  {
+    "query": "ARGO-10700 возьми в работу",
+    "should_trigger": false
+  },
+  {
+    "query": "отмени последний деплой на тесте",
+    "should_trigger": false
+  },
+  {
+    "query": "сделай git push origin feat/ARGO-10800",
+    "should_trigger": false
+  }
+]
