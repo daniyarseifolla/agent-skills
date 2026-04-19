@@ -128,16 +128,19 @@ severity:
 auto_escalation:
   - condition: "5+ MINOR in same file"
     action: "Escalate to MAJOR for that file"
-  - condition: "Any core-security finding"
-    action: "Always BLOCKER regardless of pattern severity"
+  - condition: "core-security finding with severity BLOCKER or MAJOR"
+    action: "Retain classified severity from core-security"
+  - condition: "core-security finding with severity MINOR or NIT"
+    action: "Retain as MINOR/NIT — do not escalate (e.g., hardcoded localhost in dev config is not a production vulnerability)"
 
 decision:
   APPROVED:
-    condition: "0 BLOCKER, 0 MAJOR"
+    condition: "0 BLOCKER, 0 MAJOR, 0-2 MINOR"
   APPROVED_WITH_COMMENTS:
-    condition: "0 BLOCKER, 0 MAJOR, has MINOR/NIT"
+    condition: "0 BLOCKER, 0 MAJOR, 1-2 MINOR or any NIT"
   CHANGES_REQUESTED:
     condition: "1+ BLOCKER or 1+ MAJOR or 3+ MINOR"
+    note: "3+ MINOR takes precedence over APPROVED_WITH_COMMENTS"
 ```
 
 ---
