@@ -1,6 +1,7 @@
 ---
 name: community-sync
 description: "Distribute commits across community branches with parallel cherry-pick, build verification, and deployment. Use PROACTIVELY when user says \"обновить ветки\", \"sync branches\", \"распространить коммит\", \"cherry-pick в ветки\", \"обновить community ветки\", \"раскатить на все ветки\", \"distribute commit\", \"update all branches\", \"deploy everywhere\"."
+human_description: "Раскатка коммитов по community-веткам: cherry-pick + build verify + push + deploy параллельно."
 allowed-tools: Bash(*), Read, Write, Edit, Glob, Grep, Agent
 ---
 

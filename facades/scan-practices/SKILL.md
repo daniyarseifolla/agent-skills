@@ -1,6 +1,7 @@
 ---
 name: scan-practices
 description: "Scan project for conventions, known bugs, lessons learned, and generate .claude/project-practices.md. Use when user says 'скан практик', 'scan practices', 'обнови практики', 'update practices', 'собери грабли', or when starting work on a new project."
+human_description: "Сканирует проект на конвенции, известные баги, lessons learned -> .claude/project-practices.md."
 allowed-tools: Read, Glob, Grep, Write, Bash(git log *), Bash(find *)
 ---
 

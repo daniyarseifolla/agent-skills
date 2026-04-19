@@ -1,6 +1,7 @@
 ---
 name: adapter-figma
 description: "Figma design adapter. Provides design context extraction, screenshot comparison, and design token mapping. Loaded by pipeline skills when design is figma."
+human_description: "Адаптер для Figma: извлечение дизайна, скриншоты, визуальное сравнение, design tokens."
 allowed-tools: mcp__plugin_figma_figma__get_design_context, mcp__plugin_figma_figma__get_screenshot, mcp__plugin_figma_figma__get_metadata, mcp__plugin_figma_figma__get_variable_defs
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: deploy
 description: "Deploy branches to test or production via CI/CD. Use PROACTIVELY when user says \"задеплой\", \"залей на тест\", \"залей на прод\", \"deploy to test\", \"deploy to prod\", \"trigger pipeline\", \"запусти деплой\", \"проверь пайплайн\", \"check pipeline\", or mentions deploying, triggering CI jobs, checking pipeline status, or rolling back deployments."
+human_description: "Деплой ветки на test/prod через CI/CD. Мониторинг pipeline."
 allowed-tools: Bash(glab *), Bash(git *), Read, Glob, Grep
 ---
 

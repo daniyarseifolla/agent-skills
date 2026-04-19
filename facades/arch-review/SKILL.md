@@ -1,6 +1,7 @@
 ---
 name: arch-review
 description: "Retrospective architectural review. 3 reviewers analyze code → 3 alternatives proposed. Use when user says /arch-review, \"оцени архитектуру\", \"review architecture\", \"как улучшить архитектуру\"."
+human_description: "Ретроспективный архитектурный анализ: 3 ревьюера находят проблемы, затем 3 агента предлагают альтернативы."
 ---
 
 # Arch-Review — Facade

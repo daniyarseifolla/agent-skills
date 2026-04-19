@@ -1,6 +1,7 @@
 ---
 name: architect
 description: "Standalone architectural analysis. Proposes 3 approaches from different lenses with trade-off comparison. Use when user says /arch, \"архитектурный совет\", \"предложи архитектуру\", \"как лучше спроектировать\", \"какой подход выбрать\"."
+human_description: "Standalone архитектурная консультация: показывает 3 подхода с trade-off сравнением, пользователь выбирает."
 ---
 
 # Architect — Facade

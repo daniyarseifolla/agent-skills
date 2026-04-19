@@ -1,6 +1,7 @@
 ---
 name: scan-ui-inventory
 description: "Scan project for reusable UI components, SCSS mixins, and design tokens. Generates or updates .claude/ui-inventory.md. Use when user says \"скан UI\", \"scan UI\", \"обнови инвентарь\", \"update inventory\", \"scan components\", \"сканируй компоненты\", or when starting work on a new project."
+human_description: "Сканирует проект на shared UI-компоненты, SCSS mixins, design tokens -> .claude/ui-inventory.md."
 allowed-tools: Read, Glob, Grep, Write, Bash(find *), Bash(wc *)
 ---
 

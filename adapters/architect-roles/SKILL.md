@@ -1,6 +1,7 @@
 ---
 name: adapter-architect-roles
 description: "Use when loading architect lenses for a specific tech stack. Loaded by planner when architect step runs for M+ tasks."
+human_description: "Определяет 3 линзы для архитектора под конкретный стэк (Angular: Component/State/Integration). Fallback на generic."
 disable-model-invocation: true
 ---
 

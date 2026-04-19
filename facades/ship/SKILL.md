@@ -1,6 +1,7 @@
 ---
 name: ship
 description: "Standalone commit+push+deploy command. Standalone Phase 9: ship for quick fixes. Supports direct push (default) or MR, test/prod deploy. Use when user says /ship, \"закоммить и задеплой\", \"ship it\", \"запуши и задеплой\"."
+human_description: "Быстрый деплой: commit -> push -> deploy в одну команду. Для hotfix-ов без полного pipeline."
 allowed-tools: Bash(glab *), Bash(git *), Read, Glob, Grep
 ---
 

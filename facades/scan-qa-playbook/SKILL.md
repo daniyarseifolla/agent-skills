@@ -1,6 +1,7 @@
 ---
 name: scan-qa-playbook
 description: "Generate QA playbook from project analysis: edge cases, test credentials, pre-MR checklist, known fragile areas. Use when user says 'скан QA', 'scan QA', 'сгенерируй playbook', 'generate playbook', 'обнови playbook', or when preparing for QA phase."
+human_description: "Генерирует QA playbook: edge cases, тестовые учётки, хрупкие места, pre-MR чеклист."
 allowed-tools: Read, Glob, Grep, Write, Bash(git log *), Bash(find *)
 ---
 

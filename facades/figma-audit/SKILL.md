@@ -1,6 +1,7 @@
 ---
 name: figma-audit
 description: "Use when user wants to compare implementation against Figma design, audit visual fidelity, or fix CSS mismatches. Triggered by /figma, 'проверь верстку', 'figma audit', 'сравни с макетом'."
+human_description: "Аудит вёрстки: сравнивает реализацию с Figma-макетом, находит расхождения, фиксит через субагентов."
 allowed-tools: Bash(*), Read, Write, Edit, Glob, Grep, Agent, mcp__plugin_figma_figma__get_design_context, mcp__plugin_figma_figma__get_screenshot, mcp__plugin_figma_figma__get_metadata, mcp__plugin_playwright_playwright__browser_navigate, mcp__plugin_playwright_playwright__browser_take_screenshot, mcp__plugin_playwright_playwright__browser_evaluate, mcp__plugin_playwright_playwright__browser_snapshot, mcp__plugin_playwright_playwright__browser_hover, mcp__plugin_playwright_playwright__browser_click, mcp__plugin_playwright_playwright__browser_resize, mcp__plugin_playwright_playwright__browser_press_key
 ---
 

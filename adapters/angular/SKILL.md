@@ -1,6 +1,7 @@
 ---
 name: adapter-angular
 description: "Angular/Nx tech stack adapter. Provides lint/test/build commands, quality patterns, module lookup, and component conventions. Loaded by pipeline skills when tech-stack is angular."
+human_description: "Адаптер для Angular/Nx: команды lint/test/build, паттерны, module lookup, security checks."
 ---
 
 # Adapter: Angular (tech-stack)

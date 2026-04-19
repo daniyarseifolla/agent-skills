@@ -1,6 +1,7 @@
 ---
 name: adapter-slack
 description: "Slack notification adapter. Sends QA notifications after deploy. Loaded by pipeline skills when notification is slack."
+human_description: "Адаптер для Slack: отправка QA-уведомлений после деплоя в канал."
 allowed-tools: mcp__plugin_slack_slack__slack_send_message, mcp__plugin_slack_slack__slack_search_channels, mcp__plugin_slack_slack__slack_search_users
 ---
 
