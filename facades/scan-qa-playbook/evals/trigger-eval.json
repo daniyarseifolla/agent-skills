@@ -1,0 +1,82 @@
+[
+  {
+    "query": "скан QA — нужен плейбук перед релизом",
+    "should_trigger": true
+  },
+  {
+    "query": "scan QA, сгенерь playbook для проекта",
+    "should_trigger": true
+  },
+  {
+    "query": "сгенерируй playbook с edge cases и тестовыми кредами",
+    "should_trigger": true
+  },
+  {
+    "query": "generate playbook — нужен чеклист перед MR",
+    "should_trigger": true
+  },
+  {
+    "query": "/scan-qa",
+    "should_trigger": true
+  },
+  {
+    "query": "обнови playbook, мы добавили новый модуль авторизации",
+    "should_trigger": true
+  },
+  {
+    "query": "скан куа — собери все хрупкие места и edge кейсы",
+    "should_trigger": true
+  },
+  {
+    "query": "scan QA playbook, нужно знать тестовые учетки",
+    "should_trigger": true
+  },
+  {
+    "query": "сгенери плейбук для QA, проект обновился",
+    "should_trigger": true
+  },
+  {
+    "query": "generate QA playbook with pre-MR checklist and test credentials",
+    "should_trigger": true
+  },
+  {
+    "query": "запусти тесты для модуля авторизации",
+    "should_trigger": false
+  },
+  {
+    "query": "напиши unit тест для AuthService.login()",
+    "should_trigger": false
+  },
+  {
+    "query": "сделай QA ревью моего PR",
+    "should_trigger": false
+  },
+  {
+    "query": "добавь e2e тесты для формы регистрации",
+    "should_trigger": false
+  },
+  {
+    "query": "почему падает тест в CI на пайплайне?",
+    "should_trigger": false
+  },
+  {
+    "query": "проверь coverage — мне нужно 80% минимум",
+    "should_trigger": false
+  },
+  {
+    "query": "протестируй вручную форму оплаты на тесте",
+    "should_trigger": false
+  },
+  {
+    "query": "напиши интеграционные тесты для API /users",
+    "should_trigger": false
+  },
+  {
+    "query": "какие тестовые данные нужны для этого кейса?",
+    "should_trigger": false
+  },
+  {
+    "query": "обнови playwright конфиг для нового окружения",
+    "should_trigger": false
+  }
+]

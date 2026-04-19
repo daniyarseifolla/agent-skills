@@ -1,0 +1,82 @@
+[
+  {
+    "query": "/figma https://www.figma.com/design/abc123/MyProject?node-id=10:200",
+    "should_trigger": true
+  },
+  {
+    "query": "проверь верстку по макету из фигмы",
+    "should_trigger": true
+  },
+  {
+    "query": "figma audit — сравни текущую реализацию с дизайном",
+    "should_trigger": true
+  },
+  {
+    "query": "сравни с макетом, кажется отступы поехали",
+    "should_trigger": true
+  },
+  {
+    "query": "/figma https://figma.com/design/xyz789/Dashboard?node-id=5:100 http://localhost:4200/dashboard",
+    "should_trigger": true
+  },
+  {
+    "query": "проверь верстку профиля — макет в фигме, ссылку скину",
+    "should_trigger": true
+  },
+  {
+    "query": "figma audit для карточки товара, вот ссылка на макет",
+    "should_trigger": true
+  },
+  {
+    "query": "сравни реализацию с фигмой, там кнопки не те",
+    "should_trigger": true
+  },
+  {
+    "query": "аудит верстки по фигма макету для страницы настроек",
+    "should_trigger": true
+  },
+  {
+    "query": "чекни верстку относительно макета, что-то цвета отличаются",
+    "should_trigger": true
+  },
+  {
+    "query": "сверстай модалку по этому макету из фигмы",
+    "should_trigger": false
+  },
+  {
+    "query": "поправь CSS у хедера, он на мобилке разъезжается",
+    "should_trigger": false
+  },
+  {
+    "query": "/ui-review http://localhost:4200/profile",
+    "should_trigger": false
+  },
+  {
+    "query": "реализуй дизайн карточки из фигмы с нуля",
+    "should_trigger": false
+  },
+  {
+    "query": "поправь цвет кнопки на #3B82F6",
+    "should_trigger": false
+  },
+  {
+    "query": "сделай responsive верстку для страницы каталога",
+    "should_trigger": false
+  },
+  {
+    "query": "создай компонент по макету из фигмы",
+    "should_trigger": false
+  },
+  {
+    "query": "пересмотри UI страницы логина, сейчас выглядит криво",
+    "should_trigger": false
+  },
+  {
+    "query": "добавь тени и бордер-радиусы как в дизайн-системе",
+    "should_trigger": false
+  },
+  {
+    "query": "скинь скриншот текущей реализации формы",
+    "should_trigger": false
+  }
+]

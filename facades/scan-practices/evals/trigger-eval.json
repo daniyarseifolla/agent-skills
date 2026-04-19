@@ -1,0 +1,82 @@
+[
+  {
+    "query": "скан практик — обнови project-practices.md",
+    "should_trigger": true
+  },
+  {
+    "query": "scan practices, нужно собрать конвенции проекта",
+    "should_trigger": true
+  },
+  {
+    "query": "обнови практики, мы поменяли подход к стейт менеджменту",
+    "should_trigger": true
+  },
+  {
+    "query": "собери грабли — хочу знать все известные баги и подводные камни",
+    "should_trigger": true
+  },
+  {
+    "query": "/scan-practices",
+    "should_trigger": true
+  },
+  {
+    "query": "скан практик для проекта, нужен свежий файл",
+    "should_trigger": true
+  },
+  {
+    "query": "scan practices — собери lessons learned и known bugs",
+    "should_trigger": true
+  },
+  {
+    "query": "обнови практики проекта, добавились новые конвенции",
+    "should_trigger": true
+  },
+  {
+    "query": "просканируй проект на грабли и антипаттерны",
+    "should_trigger": true
+  },
+  {
+    "query": "update practices — we changed our naming conventions last sprint",
+    "should_trigger": true
+  },
+  {
+    "query": "сделай код ревью моего PR",
+    "should_trigger": false
+  },
+  {
+    "query": "настрой eslint с правилами для Angular",
+    "should_trigger": false
+  },
+  {
+    "query": "задокументируй API эндпоинты в README",
+    "should_trigger": false
+  },
+  {
+    "query": "проверь линтером весь проект и пофикси ошибки",
+    "should_trigger": false
+  },
+  {
+    "query": "обнови документацию для модуля авторизации",
+    "should_trigger": false
+  },
+  {
+    "query": "какие конвенции для именования файлов в Angular?",
+    "should_trigger": false
+  },
+  {
+    "query": "добавь prettier конфиг в проект",
+    "should_trigger": false
+  },
+  {
+    "query": "пофикси warning-и в консоли при билде",
+    "should_trigger": false
+  },
+  {
+    "query": "рефактори ProfileService, там слишком много ответственности",
+    "should_trigger": false
+  },
+  {
+    "query": "обнови CLAUDE.md с новыми инструкциями",
+    "should_trigger": false
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "query": "скан UI — нужно обновить инвентарь компонентов",
+    "should_trigger": true
+  },
+  {
+    "query": "scan UI components in the project",
+    "should_trigger": true
+  },
+  {
+    "query": "обнови инвентарь, мы добавили новые компоненты",
+    "should_trigger": true
+  },
+  {
+    "query": "scan components — нужен список всех переиспользуемых элементов",
+    "should_trigger": true
+  },
+  {
+    "query": "/scan-ui",
+    "should_trigger": true
+  },
+  {
+    "query": "сканируй компоненты проекта и обнови ui-inventory.md",
+    "should_trigger": true
+  },
+  {
+    "query": "скан юай, хочу посмотреть какие миксины есть",
+    "should_trigger": true
+  },
+  {
+    "query": "scan UI — собери все дизайн токены и SCSS переменные",
+    "should_trigger": true
+  },
+  {
+    "query": "обнови инвентарь UI, нужно понять какие shared компоненты есть",
+    "should_trigger": true
+  },
+  {
+    "query": "скан компонентов, чтоб знать что переиспользовать",
+    "should_trigger": true
+  },
+  {
+    "query": "создай новый компонент ButtonGroup",
+    "should_trigger": false
+  },
+  {
+    "query": "поправь баг в dropdown компоненте — не закрывается по клику снаружи",
+    "should_trigger": false
+  },
+  {
+    "query": "какие цвета используются в дизайн-системе?",
+    "should_trigger": false
+  },
+  {
+    "query": "добавь SCSS миксин для адаптивных брейкпоинтов",
+    "should_trigger": false
+  },
+  {
+    "query": "обнови стили для карточки товара",
+    "should_trigger": false
+  },
+  {
+    "query": "сделай код ревью компонента DataTable",
+    "should_trigger": false
+  },
+  {
+    "query": "перенеси стили из inline в SCSS файл",
+    "should_trigger": false
+  },
+  {
+    "query": "почему tooltip не показывается на мобилке?",
+    "should_trigger": false
+  },
+  {
+    "query": "задокументируй пропсы компонента Modal",
+    "should_trigger": false
+  },
+  {
+    "query": "обнови зависимости Angular Material до последней версии",
+    "should_trigger": false
+  }
+]

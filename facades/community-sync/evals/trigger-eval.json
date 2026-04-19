@@ -1,0 +1,82 @@
+[
+  {
+    "query": "обновить ветки — раскатай последний коммит на все community",
+    "should_trigger": true
+  },
+  {
+    "query": "sync branches, нужно распространить фикс на все ветки",
+    "should_trigger": true
+  },
+  {
+    "query": "cherry-pick в ветки community/alex, community/maria, community/ivan",
+    "should_trigger": true
+  },
+  {
+    "query": "распространи коммит 7c441df на все комьюнити ветки",
+    "should_trigger": true
+  },
+  {
+    "query": "раскатить на все ветки последний коммит с main",
+    "should_trigger": true
+  },
+  {
+    "query": "обнови community ветки, там фикс сломанного хедера",
+    "should_trigger": true
+  },
+  {
+    "query": "нужно синкнуть бранчи, вчерашний хотфикс не попал в community/sergey",
+    "should_trigger": true
+  },
+  {
+    "query": "distribute commit across all community branches and deploy",
+    "should_trigger": true
+  },
+  {
+    "query": "обновить все ветки — там критичный баг пофикшен",
+    "should_trigger": true
+  },
+  {
+    "query": "update all branches with latest hotfix from main pls",
+    "should_trigger": true
+  },
+  {
+    "query": "задеплой community/alex на тест",
+    "should_trigger": false
+  },
+  {
+    "query": "смержи feature/ARGO-10800 в main",
+    "should_trigger": false
+  },
+  {
+    "query": "сделай rebase feat/ARGO-10700 на main",
+    "should_trigger": false
+  },
+  {
+    "query": "cherry-pick этот коммит в мою фичевую ветку",
+    "should_trigger": false
+  },
+  {
+    "query": "создай новую ветку community/newclient от main",
+    "should_trigger": false
+  },
+  {
+    "query": "git merge main в feat/ARGO-10900",
+    "should_trigger": false
+  },
+  {
+    "query": "залей на прод последний билд",
+    "should_trigger": false
+  },
+  {
+    "query": "проверь статус пайплайна для community/alex",
+    "should_trigger": false
+  },
+  {
+    "query": "удали ветку community/old_client, она больше не нужна",
+    "should_trigger": false
+  },
+  {
+    "query": "переключись на ветку community/maria и подтяни последние изменения",
+    "should_trigger": false
+  }
+]

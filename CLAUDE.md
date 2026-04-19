@@ -2,12 +2,11 @@
 
 Reusable development pipeline skills for Claude Code with swappable adapters.
 
-## Versions
+## Version
 
-- **v3/** — active version
-- **v1/** — archived (original Jira/Angular/GitLab-specific skills)
+Version 4.0 — see VERSION file
 
-See [v3/SKILLS_OVERVIEW.md](v3/SKILLS_OVERVIEW.md) for full architecture and catalog.
+See [SKILLS_OVERVIEW.md](SKILLS_OVERVIEW.md) for full architecture and catalog.
 
 ## Quick Reference
 
@@ -18,6 +17,8 @@ See [v3/SKILLS_OVERVIEW.md](v3/SKILLS_OVERVIEW.md) for full architecture and cat
 | `/ship`, "закоммить и задеплой" | ship | commit → push → deploy [+prod] [+mr] [+slack] |
 | "sync branches" | community-sync | gitlab adapter + parallel cherry-pick |
 | "scan UI" | scan-ui-inventory | standalone scan |
+| "архитектурный совет", /arch | architect | planner (architect step) |
+| "оцени архитектуру", /arch-review | arch-review | 3 review → 3 alternatives |
 
 ## Testing
 

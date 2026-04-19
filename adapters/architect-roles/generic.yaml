@@ -1,0 +1,23 @@
+stack: "*"
+
+generated_context:
+  - "docs/plans/{task-key}/task-analysis.md"
+  - "docs/plans/{task-key}/impact-report.md"
+
+roles:
+  lens_1:
+    name: "Structure Architect"
+    focus: "modules, components, layers, separation of concerns"
+    codebase_research: "Glob + Grep for project structure"
+
+  lens_2:
+    name: "Data Architect"
+    focus: "state management, data flow, API integration, caching"
+    codebase_research: "Glob + Grep for services and state"
+
+  lens_3:
+    name: "Quality Architect"
+    focus: "performance, error handling, edge cases, resilience"
+    codebase_research: "Glob + Grep for error patterns"
+
+stack_constraints: []
