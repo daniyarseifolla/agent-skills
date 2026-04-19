@@ -5,14 +5,12 @@ Reusable development pipeline skills for Claude Code. Automates the full cycle: 
 ## Structure
 
 ```
-v3/              — active version
-  adapters/      — swappable integrations (jira, gitlab, angular, figma)
-  commands/      — slash commands
-  core/          — protocols (orchestration, security, metrics, consensus)
-  facades/       — entry points (jira-worker, deploy, sync, figma-audit, scans)
-  pipeline/      — phases (worker, planner, coder, reviewers)
-v1/              — archived (original Jira/Angular/GitLab-specific skills)
-docs/            — specs and plans
+pipeline/        — phases (worker, planner, architect, coder, reviewers)
+adapters/        — swappable integrations (jira, gitlab, angular, figma, slack, architect-roles)
+core/            — protocols (orchestration, security, metrics, consensus, ship-protocol)
+facades/         — entry points (jira-worker, architect, arch-review, deploy, sync, figma-audit, scans)
+commands/        — 21 slash commands
+docs/            — specs, plans, reviews
 ports/           — cross-agent portability (Codex, Literal)
 research/        — analysis and research notes
 ```
@@ -22,6 +20,12 @@ research/        — analysis and research notes
 ```bash
 # Full task pipeline (Jira + Figma + Angular + GitLab)
 /worker ARGO-12345
+
+# Architectural analysis — 3 approaches with trade-offs
+/arch "как лучше спроектировать систему нотификаций"
+
+# Architecture review of existing code
+/arch-review src/features/notifications
 
 # Figma audit: compare implementation vs design
 /figma https://figma.com/design/XXX/YYY?node-id=123:456 http://localhost:4200
@@ -45,9 +49,9 @@ Phase 1: analyze     Fetch task from Jira, classify complexity (S/M/L/XL)
 Phase 2: setup       Create branch, optional worktree, disable CI
 Phase 3: research    Deep analysis: Figma screens, Swagger endpoints, functional map
 Phase 4: impact      Impact analysis: consumers, siblings, shared code
-Phase 5: plan        Plan implementation (opus model)
+Phase 5: plan        Architect (3 agents M+) + plan implementation (opus model)
 Phase 6: plan-review Review plan with consensus agents
-Phase 7: implement   Implement code with Figma self-verify
+Phase 7: implement   Implement code with Figma self-verify, per-part checkpoint
 Phase 8: review      Code review + UI review in parallel
 Phase 9: ship        Create MR, deploy, collect metrics
 ```
@@ -59,6 +63,8 @@ Simple tasks (S complexity) skip heavy phases automatically.
 | Command | Purpose |
 |---------|---------|
 | `/worker ARGO-XXX` | Full pipeline |
+| `/arch [task\|description]` | Architectural analysis (3 approaches) |
+| `/arch-review [task\|path]` | Architecture review of existing code |
 | `/plan ARGO-XXX` | Plan only |
 | `/cr` | Code review current branch |
 | `/ui-review [url]` | UI review |
@@ -77,7 +83,13 @@ Simple tasks (S complexity) skip heavy phases automatically.
 
 ## Installation
 
-See [v3/README.md](v3/README.md) for install instructions. Source: this repo → `~/.claude/skills/`.
+Source: this repo → `~/.claude/skills/`.
+
+Copy skills to your Claude Code skills directory:
+```bash
+cp -r pipeline/ adapters/ core/ facades/ ~/.claude/skills/
+cp commands/*.md ~/.claude/commands/
+```
 
 ## Requirements
 
