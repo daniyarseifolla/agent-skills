@@ -94,129 +94,20 @@ node_map:
     model: sonnet
     delay: "15 seconds before launch"
     budget: "max 60 tool calls"
-    prompt: |
-      You are the Structure Mapper agent for a Figma audit (Phase 1).
-
-      Inputs:
-      - Figma fileKey: {fileKey}
-      - Figma nodeId: {nodeId}
-      - Project root: {project_root}
-      - Output path: docs/figma-audit/{audit_id}/.tmp/node-map-structure.md
-
-      Your job: map the Figma component tree to project component files.
-
-      Steps:
-      1. Call get_design_context(fileKey, nodeId) — extract the full component tree
-         - Prefer one parent-level call over multiple child calls (rate limit optimization)
-         - From the response, extract all leaf/component nodes: name, type, CSS properties
-      2. For each component node found:
-         - Glob the project: *.component.ts, *.tsx, *.vue, *.svelte
-         - Match Figma layer name → component filename
-           (e.g., "CardHeader" → card-header.component.ts, CardHeader.tsx)
-         - Match Figma layer name → likely CSS selector
-           (e.g., "CardHeader" → .card-header, app-card-header, [data-card-header])
-         - Assign confidence: HIGH (exact match), MEDIUM (partial match), LOW (no match)
-      3. Build a mapping table:
-
-      | node-id | figma-name | figma-type | component-file | selector-guess | confidence |
-      |---------|------------|------------|----------------|----------------|------------|
-
-      4. List any Figma nodes with NO matching component file as: UNMAPPED
-
-      Write full output (table + unmapped list) to:
-      docs/figma-audit/{audit_id}/.tmp/node-map-structure.md
-
-      Budget: max 60 tool calls. Stop when complete.
+    prompt_template: "facades/figma-audit/templates/structure-mapper-prompt.md"
 
   agent_2_visual:
     name: "visual-matcher"
     model: sonnet
     skip_when: "audit-only mode (has_app_url = false) — skip entirely, write empty file"
     budget: "max 60 tool calls"
-    prompt: |
-      You are the Visual Matcher agent for a Figma audit (Phase 1).
-
-      Inputs:
-      - Figma fileKey: {fileKey}, nodeId: {nodeId}
-      - App URL: {app_url}
-      - Output path: docs/figma-audit/{audit_id}/.tmp/node-map-visual.md
-
-      Your job: map Figma nodes to DOM elements using visual screenshot comparison.
-
-      Steps:
-      1. get_screenshot(fileKey, nodeId) → capture Figma screenshot
-      2. browser_navigate(app_url) → browser_take_screenshot → capture browser screenshot
-      3. Visually compare the two screenshots:
-         - Identify which DOM regions correspond to which Figma node by position/shape
-         - For each matched region, use browser_evaluate to extract a stable CSS selector:
-           ```js
-           const el = document.elementFromPoint(x, y);
-           function getSelector(el) {
-             if (el.dataset.testid) return `[data-testid="${el.dataset.testid}"]`;
-             if (el.id) return `#${el.id}`;
-             const path = [];
-             let node = el;
-             while (node && node !== document.body) {
-               const parent = node.parentElement;
-               if (!parent) break;
-               const idx = Array.from(parent.children).indexOf(node) + 1;
-               path.unshift(`${node.tagName.toLowerCase()}:nth-child(${idx})`);
-               node = parent;
-             }
-             return path.join(' > ');
-           }
-           return getSelector(el);
-           ```
-      4. Build mapping table:
-
-      | node-id | figma-name | css-selector | bbox-x | bbox-y | confidence |
-      |---------|------------|--------------|--------|--------|------------|
-
-      bbox-confidence: HIGH (clear visual match), MEDIUM (approximate), LOW (guess)
-
-      Write output to:
-      docs/figma-audit/{audit_id}/.tmp/node-map-visual.md
-
-      Budget: max 60 tool calls.
+    prompt_template: "facades/figma-audit/templates/visual-matcher-prompt.md"
 
   agent_3_code:
     name: "code-scanner"
     model: sonnet
     budget: "max 60 tool calls"
-    prompt: |
-      You are the Code Scanner agent for a Figma audit (Phase 1).
-
-      Inputs:
-      - Figma fileKey: {fileKey}, nodeId: {nodeId}
-      - Project root: {project_root}
-      - Output path: docs/figma-audit/{audit_id}/.tmp/node-map-code.md
-
-      Your job: enumerate all project components and match them to Figma layer names.
-
-      Steps:
-      1. Glob the project:
-         - *.component.ts → extract @Component({ selector: '...' }) values
-         - *.tsx, *.jsx → extract component function/class names
-         - *.vue → extract component name from <script> or filename
-         - *.svelte → use filename
-         For each: record { component-file, selector, scss-file (if co-located) }
-      2. Check for docs/ui-inventory.md — if present, read it for shared component catalog
-      3. Call get_design_context(fileKey, nodeId) → extract Figma layer names from tree
-      4. Match: Figma layer names ↔ component selectors and filenames
-         - Normalize both sides: lowercase, remove hyphens/underscores, strip suffixes (.component, etc.)
-         - Classify each component:
-           MAPPED   — Figma layer + code component both found, match confident
-           UNMAPPED — Figma layer exists, no code component found
-           ORPHANED — Code component exists, not found in Figma tree
-      5. Build mapping table:
-
-      | component-file | selector | figma-node-id | figma-name | status |
-      |----------------|----------|---------------|------------|--------|
-
-      Write output to:
-      docs/figma-audit/{audit_id}/.tmp/node-map-code.md
-
-      Budget: max 60 tool calls.
+    prompt_template: "facades/figma-audit/templates/code-scanner-prompt.md"
 
   aggregation:
     trigger: "After all 3 agents complete (or agent_2 skipped in audit-only)"
@@ -285,135 +176,19 @@ comparison:
     name: "visual-comparator"
     model: sonnet
     budget: "max 80 tool calls, 15 min"
-    prompt: |
-      You are the Visual Comparator for Figma audit Phase 2.
-
-      Inputs:
-      - figma-node-map.md at: docs/figma-audit/{audit_id}/figma-node-map.md
-      - Figma fileKey: {fileKey}, nodeId: {nodeId}
-      - App URL: {app_url}
-      - Output path: docs/figma-audit/{audit_id}/.tmp/comparison-visual.md
-
-      Steps:
-      1. Read figma-node-map.md → get list of frames/components
-      2. For each frame:
-         a. get_screenshot(fileKey, frame_nodeId) → Figma screenshot
-         b. browser_take_screenshot at matching viewport → browser screenshot
-         c. Compare: spacing rhythm, alignment, visual hierarchy, color consistency
-      3. Repeat at 3 viewports:
-         - Desktop: browser_resize(1440, 900) → take_screenshot
-         - Tablet:  browser_resize(768, 1024) → take_screenshot
-         - Mobile:  browser_resize(375, 812)  → take_screenshot
-      4. Score each frame 1-10 per viewport
-      5. Load Skill: visual-qa if available (on_unavailable: score based on manual comparison)
-
-      Output format:
-      ## Visual Comparison
-      | Frame | Desktop | Tablet | Mobile | Score | Findings |
-      |-------|---------|--------|--------|-------|----------|
-
-      Overall score: average of all frame scores.
-      Write to: docs/figma-audit/{audit_id}/.tmp/comparison-visual.md
-      Budget: max 80 tool calls.
+    prompt_template: "facades/figma-audit/templates/visual-comparator-prompt.md"
 
   agent_2_property:
     name: "property-and-structure-auditor"
     model: sonnet
     budget: "max 100 tool calls, 15 min"
-    prompt: |
-      You are the Property & Structure Auditor for Figma audit Phase 2.
-
-      Inputs:
-      - figma-node-map.md at: docs/figma-audit/{audit_id}/figma-node-map.md
-      - App URL: {app_url}
-      - Output path: docs/figma-audit/{audit_id}/.tmp/comparison-properties.md
-
-      PART A — STRUCTURAL COMPARISON (check BEFORE CSS properties):
-      1. Read figma-node-map.md → list of MAPPED components
-      2. For each mapped component, call get_design_context to get Figma layer tree
-      3. browser_navigate(app_url) → browser_evaluate to get DOM tree for the component
-      4. Compare STRUCTURE:
-         a. Element count: Figma has N child layers → DOM should have N child elements
-         b. Nesting depth: Figma nesting → DOM nesting should match
-         c. Text content: Extract ALL text from Figma text nodes → compare with DOM textContent
-            - Figma says "Start Free Trial" but DOM has "Subscribe" → MISMATCH (wrong text)
-            - Figma says "$9.99" but DOM has "{{ price }}" → OK if data-driven (but flag if static in Figma)
-         d. Component reuse: Is the DOM element a shared project component (app-button, mat-card)
-            or a generic div/span styled to look like one? Flag custom implementations of standard UI.
-         e. Icon source: Does the DOM contain inline SVG path data that looks hand-drawn?
-            (hand-drawn SVGs have irregular paths, lack Figma export comments/metadata)
-            Flag: "Icon appears hand-drawn — verify it came from Figma export"
-      5. Classify each structural check: OK | MISMATCH | SUSPICIOUS
-
-      PART B — CSS PROPERTY COMPARISON:
-      6. For each mapped component:
-         a. Get Figma CSS values from node map (or call get_design_context if needed)
-         b. browser_evaluate: `window.getComputedStyle(document.querySelector('{selector}'))`
-         c. Compare property-by-property:
-            - font-size, font-weight, line-height, letter-spacing
-            - color, background-color, border, border-radius
-            - padding-top, padding-right, padding-bottom, padding-left
-            - margin, gap, width, height
-            - flex-direction, justify-content, align-items
-            - box-shadow, opacity
-         d. Tolerance policy:
-            - spacing (padding, margin, gap, width, height): ±0px
-            - colors: exact hex match
-            - font-weight: exact match
-            - font-size: ±0px
-            - border-radius: ±1px (subpixel rendering)
-         e. Classify each property: OK | MISMATCH | MISSING
-      7. Score: ((structure_OK + css_OK) / (structure_total + css_total)) * 10
-
-      Output format:
-      ## Structural Comparison
-      | Component | Check | Figma | Browser | Status |
-      |-----------|-------|-------|---------|--------|
-      | CardHeader | text content | "Start Free Trial" | "Start Free Trial" | OK |
-      | CardHeader | child count | 3 | 3 | OK |
-      | PriceTag | component reuse | Button | custom div.btn | MISMATCH |
-      | Icon | icon source | Figma export | hand-drawn SVG | MISMATCH |
-
-      ## CSS Property Comparison
-      | Component | Property | Figma | Browser | Status |
-      |-----------|----------|-------|---------|--------|
-
-      Write to: docs/figma-audit/{audit_id}/.tmp/comparison-properties.md
-      Budget: max 100 tool calls.
+    prompt_template: "facades/figma-audit/templates/property-auditor-prompt.md"
 
   agent_3_ux:
     name: "ux-reviewer"
     model: sonnet
     budget: "max 80 tool calls, 15 min"
-    prompt: |
-      You are the UX/Interaction Reviewer for Figma audit Phase 2.
-
-      Inputs:
-      - figma-node-map.md at: docs/figma-audit/{audit_id}/figma-node-map.md
-      - App URL: {app_url}
-      - Output path: docs/figma-audit/{audit_id}/.tmp/comparison-ux.md
-
-      Steps:
-      1. Read figma-node-map.md → identify interactive components
-      2. browser_navigate(app_url)
-      3. For each interactive component:
-         a. browser_hover → browser_take_screenshot (hover state)
-         b. browser_press_key Tab → check focus-visible (focus state)
-         c. Test disabled state if applicable
-         d. Test loading state if async
-      4. Responsive: browser_resize to each breakpoint → browser_take_screenshot
-         - 375px, 768px, 1024px, 1440px
-         - Check for overflow, broken layouts, hidden content
-      5. Accessibility:
-         - browser_evaluate contrast ratios for text/background pairs
-         - Check focus order (Tab sequence makes sense)
-         - browser_snapshot → inspect aria-labels, roles
-      6. Load Skill: ui-ux-pro-max if available (on_unavailable: basic checks only)
-      7. Score 1-10 per category: states, responsive, accessibility
-         Overall score: average of 3 categories.
-
-      Write to: docs/figma-audit/{audit_id}/.tmp/comparison-ux.md
-      Budget: max 80 tool calls.
+    prompt_template: "facades/figma-audit/templates/ux-reviewer-prompt.md"
 
   aggregation:
     trigger: "After all 3 agents complete"
@@ -478,41 +253,7 @@ implementation:
     max_parallel: 5
     per_subagent_timeout: "10 min"
 
-    subagent_prompt_template: |
-      You are a Figma implementation subagent.
-
-      Mode: {mode}  (fix | build)
-      Component: {component_name}
-      Figma node: {figma_node_id}
-
-      Figma CSS (exact values to match):
-      {figma_css_yaml}
-
-      {if fix}
-      Current mismatches:
-      {property_diff_for_component}
-      {endif}
-
-      Closest existing component (STUDY THIS FIRST):
-      {closest_pattern_path}
-
-      Project SCSS variables: {variables_path}
-
-      Steps:
-      1. RESEARCH_FIRST: Read closest_pattern — understand project conventions before writing any code
-      2. {if fix} Read current component, fix each MISMATCH using exact Figma values
-         {if build} Create component from scratch: .ts + .html + .scss using Figma extract + pattern
-      3. Self-Verify: load Skill figma-coding-rules Section 2
-         - Compare EVERY CSS property against Figma values
-         - flex-direction MUST be verified explicitly
-      4. Commit gate: figma-verify.md must have ZERO MISMATCH rows for this component before committing
-      5. git commit -m "figma-{mode}: {component_name}"
-
-      Output (write to stdout):
-      component_file: {path}
-      properties_fixed: {N}
-      properties_remaining: {N}
-      commit_hash: {hash}
+    subagent_prompt_template: "facades/figma-audit/templates/implementation-subagent-prompt.md"
 
     on_timeout: "Mark component as UNVERIFIED in implementation-summary.md, proceed to reload gate"
 
