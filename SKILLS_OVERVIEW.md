@@ -36,6 +36,7 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 | core/security | 151 | Universal OWASP checks. Framework-specific checks in tech-stack adapters (Section 7) |
 | core/consensus-review | 211 | Multi-agent review pattern: 3 agents x different angles → aggregate |
 | core/metrics | 235 | Pipeline metrics schema, phase ID normalization, collection, storage |
+| core/ship-protocol | 134 | Shared ship steps: MR, merge, deploy, transition, notify. Used by worker Phase 9 and ship facade |
 
 ### Pipeline (project-agnostic phases)
 
@@ -51,6 +52,7 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 | pipeline/code-reviewer | 319 | sonnet | subagent/worktree | 3x sonnet: Bugs + Compliance + Security | Review diff |
 | pipeline/ui-reviewer | 498 | sonnet | subagent | 3x sonnet: Functional + Visual + States/A11y | Browser + Figma testing |
 | pipeline/code-researcher | 101 | haiku | Agent tool | — | Cheap read-only search (L/XL only) |
+| pipeline/researcher | 120 | opus | subagent | 3 agents: Figma + API + Functional | Deep task research (Phase 3, skip for S) |
 
 ### Adapters (swappable per project)
 
@@ -77,6 +79,8 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 | facades/deploy | 34 | `/deploy`, "задеплой", "deploy to test/prod" |
 | facades/architect | 61 | `/arch`, "архитектурный совет", "предложи архитектуру" |
 | facades/arch-review | 126 | `/arch-review`, "оцени архитектуру", "review architecture" |
+| facades/cr | 35 | `/cr`, `/code-review`, "проверь код", "code review" |
+| facades/ui-review | 40 | `/ui-review`, "проверь UI", "UI review", "visual review" |
 
 ### Commands (19 slash commands)
 

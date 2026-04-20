@@ -7,7 +7,7 @@ human_description: "Code review текущей ветки."
 
 Alias: /code-review also works
 
-1. Load Skill: pipeline-code-reviewer
+1. Load Skill: cr
 2. Detect current branch
 3. Find plan in docs/plans/ by branch name (if exists)
 4. Run full code review: plan compliance, architecture, security (core-security), quality

@@ -1,0 +1,481 @@
+{
+  "description": "Checkpoint schema validation — verifies checkpoint.yaml files conform to the canonical schema from core/orchestration/SKILL.md",
+  "version": "4.0",
+  "source": "core/orchestration/SKILL.md section 4 — Checkpoint Protocol",
+  "location": "docs/plans/{task-key}/checkpoint.yaml",
+  "required_fields": [
+    "task_key",
+    "completed",
+    "resume",
+    "phase_name",
+    "iteration",
+    "verdict",
+    "complexity",
+    "route",
+    "timestamp"
+  ],
+  "optional_fields": [
+    "invalidated",
+    "terminal_status",
+    "ci_disabled",
+    "worktree_path",
+    "app_url",
+    "credentials_path",
+    "last_committed_part",
+    "last_commit_hash",
+    "handoff_payload",
+    "issues_history",
+    "re_routed",
+    "re_route_detail"
+  ],
+  "field_types": {
+    "task_key": "string",
+    "completed": "string[] — append-only set of phase names",
+    "resume": "string|null — next phase to execute",
+    "invalidated": "string[] — phases whose results are no longer valid",
+    "terminal_status": "running|success|failed|stopped_by_user|loop_exceeded|null",
+    "phase_name": "string — current/last completed phase name",
+    "iteration": "object — { plan_review: 'N/3', code_review: 'N/3', evaluate_return: 'N/2' }",
+    "verdict": "string — last verdict from current phase",
+    "complexity": "S|M|L|XL",
+    "route": "MINIMAL|STANDARD|FULL",
+    "timestamp": "ISO-8601",
+    "ci_disabled": "boolean",
+    "worktree_path": "string|null",
+    "app_url": "string|null",
+    "credentials_path": "string|null",
+    "last_committed_part": "number|null",
+    "last_commit_hash": "string|null",
+    "handoff_payload": "object",
+    "issues_history": "object[]",
+    "re_routed": "boolean",
+    "re_route_detail": "string"
+  },
+  "enum_fields": {
+    "complexity": ["S", "M", "L", "XL"],
+    "route": ["MINIMAL", "STANDARD", "FULL"],
+    "terminal_status": ["running", "success", "failed", "stopped_by_user", "loop_exceeded", null],
+    "phase_name_values": ["analyze", "setup", "research", "impact", "plan", "plan-review", "implement", "review", "ship"],
+    "completed_values": ["analyze", "setup", "research", "impact", "plan", "plan-review", "implement", "review", "ship"]
+  },
+  "iteration_limits": {
+    "plan_review": { "max": 3, "format": "N/3" },
+    "code_review": { "max": 3, "format": "N/3" },
+    "evaluate_return": { "max": 2, "format": "N/2" }
+  },
+  "next_phase_map": {
+    "analyze": "setup",
+    "setup": "research (or impact if complexity == S)",
+    "research": "impact",
+    "impact": "plan",
+    "plan": "plan-review (or implement if complexity == S)",
+    "plan-review": "implement",
+    "implement": "review",
+    "review": "ship",
+    "ship": null
+  },
+  "route_phase_sets": {
+    "MINIMAL": [1, 2, 4, 5, 7, 8, 9],
+    "STANDARD": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    "FULL": [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  },
+  "write_protocol": {
+    "step_1": "Write to checkpoint.yaml.tmp",
+    "step_2": "If checkpoint.yaml exists, copy to checkpoint.yaml.bak",
+    "step_3": "Rename checkpoint.yaml.tmp -> checkpoint.yaml (atomic on POSIX)",
+    "rule": "NEVER overwrite checkpoint.yaml directly"
+  },
+  "invalidation_rules": {
+    "code_review_loop": {
+      "trigger": "review verdict == CHANGES_REQUESTED",
+      "invalidated": ["review"],
+      "resume": "implement"
+    },
+    "plan_review_loop": {
+      "trigger": "plan-review verdict == NEEDS_CHANGES",
+      "invalidated": ["plan-review"],
+      "resume": "plan"
+    },
+    "evaluate_return": {
+      "trigger": "implement evaluate gate verdict == RETURN",
+      "invalidated": ["implement"],
+      "resume": "plan-review"
+    }
+  },
+  "valid_examples": [
+    {
+      "description": "S-complexity task after analyze phase",
+      "checkpoint": {
+        "task_key": "ARGO-10500",
+        "completed": ["analyze"],
+        "resume": "setup",
+        "phase_name": "analyze",
+        "iteration": { "plan_review": "0/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "PROCEED",
+        "complexity": "S",
+        "route": "MINIMAL",
+        "timestamp": "2026-04-20T10:00:00Z",
+        "ci_disabled": false,
+        "worktree_path": null,
+        "app_url": null,
+        "credentials_path": null,
+        "last_committed_part": null,
+        "last_commit_hash": null,
+        "handoff_payload": {},
+        "issues_history": []
+      },
+      "expected": "valid"
+    },
+    {
+      "description": "M-complexity task mid-pipeline, after plan-review approved",
+      "checkpoint": {
+        "task_key": "ARGO-11234",
+        "completed": ["analyze", "setup", "research", "impact", "plan", "plan-review"],
+        "resume": "implement",
+        "phase_name": "plan-review",
+        "iteration": { "plan_review": "1/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "APPROVED",
+        "complexity": "M",
+        "route": "STANDARD",
+        "timestamp": "2026-04-20T12:30:00Z",
+        "ci_disabled": true,
+        "worktree_path": "/tmp/worktree-ARGO-11234",
+        "app_url": "http://localhost:4200",
+        "credentials_path": null,
+        "last_committed_part": null,
+        "last_commit_hash": "abc1234",
+        "handoff_payload": {
+          "artifact_path": "docs/plans/ARGO-11234/plan.md",
+          "key_decisions": ["Use signals over BehaviorSubject"],
+          "complexity": "M"
+        },
+        "issues_history": []
+      },
+      "expected": "valid"
+    },
+    {
+      "description": "L-complexity task with code review loop-back",
+      "checkpoint": {
+        "task_key": "ARGO-12001",
+        "completed": ["analyze", "setup", "research", "impact", "plan", "plan-review", "implement", "review"],
+        "resume": "implement",
+        "invalidated": ["review"],
+        "phase_name": "review",
+        "iteration": { "plan_review": "1/3", "code_review": "1/3", "evaluate_return": "0/2" },
+        "verdict": "CHANGES_REQUESTED",
+        "complexity": "L",
+        "route": "FULL",
+        "timestamp": "2026-04-20T15:45:00Z",
+        "ci_disabled": true,
+        "worktree_path": "/tmp/worktree-ARGO-12001",
+        "app_url": "http://localhost:4200",
+        "credentials_path": null,
+        "last_committed_part": 3,
+        "last_commit_hash": "def5678",
+        "handoff_payload": {
+          "branch": "feat/ARGO-12001",
+          "parts_implemented": ["Part 1", "Part 2", "Part 3"],
+          "deviations_from_plan": []
+        },
+        "issues_history": [
+          { "phase": "review", "iteration": 1, "verdict": "CHANGES_REQUESTED", "issues": ["Missing error handling in API service"] }
+        ]
+      },
+      "expected": "valid"
+    },
+    {
+      "description": "Pipeline completed successfully",
+      "checkpoint": {
+        "task_key": "ARGO-10800",
+        "completed": ["analyze", "setup", "impact", "plan", "implement", "review", "ship"],
+        "resume": null,
+        "terminal_status": "success",
+        "phase_name": "ship",
+        "iteration": { "plan_review": "0/3", "code_review": "1/3", "evaluate_return": "0/2" },
+        "verdict": "APPROVED",
+        "complexity": "S",
+        "route": "MINIMAL",
+        "timestamp": "2026-04-20T16:00:00Z",
+        "ci_disabled": false,
+        "worktree_path": null,
+        "app_url": null,
+        "credentials_path": null,
+        "last_committed_part": 1,
+        "last_commit_hash": "ghi9012",
+        "handoff_payload": {},
+        "issues_history": []
+      },
+      "expected": "valid"
+    },
+    {
+      "description": "XL task with re-routing from M to XL",
+      "checkpoint": {
+        "task_key": "ARGO-13000",
+        "completed": ["analyze", "setup", "research", "impact", "plan"],
+        "resume": "plan-review",
+        "phase_name": "plan",
+        "iteration": { "plan_review": "0/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "PROCEED",
+        "complexity": "XL",
+        "route": "FULL",
+        "timestamp": "2026-04-20T09:15:00Z",
+        "re_routed": true,
+        "re_route_detail": "M->XL after planning discovered 8 AC and 5 modules",
+        "ci_disabled": true,
+        "worktree_path": "/tmp/worktree-ARGO-13000",
+        "app_url": "http://localhost:4200",
+        "credentials_path": ".credentials",
+        "last_committed_part": null,
+        "last_commit_hash": null,
+        "handoff_payload": {},
+        "issues_history": []
+      },
+      "expected": "valid"
+    },
+    {
+      "description": "Pipeline stopped by user",
+      "checkpoint": {
+        "task_key": "ARGO-10999",
+        "completed": ["analyze", "setup", "impact", "plan"],
+        "resume": "implement",
+        "terminal_status": "stopped_by_user",
+        "phase_name": "plan-review",
+        "iteration": { "plan_review": "1/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "APPROVED",
+        "complexity": "M",
+        "route": "STANDARD",
+        "timestamp": "2026-04-20T14:30:00Z",
+        "ci_disabled": false,
+        "worktree_path": null,
+        "app_url": null,
+        "credentials_path": null,
+        "last_committed_part": null,
+        "last_commit_hash": null,
+        "handoff_payload": {},
+        "issues_history": []
+      },
+      "expected": "valid"
+    }
+  ],
+  "invalid_examples": [
+    {
+      "description": "Missing required field: task_key",
+      "checkpoint": {
+        "completed": ["analyze"],
+        "resume": "setup",
+        "phase_name": "analyze",
+        "iteration": { "plan_review": "0/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "PROCEED",
+        "complexity": "S",
+        "route": "MINIMAL",
+        "timestamp": "2026-04-20T10:00:00Z"
+      },
+      "expected": "invalid",
+      "reason": "missing required field: task_key"
+    },
+    {
+      "description": "Missing required field: complexity",
+      "checkpoint": {
+        "task_key": "ARGO-10500",
+        "completed": ["analyze"],
+        "resume": "setup",
+        "phase_name": "analyze",
+        "iteration": { "plan_review": "0/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "PROCEED",
+        "route": "MINIMAL",
+        "timestamp": "2026-04-20T10:00:00Z"
+      },
+      "expected": "invalid",
+      "reason": "missing required field: complexity"
+    },
+    {
+      "description": "Missing required field: route",
+      "checkpoint": {
+        "task_key": "ARGO-10500",
+        "completed": ["analyze"],
+        "resume": "setup",
+        "phase_name": "analyze",
+        "iteration": { "plan_review": "0/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "PROCEED",
+        "complexity": "S",
+        "timestamp": "2026-04-20T10:00:00Z"
+      },
+      "expected": "invalid",
+      "reason": "missing required field: route"
+    },
+    {
+      "description": "Invalid complexity value",
+      "checkpoint": {
+        "task_key": "ARGO-10500",
+        "completed": ["analyze"],
+        "resume": "setup",
+        "phase_name": "analyze",
+        "iteration": { "plan_review": "0/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "PROCEED",
+        "complexity": "XXL",
+        "route": "MINIMAL",
+        "timestamp": "2026-04-20T10:00:00Z"
+      },
+      "expected": "invalid",
+      "reason": "invalid complexity value: XXL (valid: S, M, L, XL)"
+    },
+    {
+      "description": "Invalid route value",
+      "checkpoint": {
+        "task_key": "ARGO-10500",
+        "completed": ["analyze"],
+        "resume": "setup",
+        "phase_name": "analyze",
+        "iteration": { "plan_review": "0/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "PROCEED",
+        "complexity": "S",
+        "route": "QUICK",
+        "timestamp": "2026-04-20T10:00:00Z"
+      },
+      "expected": "invalid",
+      "reason": "invalid route value: QUICK (valid: MINIMAL, STANDARD, FULL)"
+    },
+    {
+      "description": "Invalid terminal_status value",
+      "checkpoint": {
+        "task_key": "ARGO-10500",
+        "completed": ["analyze", "setup", "impact", "plan", "implement", "review", "ship"],
+        "resume": null,
+        "terminal_status": "done",
+        "phase_name": "ship",
+        "iteration": { "plan_review": "0/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "APPROVED",
+        "complexity": "S",
+        "route": "MINIMAL",
+        "timestamp": "2026-04-20T10:00:00Z"
+      },
+      "expected": "invalid",
+      "reason": "invalid terminal_status value: done (valid: running, success, failed, stopped_by_user, loop_exceeded, null)"
+    },
+    {
+      "description": "Invalid phase_name not in phase sequence",
+      "checkpoint": {
+        "task_key": "ARGO-10500",
+        "completed": ["analyze"],
+        "resume": "setup",
+        "phase_name": "planning",
+        "iteration": { "plan_review": "0/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "PROCEED",
+        "complexity": "S",
+        "route": "MINIMAL",
+        "timestamp": "2026-04-20T10:00:00Z"
+      },
+      "expected": "invalid",
+      "reason": "invalid phase_name: planning (valid: analyze, setup, research, impact, plan, plan-review, implement, review, ship)"
+    },
+    {
+      "description": "completed contains invalid phase name",
+      "checkpoint": {
+        "task_key": "ARGO-10500",
+        "completed": ["analyze", "build"],
+        "resume": "plan",
+        "phase_name": "analyze",
+        "iteration": { "plan_review": "0/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "PROCEED",
+        "complexity": "S",
+        "route": "MINIMAL",
+        "timestamp": "2026-04-20T10:00:00Z"
+      },
+      "expected": "invalid",
+      "reason": "completed contains invalid phase name: build"
+    },
+    {
+      "description": "S-complexity with FULL route (route mismatch)",
+      "checkpoint": {
+        "task_key": "ARGO-10500",
+        "completed": ["analyze"],
+        "resume": "setup",
+        "phase_name": "analyze",
+        "iteration": { "plan_review": "0/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "PROCEED",
+        "complexity": "S",
+        "route": "FULL",
+        "timestamp": "2026-04-20T10:00:00Z"
+      },
+      "expected": "invalid",
+      "reason": "route mismatch: S complexity should use MINIMAL route, not FULL"
+    },
+    {
+      "description": "iteration exceeds max limit for plan_review",
+      "checkpoint": {
+        "task_key": "ARGO-10500",
+        "completed": ["analyze", "setup", "research", "impact", "plan"],
+        "resume": "plan",
+        "phase_name": "plan-review",
+        "iteration": { "plan_review": "4/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "NEEDS_CHANGES",
+        "complexity": "M",
+        "route": "STANDARD",
+        "timestamp": "2026-04-20T10:00:00Z"
+      },
+      "expected": "invalid",
+      "reason": "iteration exceeds limit: plan_review 4/3 (max 3)"
+    },
+    {
+      "description": "iteration exceeds max limit for evaluate_return",
+      "checkpoint": {
+        "task_key": "ARGO-10500",
+        "completed": ["analyze", "setup", "impact", "plan", "plan-review"],
+        "resume": "plan-review",
+        "phase_name": "implement",
+        "iteration": { "plan_review": "1/3", "code_review": "0/3", "evaluate_return": "3/2" },
+        "verdict": "RETURN",
+        "complexity": "M",
+        "route": "STANDARD",
+        "timestamp": "2026-04-20T10:00:00Z"
+      },
+      "expected": "invalid",
+      "reason": "iteration exceeds limit: evaluate_return 3/2 (max 2)"
+    },
+    {
+      "description": "Missing required field: timestamp",
+      "checkpoint": {
+        "task_key": "ARGO-10500",
+        "completed": ["analyze"],
+        "resume": "setup",
+        "phase_name": "analyze",
+        "iteration": { "plan_review": "0/3", "code_review": "0/3", "evaluate_return": "0/2" },
+        "verdict": "PROCEED",
+        "complexity": "S",
+        "route": "MINIMAL"
+      },
+      "expected": "invalid",
+      "reason": "missing required field: timestamp"
+    },
+    {
+      "description": "resume points past invalidated phase (invariant violation)",
+      "checkpoint": {
+        "task_key": "ARGO-12001",
+        "completed": ["analyze", "setup", "research", "impact", "plan", "plan-review", "implement", "review"],
+        "resume": "ship",
+        "invalidated": ["review"],
+        "phase_name": "review",
+        "iteration": { "plan_review": "1/3", "code_review": "1/3", "evaluate_return": "0/2" },
+        "verdict": "CHANGES_REQUESTED",
+        "complexity": "L",
+        "route": "FULL",
+        "timestamp": "2026-04-20T15:45:00Z"
+      },
+      "expected": "invalid",
+      "reason": "resume (ship) is after earliest invalidated phase (review) — must resume at or before invalidated phase"
+    }
+  ],
+  "complexity_route_mapping": {
+    "_note": "Valid complexity-to-route pairs from complexity_matrix in core/orchestration",
+    "S": "MINIMAL",
+    "M": "STANDARD",
+    "L": "FULL",
+    "XL": "FULL"
+  },
+  "verdict_vocabulary": {
+    "plan_review": ["APPROVED", "NEEDS_CHANGES", "REJECTED"],
+    "code_review": ["APPROVED", "APPROVED_WITH_COMMENTS", "CHANGES_REQUESTED"],
+    "ui_review": ["PASS", "PASS_WITH_ISSUES", "ISSUES_FOUND"],
+    "evaluate_gate": ["PROCEED", "REVISE", "RETURN"]
+  }
+}

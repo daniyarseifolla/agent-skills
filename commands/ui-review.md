@@ -7,7 +7,7 @@ human_description: "UI ревью: тестирование в браузере 
 
 Arguments: $ARGUMENTS
 
-1. Load Skill: pipeline-ui-reviewer
+1. Load Skill: ui-review
 2. If app URL provided → use it; otherwise detect/ask
 3. Detect current branch → find Figma URLs in docs/plans/
 4. Run: functional tests (agent-browser) + visual comparison (Figma) + visual-qa (screenshots)

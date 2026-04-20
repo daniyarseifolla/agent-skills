@@ -1,0 +1,292 @@
+{
+  "description": "Adapter contract compliance checks — verifies each adapter implements all required methods from its contract type",
+  "version": "4.0",
+  "source": "SKILLS_OVERVIEW.md lines 179-186 — Adapter Contracts",
+  "contracts": {
+    "task-source": {
+      "required_methods": [
+        "fetch_task",
+        "fetch_attachments",
+        "parse_ac",
+        "get_complexity_hints",
+        "transition",
+        "format_mr_description"
+      ],
+      "adapters": ["adapters/jira/SKILL.md"]
+    },
+    "ci-cd": {
+      "required_methods": [
+        "create_mr",
+        "get_pipeline",
+        "wait_for_stage",
+        "deploy",
+        "retry_job",
+        "create_tag"
+      ],
+      "adapters": ["adapters/gitlab/SKILL.md"]
+    },
+    "tech-stack": {
+      "required_methods": [
+        "commands",
+        "quality_checks",
+        "security_checks",
+        "api_discovery",
+        "patterns",
+        "module_lookup"
+      ],
+      "adapters": ["adapters/angular/SKILL.md"]
+    },
+    "design": {
+      "required_methods": [
+        "parse_urls",
+        "get_design",
+        "get_screenshot",
+        "compare_visual",
+        "extract_tokens"
+      ],
+      "adapters": ["adapters/figma/SKILL.md"]
+    },
+    "architect-roles": {
+      "required_methods": [
+        "roles",
+        "stack_constraints",
+        "generated_context"
+      ],
+      "adapters": ["adapters/architect-roles/SKILL.md"]
+    },
+    "notification": {
+      "required_methods": [
+        "notify_deploy"
+      ],
+      "adapters": ["adapters/slack/SKILL.md"]
+    }
+  },
+  "checks": [
+    {
+      "adapter": "adapters/jira/SKILL.md",
+      "contract": "task-source",
+      "method": "fetch_task",
+      "expected_heading": "## 1. fetch_task(key)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/jira/SKILL.md",
+      "contract": "task-source",
+      "method": "fetch_attachments",
+      "expected_heading": "## 2. fetch_attachments(key)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/jira/SKILL.md",
+      "contract": "task-source",
+      "method": "parse_ac",
+      "expected_heading": "## 3. parse_ac(description)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/jira/SKILL.md",
+      "contract": "task-source",
+      "method": "get_complexity_hints",
+      "expected_heading": "## 4. get_complexity_hints(task)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/jira/SKILL.md",
+      "contract": "task-source",
+      "method": "transition",
+      "expected_heading": "## 5. transition(key, status)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/jira/SKILL.md",
+      "contract": "task-source",
+      "method": "format_mr_description",
+      "expected_heading": "## 6. format_mr_description(task, plan_summary, changes)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/gitlab/SKILL.md",
+      "contract": "ci-cd",
+      "method": "create_mr",
+      "expected_heading": "## 1. create_mr(branch, title, description, target_branch)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/gitlab/SKILL.md",
+      "contract": "ci-cd",
+      "method": "get_pipeline",
+      "expected_heading": "## 2. get_pipeline(branch)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/gitlab/SKILL.md",
+      "contract": "ci-cd",
+      "method": "wait_for_stage",
+      "expected_heading": "## 3. wait_for_stage(pipeline_id, stage_name, timeout_min)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/gitlab/SKILL.md",
+      "contract": "ci-cd",
+      "method": "deploy",
+      "expected_heading": "## 4. deploy(branch, environment)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/gitlab/SKILL.md",
+      "contract": "ci-cd",
+      "method": "retry_job",
+      "expected_heading": "## 7. retry_job(job_id)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/gitlab/SKILL.md",
+      "contract": "ci-cd",
+      "method": "create_tag",
+      "expected_heading": "## 8. create_tag(tag_name, ref)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/angular/SKILL.md",
+      "contract": "tech-stack",
+      "method": "commands",
+      "expected_heading": "## 1. Commands",
+      "expected_yaml_key": "commands",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/angular/SKILL.md",
+      "contract": "tech-stack",
+      "method": "quality_checks",
+      "expected_heading": "## 2. Quality Checks",
+      "expected_yaml_key": "quality_checks",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/angular/SKILL.md",
+      "contract": "tech-stack",
+      "method": "security_checks",
+      "expected_heading": "## 7. Security Checks (Angular-specific)",
+      "expected_yaml_key": "security_checks",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/angular/SKILL.md",
+      "contract": "tech-stack",
+      "method": "api_discovery",
+      "expected_heading": "## 9. API Discovery",
+      "expected_yaml_key": "api_discovery",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/angular/SKILL.md",
+      "contract": "tech-stack",
+      "method": "patterns",
+      "expected_heading": "## 3. Component Patterns",
+      "expected_yaml_key": "component_pattern",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/angular/SKILL.md",
+      "contract": "tech-stack",
+      "method": "module_lookup",
+      "expected_heading": "## 4. Module Lookup",
+      "expected_yaml_key": "modules",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/figma/SKILL.md",
+      "contract": "design",
+      "method": "parse_urls",
+      "expected_heading": "## 1. parse_urls(text)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/figma/SKILL.md",
+      "contract": "design",
+      "method": "get_design",
+      "expected_heading": "## 2. get_design(url)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/figma/SKILL.md",
+      "contract": "design",
+      "method": "get_screenshot",
+      "expected_heading": "## 3. get_screenshot(url)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/figma/SKILL.md",
+      "contract": "design",
+      "method": "compare_visual",
+      "expected_heading": "## 4. compare_visual(actual_screenshot_path, figma_url)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/figma/SKILL.md",
+      "contract": "design",
+      "method": "extract_tokens",
+      "expected_heading": "## 5. extract_tokens(figma_url)",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/architect-roles/SKILL.md",
+      "contract": "architect-roles",
+      "method": "roles",
+      "expected_yaml_key": "roles",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/architect-roles/SKILL.md",
+      "contract": "architect-roles",
+      "method": "stack_constraints",
+      "expected_yaml_key": "stack_constraints",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/architect-roles/SKILL.md",
+      "contract": "architect-roles",
+      "method": "generated_context",
+      "expected_yaml_key": "generated_context",
+      "expected": true
+    },
+    {
+      "adapter": "adapters/slack/SKILL.md",
+      "contract": "notification",
+      "method": "notify_deploy",
+      "expected_heading": "## 1. notify_deploy(task_key, environment, options?)",
+      "expected": true
+    }
+  ],
+  "extra_methods_not_in_contract": {
+    "_note": "Methods found in adapters beyond the contract — informational only, not tested",
+    "adapters/jira/SKILL.md": [
+      "detect_modules",
+      "parse_task_key",
+      "add_comment",
+      "search"
+    ],
+    "adapters/gitlab/SKILL.md": [
+      "disable_ci",
+      "restore_ci",
+      "branch_management",
+      "get_job_log",
+      "community_sync",
+      "rollback"
+    ],
+    "adapters/figma/SKILL.md": [
+      "figma_first_mode",
+      "get_metadata"
+    ]
+  },
+  "adapter_file_registry": {
+    "adapters/jira/SKILL.md": { "contract": "task-source", "lines": 205 },
+    "adapters/gitlab/SKILL.md": { "contract": "ci-cd", "lines": 307 },
+    "adapters/angular/SKILL.md": { "contract": "tech-stack", "lines": 364 },
+    "adapters/figma/SKILL.md": { "contract": "design", "lines": 227 },
+    "adapters/architect-roles/SKILL.md": { "contract": "architect-roles", "lines": 41 },
+    "adapters/slack/SKILL.md": { "contract": "notification", "lines": 153 },
+    "adapters/architect-roles/angular.yaml": { "type": "role-definitions", "stack": "angular" },
+    "adapters/architect-roles/generic.yaml": { "type": "role-definitions", "stack": "generic-fallback" }
+  }
+}
