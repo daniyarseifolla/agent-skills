@@ -46,10 +46,7 @@ Triggers:
    - Load task-source adapter
    - Fetch task (title, AC, description, Figma URLs)
 
-4. Run brainstorming:
-   - Invoke `superpowers:brainstorming` to explore problem space
-
-5. Invoke planner in architect-only mode:
+4. Invoke planner in architect-only mode (brainstorming is owned by pipeline/planner):
    ```yaml
    Skill: pipeline-planner
    mode: architect-only
@@ -57,6 +54,6 @@ Triggers:
    This runs steps 3-5 only (research + brainstorming + architect).
    Shows 3 approaches + comparison table. No arbiter.
 
-6. User interaction:
+5. User interaction:
    - User selects / discusses / asks questions
    - Optional: save chosen approach to `architecture.md`

@@ -50,7 +50,7 @@ User types "архитектурный совет"
 ## Правила
 
 - **Commands** -> загружают facades или pipeline skills
-- **Facades** -> загружают pipeline skills
+- **Facades** -> загружают pipeline skills и adapters (для routing/контекста проекта)
 - **Pipeline skills** -> загружают core skills и adapters
 - **Core skills** -> не загружают ничего (protocols only)
 - **Adapters** -> не загружают ничего (config only)

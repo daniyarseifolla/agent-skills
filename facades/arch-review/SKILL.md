@@ -38,7 +38,7 @@ Triggers:
 
 1. Load role adapter (same lenses as /arch)
 2. Determine scope:
-   - If task key → `git diff develop...HEAD` for changed files
+   - If task key → `git diff <base-branch>...HEAD` for changed files (use base branch from CI-CD adapter config; default: main; detect via `git remote show origin` or project.yaml ci-cd adapter)
    - If path → that directory
    - If bare → ask user
 3. Dispatch 3 review agents in parallel

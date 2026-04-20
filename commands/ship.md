@@ -1,5 +1,5 @@
 ---
-description: "Commit, push, and deploy. Usage: /ship [prod] [--mr] [--sync]"
+description: "Commit, push, and deploy. Usage: /ship [prod] [--mr]"
 human_description: "Commit + push + deploy в одну команду."
 ---
 
@@ -11,6 +11,5 @@ Arguments: $ARGUMENTS
 2. Parse arguments:
    - `prod` → enable production deploy
    - `--mr` → create MR instead of direct push
-   - `--sync` → run community sync after deploy
    - No args → commit + push + deploy test
 3. Execute ship workflow with parsed flags

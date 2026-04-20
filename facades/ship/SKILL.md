@@ -76,46 +76,39 @@ mode_mr: # --mr flag
   note: "Push feature branch, MR created in step 3"
 ```
 
-### Step 3: MR + Merge + Deploy Test (--mr path uses protocol)
+### Step 3: Deploy (both paths delegate to core-ship-protocol)
 
 ```yaml
-mr_path: # only with --mr
+resolve_task_key: |
+  Before delegating, resolve task_key for protocol:
+    branch name feat/{TASK_KEY} → {TASK_KEY}, or parse from commit messages.
+    If truly unresolvable → pass empty, protocol will WARN and continue.
+
+mr_path: # --mr flag
   action: |
-    Load core-ship-protocol. Execute shared steps with inputs:
-      task_key: resolved from branch name feat/{TASK_KEY} or commit messages
+    Load core-ship-protocol. Execute with inputs:
+      task_key: {resolved_task_key}
       mr_title: auto-generate from latest commits
       mr_description: auto-generate from git diff
       target_branch: target_branch
       environment: 'test'
       skip_after_mr: false
+      skip_mr: false
+      skip_merge: false
     If --slack → ensure notification adapter is loaded before protocol runs.
     Error handling defined in core-ship-protocol.
 
 direct_path: # no --mr (default)
   action: |
-    Skip MR creation/merge (already pushed direct in Step 2).
-    Deploy test:
-      - find_pipeline: "ci-cd adapter get_pipeline(target_branch)"
-      - wait_build: "ci-cd adapter wait_for_stage(pipeline, 'build', timeout=15min)"
-      - deploy: "ci-cd adapter deploy(target_branch, 'test')"
-      - wait_deploy: "Poll deploy job until success (timeout: 10min)"
-      - transition: |
-          MANDATORY — Jira transition MUST happen after every test deploy.
-          Resolve task_key: branch name feat/{TASK_KEY} → {TASK_KEY}, or parse from commit messages.
-          task_source_adapter.transition(task_key, 'Ready for Test')
-          skip_if: no task_source adapter loaded (ONLY valid reason to skip)
-          Do NOT skip because "task_key not resolved" — extract from branch name first, then commits.
-          If task_key truly unresolvable → WARN, continue. If API fails → WARN, continue.
-      - notify: |
-          If --slack → MUST load adapter-slack skill and follow its template EXACTLY.
-          Template (4 lines, no extras):
-            {mention}
-            <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на test
-            {summary — импакт для пользователя, НЕ тех. термины}
-            <{env_url from CLAUDE.md: host + base_href}|Тест>
-          env_url source: CLAUDE.md OR .gitlab-ci.yml
-          NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
-  report: "Deploy test: SUCCESS | {pipeline_url}"
+    Load core-ship-protocol. Execute with inputs:
+      task_key: {resolved_task_key}
+      target_branch: target_branch
+      environment: 'test'
+      skip_mr: true
+      skip_merge: true
+    Protocol handles: find pipeline → wait build → deploy → wait deploy → Jira transition → Slack notify.
+    If --slack → ensure notification adapter is loaded before protocol runs.
+    Error handling defined in core-ship-protocol.
 ```
 
 ### Step 4: Deploy Prod (only with `prod`)
@@ -123,25 +116,15 @@ direct_path: # no --mr (default)
 ```yaml
 skip_if: "No prod flag"
 confirmation: REQUIRED — "Deploy to production? (y/n)"
-steps:
-  - deploy: "ci-cd adapter deploy(target_branch, 'prod')"
-  - wait_deploy: "Poll deploy job until success (timeout: 15min)"
-  - transition: |
-      MANDATORY — same rules as Step 3 transition.
-      Resolve task_key: branch name feat/{TASK_KEY} → {TASK_KEY}, or parse from commit messages.
-      task_source_adapter.transition(task_key, 'Done')
-      skip_if: no task_source adapter loaded (ONLY valid reason to skip)
-      If task_key unresolvable → WARN, continue. If API fails → WARN, continue.
-  - notify: |
-      If --slack → MUST load adapter-slack skill and follow its template EXACTLY.
-      Template (4 lines, no extras):
-        {mention}
-        <{$JIRA_BASE_URL}/browse/{task_key}|{task_key}> задеплоен на prod
-        {summary — импакт для пользователя, НЕ тех. термины}
-        <{env_url from CLAUDE.md: host + base_href}|Прод>
-      env_url source: CLAUDE.md OR .gitlab-ci.yml
-      NEVER add: MR link, pipeline link, branch name, raw URLs, verification steps.
-report: "Deploy prod: SUCCESS | {pipeline_url}"
+action: |
+  Re-invoke core-ship-protocol with inputs:
+    task_key: {resolved_task_key}
+    target_branch: target_branch
+    environment: 'prod'
+    skip_mr: true
+    skip_merge: true
+  Protocol handles: find pipeline → wait build → deploy → wait deploy → Jira transition → Slack notify.
+  Slack notification uses adapter-slack template (defined in adapter, not here).
 ```
 
 ### Step 5: Report

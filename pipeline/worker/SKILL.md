@@ -404,6 +404,12 @@ phases:
 
 ```yaml
 dispatch:
+  dispatch_tracking:
+    counter: "dispatch_count (starts at 0)"
+    increment: "After each Agent tool call (subagent dispatch)"
+    check: "Before each dispatch: if dispatch_count >= dispatch_budget.ceilings[complexity] → trigger on_limit_reached"
+    checkpoint_field: "dispatch_count persisted in checkpoint.yaml"
+
   before_phase:
     - validate: "handoff payload against core-orchestration contract"
     - check_skip: "evaluate skip_if condition"

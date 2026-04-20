@@ -21,6 +21,8 @@ inputs:
   target_branch: "Merge target. From project.yaml → project.branches.main (fallback: develop)"
   environment: "Deploy target: 'test' or 'prod'"
   skip_after_mr: "boolean — if true, stop after MR creation (e.g., worker 'только MR' option)"
+  skip_mr: "boolean — if true, skip Steps 1-6 (push, MR creation, pipeline wait, merge). Caller already pushed to target branch directly."
+  skip_merge: "boolean — if true, skip Steps 5-6 (merge + wait). Implied by skip_mr."
 ```
 
 ---
@@ -30,6 +32,7 @@ inputs:
 ### Step 1: Push
 
 ```yaml
+skip_if: "skip_mr == true (caller already pushed to target branch)"
 action: "git push -u origin {current_branch}"
 note: "Ensure feature branch is on remote before MR creation"
 ```
@@ -37,6 +40,7 @@ note: "Ensure feature branch is on remote before MR creation"
 ### Step 2: Create MR
 
 ```yaml
+skip_if: "skip_mr == true"
 action: |
   ci-cd adapter create_mr(
     branch: current_branch,
@@ -50,6 +54,7 @@ action: |
 ### Step 3: Stop If MR Only
 
 ```yaml
+skip_if: "skip_mr == true"
 skip_to: "caller checkpoint"
 condition: "skip_after_mr == true"
 ```
@@ -57,6 +62,7 @@ condition: "skip_after_mr == true"
 ### Step 4: Wait MR Pipeline
 
 ```yaml
+skip_if: "skip_mr == true"
 action: "ci-cd adapter wait_for_stage(pipeline, 'build')"
 timeout: "15min"
 ```
@@ -64,12 +70,14 @@ timeout: "15min"
 ### Step 5: Merge
 
 ```yaml
+skip_if: "skip_mr == true OR skip_merge == true"
 action: "glab mr merge {mr_iid} --auto-merge"
 ```
 
 ### Step 6: Wait Merge
 
 ```yaml
+skip_if: "skip_mr == true OR skip_merge == true"
 action: "Poll MR state until state == 'merged'"
 poll_interval: "30s"
 timeout: "10min"

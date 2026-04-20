@@ -334,6 +334,19 @@ guard_check:
     - display: "iteration summary table (iteration, verdict, issues_raised, issues_resolved)"
     - request: "user intervention required"
     - do_not: "auto-proceed or auto-approve"
+
+dispatch_budget:
+  description: "Maximum Agent tool dispatches per pipeline run. Confirmation gate at limit."
+  ceilings:
+    S: 5
+    M: 20
+    L: 35
+    XL: 45
+  on_limit_reached:
+    action: "WARN user: 'Dispatch budget reached ({count}/{ceiling}). Continue? (y/n)'"
+    on_yes: "Extend budget by 50% of original ceiling"
+    on_no: "Write checkpoint, STOP"
+  tracking: "Worker increments dispatch_count after each Agent tool call"
 ```
 
 ---
