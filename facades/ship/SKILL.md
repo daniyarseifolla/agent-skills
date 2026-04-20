@@ -96,6 +96,7 @@ mr_path: # --mr flag
       skip_mr: false
       skip_merge: false
     If --slack → ensure notification adapter is loaded before protocol runs.
+    CRITICAL: Slack message MUST follow adapter-slack template exactly: {mention} + task link + summary + env link. 4 lines, nothing extra.
     Error handling defined in core-ship-protocol.
 
 direct_path: # no --mr (default)
@@ -108,6 +109,7 @@ direct_path: # no --mr (default)
       skip_merge: true
     Protocol handles: find pipeline → wait build → deploy → wait deploy → Jira transition → Slack notify.
     If --slack → ensure notification adapter is loaded before protocol runs.
+    CRITICAL: Slack message MUST follow adapter-slack template exactly: {mention} + task link + summary + env link. 4 lines, nothing extra.
     Error handling defined in core-ship-protocol.
 ```
 
@@ -124,7 +126,7 @@ action: |
     skip_mr: true
     skip_merge: true
   Protocol handles: find pipeline → wait build → deploy → wait deploy → Jira transition → Slack notify.
-  Slack notification uses adapter-slack template (defined in adapter, not here).
+  CRITICAL: Slack message MUST follow adapter-slack template exactly: {mention} + task link + summary + env link. 4 lines, nothing extra.
 ```
 
 ### Step 5: Report
