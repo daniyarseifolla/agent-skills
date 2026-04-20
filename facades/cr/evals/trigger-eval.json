@@ -1,0 +1,82 @@
+[
+  {
+    "query": "/cr",
+    "should_trigger": true
+  },
+  {
+    "query": "/code-review",
+    "should_trigger": true
+  },
+  {
+    "query": "/cr посмотри что я наделал в этой ветке",
+    "should_trigger": true
+  },
+  {
+    "query": "проверь код в текущей ветке",
+    "should_trigger": true
+  },
+  {
+    "query": "сделай ревью кода",
+    "should_trigger": true
+  },
+  {
+    "query": "посмотри мои изменения, всё ли ок",
+    "should_trigger": true
+  },
+  {
+    "query": "review my code before I push",
+    "should_trigger": true
+  },
+  {
+    "query": "code review on this branch please",
+    "should_trigger": true
+  },
+  {
+    "query": "review this branch, I changed the auth logic",
+    "should_trigger": true
+  },
+  {
+    "query": "check my changes, I refactored the service layer",
+    "should_trigger": true
+  },
+  {
+    "query": "look at the diff and tell me if anything is wrong",
+    "should_trigger": true
+  },
+  {
+    "query": "what do you think about my changes in this branch",
+    "should_trigger": true
+  },
+  {
+    "query": "review PR, I'm about to merge",
+    "should_trigger": true
+  },
+  {
+    "query": "проверь мой PR на ошибки и уязвимости",
+    "should_trigger": true
+  },
+  {
+    "query": "write code for the login page",
+    "should_trigger": false
+  },
+  {
+    "query": "implement feature ARGO-11000",
+    "should_trigger": false
+  },
+  {
+    "query": "fix bug in the validation module",
+    "should_trigger": false
+  },
+  {
+    "query": "задеплой текущую ветку на тест",
+    "should_trigger": false
+  },
+  {
+    "query": "оцени архитектуру нашего notification service",
+    "should_trigger": false
+  },
+  {
+    "query": "ARGO-10698 возьми тикет и реализуй",
+    "should_trigger": false
+  }
+]

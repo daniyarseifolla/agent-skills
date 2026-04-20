@@ -1,4 +1,4 @@
-# Agent Skills v4.0 — Context Transfer
+# Agent Skills v4.1 — Context Transfer
 
 Этот файл передаёт контекст между сессиями Claude Code. Прочитай его ПЕРЕД любой работой со скиллами.
 
@@ -6,7 +6,7 @@
 
 **Repo:** ~/Desktop/pet/agent-skills/ — **canonical source of truth**
 **Install target:** ~/.claude/skills/ + ~/.claude/commands/ (NOT the source)
-**Версия:** 4.0 (see VERSION file)
+**Версия:** 4.1 (see VERSION file)
 **Обзор:** [SKILLS_OVERVIEW.md](SKILLS_OVERVIEW.md)
 **Reviews:** [docs/reviews/](docs/reviews/)
 

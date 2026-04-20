@@ -1,4 +1,4 @@
-# Agent Skills v4.0 — Overview
+# Agent Skills v4.1 — Overview
 
 > **Source of truth:** This repository is canonical. `~/.claude/skills/` is the install target, not the source. All edits here, then sync to global.
 
@@ -194,7 +194,7 @@ notification:      notify_deploy
 
 ```yaml
 # .claude/project.yaml
-version: "4.0"
+version: "4.1"
 task-source: jira
 ci-cd: gitlab
 tech-stack: angular

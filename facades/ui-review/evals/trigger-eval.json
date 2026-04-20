@@ -1,0 +1,82 @@
+[
+  {
+    "query": "/ui-review",
+    "should_trigger": true
+  },
+  {
+    "query": "/ui-review http://localhost:4200",
+    "should_trigger": true
+  },
+  {
+    "query": "проверь UI в текущей ветке",
+    "should_trigger": true
+  },
+  {
+    "query": "проверь верстку, кажется сломалась после рефакторинга",
+    "should_trigger": true
+  },
+  {
+    "query": "как выглядит форма авторизации, всё ли ок",
+    "should_trigger": true
+  },
+  {
+    "query": "UI review on this branch",
+    "should_trigger": true
+  },
+  {
+    "query": "visual review of the dashboard page",
+    "should_trigger": true
+  },
+  {
+    "query": "check the interface, I changed the sidebar layout",
+    "should_trigger": true
+  },
+  {
+    "query": "test the UI in browser and compare with Figma",
+    "should_trigger": true
+  },
+  {
+    "query": "does it look right compared to the design",
+    "should_trigger": true
+  },
+  {
+    "query": "compare with design mockup, the spacing feels off",
+    "should_trigger": true
+  },
+  {
+    "query": "check responsive on mobile, the cards break",
+    "should_trigger": true
+  },
+  {
+    "query": "проверь вёрстку на мобилке, кнопки налезают друг на друга",
+    "should_trigger": true
+  },
+  {
+    "query": "посмотри визуально что получилось, совпадает ли с макетом",
+    "should_trigger": true
+  },
+  {
+    "query": "implement UI for the settings page",
+    "should_trigger": false
+  },
+  {
+    "query": "build component for user profile card",
+    "should_trigger": false
+  },
+  {
+    "query": "fix styling of the dropdown menu",
+    "should_trigger": false
+  },
+  {
+    "query": "сделай ревью кода в текущей ветке",
+    "should_trigger": false
+  },
+  {
+    "query": "задеплой текущую ветку на тест",
+    "should_trigger": false
+  },
+  {
+    "query": "ARGO-10800 возьми тикет",
+    "should_trigger": false
+  }
+]

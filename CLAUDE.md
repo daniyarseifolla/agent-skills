@@ -4,7 +4,7 @@ Reusable development pipeline skills for Claude Code with swappable adapters.
 
 ## Version
 
-Version 4.0 — see VERSION file
+Version 4.1 — see VERSION file
 
 See [SKILLS_OVERVIEW.md](SKILLS_OVERVIEW.md) for full architecture and catalog.
 

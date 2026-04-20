@@ -1,4 +1,4 @@
-# Project configuration for agent-skills v4.0
+# Project configuration for agent-skills v4.1
 # Copy to .claude/project.yaml in your project root
 #
 # If this file is absent, worker will autodetect:
@@ -7,7 +7,7 @@
 #   - Jira URL in task → jira
 #   - Figma URL in task → figma
 
-version: "4.0"
+version: "4.1"
 
 # Adapters — which integrations to use
 task-source: jira            # jira | github-issues | linear (future)
