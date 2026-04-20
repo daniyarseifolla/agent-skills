@@ -59,6 +59,34 @@ startup:
     M: STANDARD
     L_XL: FULL
 
+  step_8_preflight_external:
+    action: "Check availability of external skills needed for this route"
+    check_list:
+      - skill: "visual-qa"
+        needed_by: "Phase 8: ui-review"
+        needed_when: "design adapter loaded"
+      - skill: "css-styling-expert"
+        needed_by: "Phase 7: implement"
+        needed_when: "always"
+      - skill: "refactoring-ui"
+        needed_by: "Phase 7: implement"
+        needed_when: "design adapter loaded"
+      - skill: "qa-test-planner"
+        needed_by: "Phase 8: ui-review"
+        needed_when: "design adapter loaded"
+      - skill: "ui-ux-pro-max"
+        needed_by: "Phase 8: ui-review"
+        needed_when: "design adapter loaded"
+      - skill: "agent-browser"
+        needed_by: "Phase 8: ui-review"
+        needed_when: "design adapter loaded"
+    on_missing: |
+      Show all missing skills at once:
+      "The following external skills are not installed: [list]
+       They will be needed in: [phases]
+       Install now? (y/skip affected phases/abort)"
+    note: "Better to discover missing skills at startup than mid-pipeline"
+
   flags:
     --arch-auto: "Pass auto_approve=true to planner's architect step"
     --model: "Override model for architect agents (opus|sonnet)"

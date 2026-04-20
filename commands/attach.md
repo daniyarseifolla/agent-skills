@@ -18,12 +18,12 @@ Detects what's done, creates checkpoint, runs missing phases.
 
 1. **Find task key:**
    - If argument provided → use it
-   - Else: parse from branch name (feat/ARGO-XXXXX)
-   - Else: find in recent commits (grep ARGO)
+   - Else: parse from branch name or recent commits
    - Else: ask user
 
-2. **Fetch task from Jira** (if task-source = jira):
-   - Load Skill: adapter-jira
+2. **Fetch task from task source:**
+   - Detect adapter: `[A-Z]{2,10}-\d+` or `atlassian.net` URL → adapter-jira; `#\d+` or `github.com` URL → adapter-github; else parse from domain
+   - Load Skill: detected adapter (fallback: check project.yaml `task-source`)
    - Get: title, AC, Figma URLs, description
 
 3. **Scan what exists:**

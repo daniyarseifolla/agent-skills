@@ -32,79 +32,79 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 
 | Skill | Lines | Purpose |
 |-------|-------|---------|
-| core/orchestration | 444 | Phases (1-9), handoffs, checkpoints, recovery, loops, routing, consensus activation |
-| core/security | 151 | Universal OWASP checks. Framework-specific checks in tech-stack adapters (Section 7) |
-| core/consensus-review | 211 | Multi-agent review pattern: 3 agents x different angles → aggregate |
-| core/metrics | 235 | Pipeline metrics schema, phase ID normalization, collection, storage |
-| core/ship-protocol | 134 | Shared ship steps: MR, merge, deploy, transition, notify. Used by worker Phase 9 and ship facade |
+| core/orchestration | 495 | Phases (1-9), handoffs, checkpoints, recovery, loops, routing, consensus activation |
+| core/security | 152 | Universal OWASP checks. Framework-specific checks in tech-stack adapters (Section 7) |
+| core/consensus-review | 250 | Multi-agent review pattern: 3 agents x different angles → aggregate |
+| core/metrics | 236 | Pipeline metrics schema, phase ID normalization, collection, storage |
+| core/ship-protocol | 181 | Shared ship steps: MR, merge, deploy, transition, notify. Used by worker Phase 9 and ship facade |
 
 ### Pipeline (project-agnostic phases)
 
 | Skill | Lines | Model | Mode | Consensus (M+) | Purpose |
 |-------|-------|-------|------|-----------------|---------|
-| pipeline/worker | 654 | — | inline | — | Orchestrator: phases, checkpoints, dispatch |
-| pipeline/impact-analyzer | 200 | sonnet | inline | — | Impact analysis: consumers, siblings, shared code |
-| pipeline/planner | 427 | opus | inline | — | Research codebase, create plan (reads task-analysis.md) |
-| pipeline/architect | 222 | opus | subagent | 3 agents + arbiter (M+) | Architectural analysis: 3 lenses → arbiter combines |
-| pipeline/plan-reviewer | 235 | opus | subagent | 3x opus: AC + Architecture + Design | Validate plan |
-| pipeline/coder | 303 | sonnet | inline | — | Evaluate gate + implement + commit gate |
-| pipeline/figma-coding-rules | 380 | — | loaded by coder | — | Figma extract, self-verify, UI quality, icons |
-| pipeline/code-reviewer | 319 | sonnet | subagent/worktree | 3x sonnet: Bugs + Compliance + Security | Review diff |
-| pipeline/ui-reviewer | 498 | sonnet | subagent | 3x sonnet: Functional + Visual + States/A11y | Browser + Figma testing |
-| pipeline/code-researcher | 101 | haiku | Agent tool | — | Cheap read-only search (L/XL only) |
-| pipeline/researcher | 120 | opus | subagent | 3 agents: Figma + API + Functional | Deep task research (Phase 3, skip for S) |
+| pipeline/worker | 525 | — | inline | — | Orchestrator: phases, checkpoints, dispatch |
+| pipeline/impact-analyzer | 201 | sonnet | inline | — | Impact analysis: consumers, siblings, shared code |
+| pipeline/planner | 445 | opus | inline | — | Research codebase, create plan (reads task-analysis.md) |
+| pipeline/architect | 223 | opus | subagent | 3 agents + arbiter (M+) | Architectural analysis: 3 lenses → arbiter combines |
+| pipeline/plan-reviewer | 236 | opus | subagent | 3x opus: AC + Architecture + Design | Validate plan |
+| pipeline/coder | 322 | sonnet | inline | — | Evaluate gate + implement + commit gate |
+| pipeline/figma-coding-rules | 381 | — | loaded by coder | — | Figma extract, self-verify, UI quality, icons |
+| pipeline/code-reviewer | 323 | sonnet | subagent/worktree | 3x sonnet: Bugs + Compliance + Security | Review diff |
+| pipeline/ui-reviewer | 352 | sonnet | subagent | 3x sonnet: Functional + Visual + States/A11y | Browser + Figma testing |
+| pipeline/code-researcher | 102 | haiku | Agent tool | — | Cheap read-only search (L/XL only) |
+| pipeline/researcher | 183 | opus | subagent | 3 agents: Figma + API + Functional | Deep task research (Phase 3, skip for S) |
 
 ### Adapters (swappable per project)
 
 | Skill | Lines | Type | Key Methods |
 |-------|-------|------|-------------|
-| adapters/jira | 202 | task-source | fetch_task, fetch_attachments, parse_ac, transition, format_mr |
-| adapters/gitlab | 304 | ci-cd | create_mr, pipeline, deploy, cherry_pick, CI disable/restore |
-| adapters/angular | 361 | tech-stack | commands, quality_checks, security_checks, api_discovery, patterns, module_lookup |
-| adapters/figma | 224 | design | get_design, get_screenshot, compare_visual, extract_tokens |
-| adapters/architect-roles | 39 | architect-roles | roles (3 lenses), stack_constraints, generated_context |
-| adapters/slack | 150 | notification | notify_deploy (env-based config, template with summary) |
+| adapters/jira | 204 | task-source | fetch_task, fetch_attachments, parse_ac, transition, format_mr |
+| adapters/gitlab | 306 | ci-cd | create_mr, pipeline, deploy, cherry_pick, CI disable/restore |
+| adapters/angular | 363 | tech-stack | commands, quality_checks, security_checks, api_discovery, patterns, module_lookup |
+| adapters/figma | 226 | design | get_design, get_screenshot, compare_visual, extract_tokens |
+| adapters/architect-roles | 40 | architect-roles | roles (3 lenses), stack_constraints, generated_context |
+| adapters/slack | 152 | notification | notify_deploy (env-based config, template with summary) |
 
 ### Facades (user-facing entry points)
 
 | Skill | Lines | Triggers |
 |-------|-------|----------|
-| facades/figma-audit | 667 | `/figma`, "проверь верстку", "figma audit", "сравни с макетом" |
-| facades/scan-qa-playbook | 211 | `/scan-qa`, "скан QA", "сгенерируй playbook" |
-| facades/community-sync | 186 | `/sync`, "обновить ветки", "sync branches" |
-| facades/scan-practices | 149 | `/scan-practices`, "скан практик" |
-| facades/scan-ui-inventory | 132 | `/scan-ui`, "скан UI", "обнови инвентарь" |
-| facades/worker | 45 | `/worker`, ARGO-XXX, "сделай задачу", "возьми тикет" |
-| facades/ship | 227 | `/ship`, "закоммить и задеплой", "ship it" |
-| facades/deploy | 34 | `/deploy`, "задеплой", "deploy to test/prod" |
-| facades/architect | 61 | `/arch`, "архитектурный совет", "предложи архитектуру" |
-| facades/arch-review | 126 | `/arch-review`, "оцени архитектуру", "review architecture" |
-| facades/cr | 35 | `/cr`, `/code-review`, "проверь код", "code review" |
-| facades/ui-review | 40 | `/ui-review`, "проверь UI", "UI review", "visual review" |
+| facades/figma-audit | 409 | `/figma`, "проверь верстку", "figma audit", "сравни с макетом" |
+| facades/scan-qa-playbook | 212 | `/scan-qa`, "скан QA", "сгенерируй playbook" |
+| facades/community-sync | 187 | `/sync`, "обновить ветки", "sync branches" |
+| facades/scan-practices | 150 | `/scan-practices`, "скан практик" |
+| facades/scan-ui-inventory | 133 | `/scan-ui`, "скан UI", "обнови инвентарь" |
+| facades/worker | 56 | `/worker`, ARGO-XXX, "сделай задачу", "возьми тикет" |
+| facades/ship | 203 | `/ship`, "закоммить и задеплой", "ship it" |
+| facades/deploy | 35 | `/deploy`, "задеплой", "deploy to test/prod" |
+| facades/architect | 59 | `/arch`, "архитектурный совет", "предложи архитектуру" |
+| facades/arch-review | 127 | `/arch-review`, "оцени архитектуру", "review architecture" |
+| facades/cr | 36 | `/cr`, `/code-review`, "проверь код", "code review" |
+| facades/ui-review | 46 | `/ui-review`, "проверь UI", "UI review", "visual review" |
 
 ### Commands (19 slash commands)
 
 | Command | Lines | Purpose |
 |---------|-------|---------|
-| /worker | 13 | Start full pipeline |
-| /figma | 25 | Figma audit & implementation |
-| /plan | 14 | Run planner only |
-| /arch | 13 | Standalone architectural analysis |
-| /arch-review | 13 | Retrospective architectural review |
-| /cr | 15 | Code review |
-| /code-review | 5 | Alias for /cr |
-| /ui-review | 13 | UI review |
-| /verify-figma | 53 | Figma CSS verification |
+| /worker | 14 | Start full pipeline |
+| /figma | 26 | Figma audit & implementation |
+| /plan | 15 | Run planner only |
+| /arch | 15 | Standalone architectural analysis |
+| /arch-review | 15 | Retrospective architectural review |
+| /cr | 16 | Code review |
+| /code-review | 6 | Alias for /cr |
+| /ui-review | 14 | UI review |
+| /verify-figma | 54 | Figma CSS verification |
 | /ship | 15 | Commit + push + deploy [+prod] [+mr] [+slack] |
-| /deploy | 14 | Deploy to environment |
-| /sync | 11 | Sync community branches |
-| /attach | 169 | Attach to existing task |
-| /continue | 95 | Resume from checkpoint |
-| /progress | 28 | Show pipeline state |
-| /cleanup | 26 | Clean up artifacts |
-| /scan-ui | 9 | Scan UI inventory |
-| /scan-qa | 9 | Generate QA playbook |
-| /scan-practices | 9 | Scan project practices |
+| /deploy | 15 | Deploy to environment |
+| /sync | 12 | Sync community branches |
+| /attach | 196 | Attach to existing task |
+| /continue | 96 | Resume from checkpoint |
+| /progress | 29 | Show pipeline state |
+| /cleanup | 27 | Clean up artifacts |
+| /scan-ui | 10 | Scan UI inventory |
+| /scan-qa | 10 | Generate QA playbook |
+| /scan-practices | 10 | Scan project practices |
 
 ## Pipeline Phases
 

@@ -48,6 +48,72 @@ else
   FAIL=$((FAIL + 1))
 fi
 
+# Line count accuracy: compare actual wc -l to values in SKILLS_OVERVIEW.md
+LINECOUNT_WARN=0
+echo ""
+echo "--- Line Count Check (>10% drift = WARNING) ---"
+for skill_md in $(find "$ROOT" -path '*/SKILL.md' -not -path '*/node_modules/*' | sort); do
+  # Derive the skill path as it appears in the table (e.g., pipeline/worker)
+  rel="${skill_md#$ROOT/}"          # e.g. pipeline/worker/SKILL.md
+  skill_path="${rel%/SKILL.md}"     # e.g. pipeline/worker
+  actual=$(wc -l < "$skill_md" | tr -d ' ')
+
+  # Extract documented count from the overview table: "| pipeline/worker | 525 |"
+  documented=$(grep -E "^\| ${skill_path} \|" "$OVERVIEW" | head -1 | awk -F'|' '{print $3}' | tr -d ' ')
+  if [ -z "$documented" ]; then
+    printf "  %-35s actual %-4d  (not in SKILLS_OVERVIEW.md) \xe2\x9a\xa0\n" "$skill_path" "$actual"
+    LINECOUNT_WARN=$((LINECOUNT_WARN + 1))
+    continue
+  fi
+
+  # Calculate percentage difference
+  if [ "$documented" -eq 0 ]; then
+    pct_diff=100
+  else
+    diff=$((actual - documented))
+    if [ "$diff" -lt 0 ]; then diff=$(( -diff )); fi
+    pct_diff=$(( diff * 100 / documented ))
+  fi
+
+  if [ "$pct_diff" -gt 10 ]; then
+    printf "  %-35s actual %-4d documented %-4d (%d%% drift) \xe2\x9a\xa0\n" "$skill_path" "$actual" "$documented" "$pct_diff"
+    LINECOUNT_WARN=$((LINECOUNT_WARN + 1))
+  fi
+done
+
+# Also check command files
+for cmd_md in $(find "$ROOT/commands" -maxdepth 1 -name '*.md' ! -iname 'readme*' | sort); do
+  cmd_name="/$(basename "$cmd_md" .md)"
+  actual=$(wc -l < "$cmd_md" | tr -d ' ')
+
+  documented=$(grep -E "^\| ${cmd_name} \|" "$OVERVIEW" | head -1 | awk -F'|' '{print $3}' | tr -d ' ')
+  if [ -z "$documented" ]; then
+    printf "  %-35s actual %-4d  (not in SKILLS_OVERVIEW.md) \xe2\x9a\xa0\n" "commands${cmd_name}" "$actual"
+    LINECOUNT_WARN=$((LINECOUNT_WARN + 1))
+    continue
+  fi
+
+  if [ "$documented" -eq 0 ]; then
+    pct_diff=100
+  else
+    diff=$((actual - documented))
+    if [ "$diff" -lt 0 ]; then diff=$(( -diff )); fi
+    pct_diff=$(( diff * 100 / documented ))
+  fi
+
+  if [ "$pct_diff" -gt 10 ]; then
+    printf "  %-35s actual %-4d documented %-4d (%d%% drift) \xe2\x9a\xa0\n" "commands${cmd_name}" "$actual" "$documented" "$pct_diff"
+    LINECOUNT_WARN=$((LINECOUNT_WARN + 1))
+  fi
+done
+
+if [ "$LINECOUNT_WARN" -eq 0 ]; then
+  printf "Line counts: all within 10%% tolerance \xE2\x9C\x93\n"
+else
+  printf "Line counts: %d file(s) drifted >10%% (WARNING, not a failure)\n" "$LINECOUNT_WARN"
+fi
+echo ""
+
 # Stale directory references in top-level docs
 DOCS="$ROOT/AGENT.md $ROOT/README.md $ROOT/SKILLS_OVERVIEW.md $ROOT/CLAUDE.md"
 STALE=""
