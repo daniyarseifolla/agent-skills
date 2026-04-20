@@ -7,7 +7,7 @@ human_description: "Создать план реализации без коди
 
 Task key: $ARGUMENTS
 
-1. Load Skill: worker with override: "только план"
+1. Load Skill: pipeline-worker with override: "только план"
 2. Run Phase 1: analyze + Phase 5: plan only
 3. Output: docs/plans/{task-key}/plan.md + checklist.md
 4. STOP after planning — do not proceed to implementation

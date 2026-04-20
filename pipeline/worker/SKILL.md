@@ -1,12 +1,47 @@
 ---
 name: pipeline-worker
-description: "Use when orchestrating full pipeline execution. Called by facade skills, not directly."
+description: "Full-cycle task implementation. Use PROACTIVELY when user provides a Jira issue key (ARGO-10698), Jira URL (atlassian.net/browse/..., atlassian.net/jira/...), GitHub issue (#123), task URL, or says anything like \"сделай задачу\", \"возьми тикет\", \"реализуй\", \"take this ticket\", \"implement this issue\", \"work on ARGO-XXX\". Even if the user just pastes a task key or URL without any context, this skill applies."
 human_description: "Оркестратор pipeline: управляет фазами 1-9, checkpoint-ами, recovery. Делегирует работу pipeline-скиллам, не делает ничего сам."
+allowed-tools: Bash(*), Read, Write, Edit, Glob, Grep, Agent, Skill, mcp__plugin_atlassian_atlassian__getJiraIssue, mcp__plugin_atlassian_atlassian__getTransitionsForJiraIssue, mcp__plugin_atlassian_atlassian__transitionJiraIssue, mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql, mcp__plugin_figma_figma__get_design_context, mcp__plugin_figma_figma__get_screenshot
 ---
 
 # Pipeline Worker
 
-Thin orchestrator. Delegates all work to pipeline phases. Manages flow, checkpoints, recovery.
+Full-cycle task implementation orchestrator. Delegates all work to pipeline phases. Manages flow, checkpoints, recovery.
+
+---
+
+## 0. Entry Point
+
+### Task Source Autodetect
+
+| Pattern | Detected source |
+|---------|----------------|
+| `[A-Z]{2,10}-\d+` (e.g., ARGO-XXX) | Jira |
+| `#\d+` | GitHub |
+| URL containing `atlassian.net` | Jira |
+| URL containing `github.com` | GitHub |
+| Other URL | Parse and detect |
+
+### User Overrides
+
+| User says | Effect |
+|-----------|--------|
+| "быстро", "по-быстрому", "quick" | Force SIMPLE route (S complexity) |
+| "полный цикл", "full cycle", "с ревью" | Force FULL route (L complexity) |
+| "только план", "just plan" | Run only Phase 5: plan, stop |
+| "без деплоя", "no deploy" | Skip MR/deploy at completion |
+
+### Input Parsing
+
+1. Parse task reference from user input
+2. If task reference found or user intent matches triggers, activate
+3. Autodetect task source from input and set adapter overrides:
+   ```yaml
+   task-source: "{autodetected}"
+   task_key: "{parsed key}"
+   ```
+4. Apply user overrides if present (complexity_override, plan-only, no-deploy)
 
 ---
 
@@ -16,18 +51,21 @@ Thin orchestrator. Delegates all work to pipeline phases. Manages flow, checkpoi
 startup:
   step_1_config:
     action: "Read .claude/project.yaml"
-    fallback: "Autodetect (see section 3)"
+    fallback: "Autodetect (see section 4)"
     output: "config object with adapter types"
+    note: "If task_key provided by user → use autodetected task-source adapter from Entry Point"
 
   step_2_adapters:
-    action: "Load adapters based on config"
-    mapping:
+    action: "Load task-source adapter now, defer others until needed"
+    load_now:
       task-source: "adapter-{config.task-source}"
-      ci-cd: "adapter-{config.ci-cd}"
-      tech-stack: "adapter-{config.tech-stack}"
-      design: "adapter-{config.design}"
-      notification: "adapter-{config.notification}"
+    deferred:
+      tech-stack: { adapter: "adapter-{config.tech-stack}", load_before: "Phase 7: implement", lazy: true }
+      design: { adapter: "adapter-{config.design}", load_before: "Phase 3: research (or Phase 8: review)", lazy: true }
+      ci-cd: { adapter: "adapter-{config.ci-cd}", load_before: "Phase 9: ship", lazy: true }
+      notification: { adapter: "adapter-{config.notification}", load_before: "Phase 9: ship", lazy: true }
     on_missing: "WARN, continue without that adapter type"
+    note: "Lazy loading is RECOMMENDED. Loading all adapters at startup still works but costs ~2400 extra tokens in context. See core-orchestration context_budget."
 
   step_3_core:
     action: "Load core-orchestration"

@@ -271,6 +271,34 @@ context_pressure:
     Context exhaustion is the #1 real-world failure mode for L/XL tasks.
 ```
 
+### Context Budget
+
+```yaml
+context_budget:
+  description: "Approximate token costs for skill loading. Used to prioritize what stays in context."
+  estimates:
+    core_orchestration: "~2000 tokens"
+    pipeline_worker: "~2200 tokens"
+    pipeline_planner: "~1800 tokens"
+    pipeline_coder: "~1300 tokens"
+    pipeline_code_reviewer: "~1300 tokens"
+    pipeline_ui_reviewer: "~1400 tokens"
+    pipeline_researcher: "~750 tokens"
+    consensus_review: "~1000 tokens"
+    adapter_average: "~800 tokens (× number loaded)"
+    total_all_skills: "~16000 tokens (all pipeline + core + 3 adapters)"
+  note: "These are estimates. Actual varies with YAML formatting and load method."
+
+  lazy_loading_strategy:
+    description: "Load adapters only when their phase needs them, not all at startup"
+    startup: "Load only: core-orchestration, task-source adapter"
+    phase_3: "Load design adapter (if needed)"
+    phase_7: "Load tech-stack adapter"
+    phase_8: "Load design adapter (if not already loaded)"
+    phase_9: "Load ci-cd adapter, notification adapter"
+    benefit: "Reduces startup context by ~2400 tokens (3 adapters deferred)"
+```
+
 ---
 
 ## 5. Session Recovery

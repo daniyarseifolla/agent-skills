@@ -32,7 +32,7 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 
 | Skill | Lines | Purpose |
 |-------|-------|---------|
-| core/orchestration | 495 | Phases (1-9), handoffs, checkpoints, recovery, loops, routing, consensus activation |
+| core/orchestration | 523 | Phases (1-9), handoffs, checkpoints, recovery, loops, routing, consensus activation, context budget |
 | core/security | 152 | Universal OWASP checks. Framework-specific checks in tech-stack adapters (Section 7) |
 | core/consensus-review | 250 | Multi-agent review pattern: 3 agents x different angles → aggregate |
 | core/metrics | 236 | Pipeline metrics schema, phase ID normalization, collection, storage |
@@ -42,7 +42,7 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 
 | Skill | Lines | Model | Mode | Consensus (M+) | Purpose |
 |-------|-------|-------|------|-----------------|---------|
-| pipeline/worker | 525 | — | inline | — | Orchestrator: phases, checkpoints, dispatch |
+| pipeline/worker | 591 | — | inline | — | Orchestrator: entry point, phases, checkpoints, dispatch |
 | pipeline/impact-analyzer | 201 | sonnet | inline | — | Impact analysis: consumers, siblings, shared code |
 | pipeline/planner | 445 | opus | inline | — | Research codebase, create plan (reads task-analysis.md) |
 | pipeline/architect | 223 | opus | subagent | 3 agents + arbiter (M+) | Architectural analysis: 3 lenses → arbiter combines |
@@ -74,13 +74,14 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 | facades/community-sync | 187 | `/sync`, "обновить ветки", "sync branches" |
 | facades/scan-practices | 150 | `/scan-practices`, "скан практик" |
 | facades/scan-ui-inventory | 133 | `/scan-ui`, "скан UI", "обнови инвентарь" |
-| facades/worker | 56 | `/worker`, ARGO-XXX, "сделай задачу", "возьми тикет" |
+| facades/worker | 12 | **Redirect** to pipeline-worker (merged). Trigger matching only. |
 | facades/ship | 203 | `/ship`, "закоммить и задеплой", "ship it" |
 | facades/deploy | 35 | `/deploy`, "задеплой", "deploy to test/prod" |
 | facades/architect | 59 | `/arch`, "архитектурный совет", "предложи архитектуру" |
 | facades/arch-review | 127 | `/arch-review`, "оцени архитектуру", "review architecture" |
 | facades/cr | 36 | `/cr`, `/code-review`, "проверь код", "code review" |
 | facades/ui-review | 46 | `/ui-review`, "проверь UI", "UI review", "visual review" |
+| facades/continue | 123 | `/continue`, "продолжи", "resume pipeline" |
 
 ### Commands (19 slash commands)
 
@@ -99,7 +100,7 @@ facades/                    pipeline/ (project-agnostic)      core/ (invisible)
 | /deploy | 15 | Deploy to environment |
 | /sync | 12 | Sync community branches |
 | /attach | 196 | Attach to existing task |
-| /continue | 96 | Resume from checkpoint |
+| /continue | 13 | Resume from checkpoint |
 | /progress | 29 | Show pipeline state |
 | /cleanup | 27 | Clean up artifacts |
 | /scan-ui | 10 | Scan UI inventory |
