@@ -114,6 +114,11 @@ implement:
       - Update checkpoint: last_committed_part: {N}, last_commit_hash: $(git rev-parse HEAD)
       - Do NOT update completed (Phase 7 is not complete until all parts done)
       - This ensures /continue can resume from part N+1, not from scratch
+    step_7c_context_check: |
+      After every 3 completed parts, check context pressure:
+      If running for 45+ minutes OR this is part 5+:
+        Display: "Завершено {N}/{total} частей. Checkpoint сохранён.
+                  Продолжить или /continue {task_key} в новой сессии?"
     verification_gate: |
       BEFORE git commit (step_7), ALL of these must pass:
       1. tech_stack_adapter lint command → exit code 0

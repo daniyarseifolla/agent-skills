@@ -235,6 +235,36 @@ invalidation_rules:
     resume: plan-review
 ```
 
+### Context Pressure Protocol
+
+```yaml
+context_pressure:
+  description: "Proactive checkpoint before context window exhaustion"
+  
+  detection:
+    method: "Monitor conversation length. If approaching context limits, trigger save."
+    heuristic: |
+      After each phase completion or after each implementation part:
+      If the conversation has been running for 60+ minutes OR
+      If 5+ tool calls happened since last checkpoint:
+        Write checkpoint immediately, don't wait for phase completion.
+    
+  action: |
+    When context pressure detected:
+    1. Write checkpoint with current state (completed phases, current part, handoff)
+    2. Save last_commit_hash: $(git rev-parse HEAD)
+    3. Display to user:
+       "⚠️ Приближаюсь к лимиту контекста.
+        Checkpoint сохранён. Для продолжения:
+        /continue {task_key}"
+    4. STOP — do not attempt more work in degraded context
+    
+  CRITICAL: |
+    Better to stop early with a clean checkpoint than to continue
+    with degraded context and produce broken output.
+    Context exhaustion is the #1 real-world failure mode for L/XL tasks.
+```
+
 ---
 
 ## 5. Session Recovery

@@ -421,6 +421,11 @@ dispatch:
   after_phase:
     - validate: "output handoff payload"
     - write_checkpoint: "docs/plans/{task-key}/checkpoint.yaml"
+    - context_pressure_check: |
+        If conversation is long-running (60+ min or 5+ phases completed):
+          Display: "Checkpoint saved. To continue: /continue {task_key}"
+          Offer user: "Continue in this session? (y) / Start fresh session with /continue? (n)"
+          If user says n → STOP cleanly
     - push_checkpoint: |
         After phases that produce commits or artifacts, push to remote:
           Phase 2: setup — git push -u origin feat/{task_key} (establish tracking)
