@@ -207,11 +207,17 @@ next_phase_map:
   review: ship
   ship: null          # done
 
+checkpoint_write_protocol:
+  step_1: "Write to checkpoint.yaml.tmp"
+  step_2: "If checkpoint.yaml exists, copy to checkpoint.yaml.bak"
+  step_3: "Rename checkpoint.yaml.tmp → checkpoint.yaml (atomic on POSIX)"
+  note: "NEVER overwrite checkpoint.yaml directly. Always write-then-rename."
+
 checkpoint_rules:
   write_after: [phase_completion, review_iteration, re_route_decision, terminal_event]
   format: YAML
   location: "docs/plans/{task-key}/checkpoint.yaml"
-  overwrite: true
+  write_method: "checkpoint_write_protocol (see above — write-tmp-then-rename, never direct overwrite)"
   on_every_write:
     - "Set resume to the next phase that should execute (from next_phase_map or loop target)"
     - "Set invalidated if loop-back occurred (see invalidation_rules)"
@@ -276,7 +282,7 @@ recovery_from_checkpoint:
   - read: "docs/plans/{task-key}/checkpoint.yaml"
   - resume_from: |
       PRIMARY:  checkpoint.resume (if present and non-null)
-      FALLBACK: next_phase_map[last(completed)] (backward compat for old checkpoints)
+      FALLBACK: next_phase_map[max(completed)] (backward compat for old checkpoints)
   - enforce_invalidation: |
       If invalidated is non-empty:
         → resume MUST precede or equal the earliest invalidated phase

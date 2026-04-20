@@ -2,6 +2,7 @@
 name: adapter-angular
 description: "Use when working with Angular/Nx projects. Provides lint/test/build commands, patterns, and module lookup."
 human_description: "Адаптер для Angular/Nx: команды lint/test/build, паттерны, module lookup, security checks."
+disable-model-invocation: true
 ---
 
 # Adapter: Angular (tech-stack)

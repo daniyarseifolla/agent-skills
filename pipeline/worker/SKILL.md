@@ -285,8 +285,8 @@ phases:
       with: "pipeline-planner"
       counter: "checkpoint.iteration.plan_review"
       on_NEEDS_CHANGES:
-        invalidated: [6]
-        resume: 5
+        invalidated: [plan-review]
+        resume: plan
 
   - phase: 7
     name: implement
@@ -299,8 +299,8 @@ phases:
     evaluate_gate:
       on_RETURN:
         checkpoint_write:
-          invalidated: [7]
-          resume: 6
+          invalidated: [implement]
+          resume: plan-review
           iteration.evaluate_return: "+= 1"
           handoff_payload: "coder_evaluate_return contract (plan_issues, blocked_parts)"
         action: "Loop back to Phase 6: plan-review — not Phase 5: plan (planner)"
@@ -322,7 +322,7 @@ phases:
         mode: subagent
         skip_if: "no design adapter"
         consensus_agents: "Functional + Visual fidelity + States/A11y (when M+)"
-        input: "branch, figma_urls"
+        input: "branch, figma_urls, app_url (from checkpoint.app_url), credentials (from checkpoint.credentials_path)"
         output: "ui review report"
 
     after_parallel:
@@ -383,7 +383,7 @@ phases:
             "y": "Full cycle"
             "только MR": "Create MR only"
             "отмена": "Do nothing"
-          on_cancel: "Write checkpoint: terminal_status: stopped_by_user, resume: 9. STOP."
+          on_cancel: "Write checkpoint: terminal_status: stopped_by_user, resume: ship. STOP."
       - ship_protocol: |
           Load core-ship-protocol. Execute shared steps with inputs:
             task_key: {task_key}

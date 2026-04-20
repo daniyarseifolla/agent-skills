@@ -60,6 +60,19 @@ Detects what's done, creates checkpoint, runs missing phases.
    invalidated: []                  # clean start for attach
    terminal_status: null                   # pipeline is running
    phase_name: "{detected state}"
+   iteration: { plan_review: "0/3", code_review: "0/3", evaluate_return: "0/2" }
+   verdict: null
+   complexity: "{detected or estimated}"
+   route: "{MINIMAL|STANDARD|FULL based on complexity}"
+   timestamp: "{ISO-8601}"
+   ci_disabled: false
+   worktree_path: null
+   app_url: null                    # resolve before UI review if needed
+   credentials_path: null           # resolve before UI review if needed
+   last_committed_part: null
+   last_commit_hash: null
+   handoff_payload: {}
+   issues_history: []
    attached_at: "{timestamp}"
    attached_from: "existing task — not started with /worker"
    ```
@@ -157,6 +170,19 @@ resume: ship                              # next phase to execute
 invalidated: []                           # cleared after all reviews pass
 terminal_status: null                              # still running
 phase_name: "{name}"
+iteration: { plan_review: "N/3", code_review: "N/3", evaluate_return: "N/2" }
+verdict: "{last verdict}"
+complexity: "{S|M|L|XL}"
+route: "{MINIMAL|STANDARD|FULL}"
+timestamp: "{ISO-8601}"
+ci_disabled: false
+worktree_path: null
+app_url: "{resolved or null}"
+credentials_path: "{resolved or null}"
+last_committed_part: null
+last_commit_hash: "{git rev-parse HEAD}"
+handoff_payload: "{accumulated handoff data}"
+issues_history: [{accumulated issues}]
 attached_at: "{timestamp}"
 attached_from: "existing task — not started with /worker"
 ```

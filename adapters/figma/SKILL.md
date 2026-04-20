@@ -3,6 +3,7 @@ name: adapter-figma
 description: "Use when extracting design context from Figma files. Provides screenshots, comparison, and token extraction."
 human_description: "Адаптер для Figma: извлечение дизайна, скриншоты, визуальное сравнение, design tokens."
 allowed-tools: mcp__plugin_figma_figma__get_design_context, mcp__plugin_figma_figma__get_screenshot, mcp__plugin_figma_figma__get_metadata, mcp__plugin_figma_figma__get_variable_defs
+disable-model-invocation: true
 ---
 
 # Adapter: Figma (design)

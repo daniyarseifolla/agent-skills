@@ -25,7 +25,7 @@ User → Command → Facade → Worker → [Phase 1 → 2 → 3 → 4 → 5 → 
 | adapters (6) | jira, gitlab, angular, figma, slack, architect-roles |
 | facades (10) | worker, architect, arch-review, deploy, ship, community-sync, figma-audit, scan-ui-inventory, scan-practices, scan-qa-playbook |
 
-31 skills + 21 commands + 1 hook
+31 skills + 19 commands + 1 hook
 
 ## Основные команды
 

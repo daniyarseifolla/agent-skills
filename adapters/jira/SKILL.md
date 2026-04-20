@@ -3,6 +3,7 @@ name: adapter-jira
 description: "Use when fetching and managing Jira tasks. Provides task fetching, AC parsing, transitions."
 human_description: "Адаптер для Jira: fetch задачи, парсинг AC, переходы статуса, формат MR description."
 allowed-tools: mcp__plugin_atlassian_atlassian__getJiraIssue, mcp__plugin_atlassian_atlassian__getTransitionsForJiraIssue, mcp__plugin_atlassian_atlassian__transitionJiraIssue, mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql, mcp__plugin_atlassian_atlassian__addCommentToJiraIssue
+disable-model-invocation: true
 ---
 
 # Adapter: Jira (task-source)

@@ -9,9 +9,8 @@ pipeline/        — phases (worker, planner, architect, coder, reviewers)
 adapters/        — swappable integrations (jira, gitlab, angular, figma, slack, architect-roles)
 core/            — protocols (orchestration, security, metrics, consensus, ship-protocol)
 facades/         — entry points (worker, architect, arch-review, deploy, sync, figma-audit, scans)
-commands/        — 21 slash commands
+commands/        — 19 slash commands
 docs/            — specs, plans, reviews
-ports/           — cross-agent portability (Codex, Literal)
 research/        — analysis and research notes
 ```
 
