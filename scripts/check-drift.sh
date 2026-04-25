@@ -59,7 +59,7 @@ for skill_md in $(find "$ROOT" -path '*/SKILL.md' -not -path '*/node_modules/*' 
   actual=$(wc -l < "$skill_md" | tr -d ' ')
 
   # Extract documented count from the overview table: "| pipeline/worker | 525 |"
-  documented=$(grep -E "^\| ${skill_path} \|" "$OVERVIEW" | head -1 | awk -F'|' '{print $3}' | tr -d ' ')
+  documented=$(grep -E "^\| ${skill_path} \|" "$OVERVIEW" | head -1 | awk -F'|' '{print $3}' | tr -d ' ' || true)
   if [ -z "$documented" ]; then
     printf "  %-35s actual %-4d  (not in SKILLS_OVERVIEW.md) \xe2\x9a\xa0\n" "$skill_path" "$actual"
     LINECOUNT_WARN=$((LINECOUNT_WARN + 1))
@@ -86,7 +86,7 @@ for cmd_md in $(find "$ROOT/commands" -maxdepth 1 -name '*.md' ! -iname 'readme*
   cmd_name="/$(basename "$cmd_md" .md)"
   actual=$(wc -l < "$cmd_md" | tr -d ' ')
 
-  documented=$(grep -E "^\| ${cmd_name} \|" "$OVERVIEW" | head -1 | awk -F'|' '{print $3}' | tr -d ' ')
+  documented=$(grep -E "^\| ${cmd_name} \|" "$OVERVIEW" | head -1 | awk -F'|' '{print $3}' | tr -d ' ' || true)
   if [ -z "$documented" ]; then
     printf "  %-35s actual %-4d  (not in SKILLS_OVERVIEW.md) \xe2\x9a\xa0\n" "commands${cmd_name}" "$actual"
     LINECOUNT_WARN=$((LINECOUNT_WARN + 1))
