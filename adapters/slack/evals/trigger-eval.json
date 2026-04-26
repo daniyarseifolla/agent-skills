@@ -54,5 +54,29 @@
   {
     "query": "напиши сообщение в slack канал general с итогами спринта",
     "should_trigger": false
+  },
+  {
+    "query": "send deploy notification to QA slack channel",
+    "should_trigger": true
+  },
+  {
+    "query": "уведоми слак что ARGO-10800 готов к тестированию",
+    "should_trigger": true
+  },
+  {
+    "query": "создай MR из текущей ветки",
+    "should_trigger": false
+  },
+  {
+    "query": "закоммить и запуши изменения",
+    "should_trigger": false
+  },
+  {
+    "query": "скан практик проекта",
+    "should_trigger": false
+  },
+  {
+    "query": "оцени архитектуру модуля авторизации",
+    "should_trigger": false
   }
 ]

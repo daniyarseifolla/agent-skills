@@ -1,0 +1,82 @@
+[
+  {
+    "query": "/continue ARGO-12345",
+    "should_trigger": true
+  },
+  {
+    "query": "продолжи пайплайн",
+    "should_trigger": true
+  },
+  {
+    "query": "resume pipeline ARGO-10700",
+    "should_trigger": true
+  },
+  {
+    "query": "/continue",
+    "should_trigger": true
+  },
+  {
+    "query": "продолжи задачу ARGO-10698",
+    "should_trigger": true
+  },
+  {
+    "query": "resume interrupted work on ARGO-11000",
+    "should_trigger": true
+  },
+  {
+    "query": "continue ARGO-10800 from checkpoint",
+    "should_trigger": true
+  },
+  {
+    "query": "возобнови пайплайн",
+    "should_trigger": true
+  },
+  {
+    "query": "продолжи с чекпоинта",
+    "should_trigger": true
+  },
+  {
+    "query": "resume from where we left off ARGO-10750",
+    "should_trigger": true
+  },
+  {
+    "query": "ARGO-10698 возьми в работу",
+    "should_trigger": false
+  },
+  {
+    "query": "задеплой на тест",
+    "should_trigger": false
+  },
+  {
+    "query": "/ship prod",
+    "should_trigger": false
+  },
+  {
+    "query": "сделай задачу ARGO-10700",
+    "should_trigger": false
+  },
+  {
+    "query": "review my code",
+    "should_trigger": false
+  },
+  {
+    "query": "создай план для ARGO-10800",
+    "should_trigger": false
+  },
+  {
+    "query": "запусти code review",
+    "should_trigger": false
+  },
+  {
+    "query": "обнови ветки",
+    "should_trigger": false
+  },
+  {
+    "query": "скан UI компонентов",
+    "should_trigger": false
+  },
+  {
+    "query": "покажи статус пайплайна",
+    "should_trigger": false
+  }
+]
