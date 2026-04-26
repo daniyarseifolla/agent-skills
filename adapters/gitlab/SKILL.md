@@ -140,6 +140,36 @@ error_handling:
 
 ---
 
+## 6a. ci_skip_push_option — Rule: Skip CI via Push Option, NOT Commit Message
+
+```yaml
+rule: "NEVER write [skip ci], [ci skip], or [no ci] in commit messages. Always use GitLab push option."
+
+why: |
+  [skip ci] markers in commit messages are permanent:
+    - After MR merge (especially rebase/fast-forward), markers land in main history
+    - Cherry-pick carries them into community branches
+    - Pollutes git log forever
+  -o ci.skip is a push-level instruction — never written to the commit.
+
+commands:
+  normal_push: "git push -o ci.skip"
+  force_push:  "git push -o ci.skip --force-with-lease"   # works for rewrites too
+
+feature_branch_workflow:
+  intermediate_pushes: "git push -o ci.skip — saves CI minutes during iteration"
+  final_push_before_mr: "git push — regular push so pipeline runs on MR"
+
+cleanup_if_markers_leaked:
+  description: "If branch already has commits with [skip ci], strip markers before opening MR"
+  command: |
+    git rebase --exec 'git commit --amend -m "$(git log -1 --format=%B | sed -e "s/ \[skip ci\]//")"' origin/develop
+    git push --force-with-lease
+  what_it_does: "Amends every commit in branch to strip the marker, then force-updates the remote"
+```
+
+---
+
 ## 7. retry_job(job_id)
 
 ```yaml
