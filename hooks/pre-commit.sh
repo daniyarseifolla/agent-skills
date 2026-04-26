@@ -13,4 +13,16 @@ echo "=== Pre-commit: Contract Check ==="
 bash "$REPO_ROOT/scripts/check-contracts.sh"
 
 echo ""
+echo "=== Pre-commit: Frontmatter Lint ==="
+bash "$REPO_ROOT/scripts/check-frontmatter.sh"
+
+echo ""
+echo "=== Pre-commit: Trigger Evals ==="
+bash "$REPO_ROOT/scripts/check-triggers.sh"
+
+echo ""
+echo "=== Pre-commit: Dependency Resolution ==="
+bash "$REPO_ROOT/scripts/check-deps.sh"
+
+echo ""
 echo "All pre-commit checks passed."
