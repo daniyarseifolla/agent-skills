@@ -1,0 +1,12 @@
+{
+  "alwaysUpdateLinks": true,
+  "newLinkFormat": "shortest",
+  "useMarkdownLinks": false,
+  "userIgnoreFilters": [
+    "evals/",
+    "node_modules/",
+    ".git/"
+  ],
+  "attachmentFolderPath": "attachments",
+  "promptDelete": true
+}

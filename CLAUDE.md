@@ -2,6 +2,10 @@
 
 Reusable development pipeline skills for Claude Code with swappable adapters.
 
+## For Agents
+
+Если ты новый агент в этом репо — прочти **[docs/AGENTS.md](docs/AGENTS.md)** перед началом работы. Там карта: куда смотреть для конкретных задач и куда писать новое (термины → `docs/glossary.md`, решения → `docs/ARCHITECTURE_DECISIONS.md`, внешние скиллы → `external-skills/`).
+
 ## Version
 
 Version 4.1 — see VERSION file

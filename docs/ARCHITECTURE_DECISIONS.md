@@ -45,3 +45,15 @@
 **Контекст:** jira-worker hardcoded task-source=jira. Worker autodetect уже умеет определять source.
 **Решение:** Переименовать в facades/worker, сделать universal с autodetect.
 **Статус:** Реализовано.
+
+### AD-008: Repo as Obsidian vault + onboarding canal for agents
+**Дата:** 2026-04-26
+**Контекст:** Между сессиями агенты теряли контекст: CLAUDE.md грузится автоматически, но детальная структура (термины, внешние зависимости) была разбросана. Нужна общая память, доступная любому агенту.
+**Решение:**
+- Корень репо открыт как Obsidian vault (`.obsidian/` закоммичен).
+- Канал онбординга — [`docs/AGENTS.md`](AGENTS.md), куда CLAUDE.md направляет агентов.
+- Канал терминов — [`docs/glossary.md`](glossary.md).
+- Канал внешних скиллов (`~/.claude/skills/...`) — [`external-skills/`](../external-skills/README.md) с заметкой на каждый установленный скилл.
+- ADR продолжаем писать здесь, в `ARCHITECTURE_DECISIONS.md`, в формате AD-NNN.
+**Альтернативы:** только CLAUDE.md (не масштабируется), `~/.claude/projects/.../memory/` (приватно, не в гите), vault в подпапке (теряет связи с CLAUDE.md и SKILLS_OVERVIEW.md).
+**Статус:** Реализовано.
